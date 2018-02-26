@@ -11,7 +11,7 @@ pub enum Command {
     FlowRun(String),
     MilestoneActivate(String),
     Noop,
-    ShellPrompt,
+    ShellPrompt(bool),
 }
 
 /// Parse a Command from the command line options.
@@ -38,7 +38,10 @@ pub fn parse() -> Command {
                 .short("g")
                 .help("create a global flow")))
         .subcommand(SubCommand::with_name("prompt")
-            .about("Generate the shell prompt, call this from PS1"))
+            .about("Generate the shell prompt, call this from PS1")
+            .arg(Arg::with_name("check")
+                .long("check")
+                .help("validate the setup")))
         .subcommand(SubCommand::with_name("milestone")
             .about("Set the active milestone that you are working towards")
             .arg(Arg::with_name("NAME")
@@ -64,8 +67,8 @@ pub fn parse() -> Command {
         let name = run.value_of("NAME").unwrap();
         return Command::MilestoneActivate(String::from(name));
     }
-    if matches.subcommand_matches("prompt").is_some() {
-        return Command::ShellPrompt;
+    if let Some(prompt) = matches.subcommand_matches("prompt") {
+        return Command::ShellPrompt(prompt.is_present("check"));
     }
 
     Command::FlowRecommend

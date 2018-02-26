@@ -1,3 +1,4 @@
+use ::cli;
 /// Handle operations on flows.
 
 use ::entities::Flow;
@@ -82,7 +83,8 @@ pub fn run<T>(name: T) -> Result<()>
     Err(Error::from_kind(ErrorKind::from("flow not found")))
 }
 
-
+/// Create a flow with the given name, in the global location or not,
+/// and with the given actions.
 pub fn create(name: String, global: bool, actions: Vec<String>) -> Result<()> {
     let mut path = flows_folder(global)?;
     path.push(format!("{}.flow.json", name));
@@ -93,4 +95,23 @@ pub fn create(name: String, global: bool, actions: Vec<String>) -> Result<()> {
     };
     let data = flow.to_str()?;
     write_content(&path, &data).chain_err(|| "create flow")
+}
+
+/// Recommend a list of Flows for the current user.
+pub fn recommend() -> Result<()> {
+    let active = active()
+        .chain_err(|| "getting active flows")?;
+
+    let mut displayed = 0;
+    for name in active.iter() {
+        if displayed == 0 {
+            println!("recommended flows:")
+        }
+        displayed += 1;
+        println!("  {}", name);
+    }
+    if displayed > 0 {
+        println!("To run one use `{} run <flow-name>`", cli::APP_NAME);
+    }
+    Ok(())
 }
