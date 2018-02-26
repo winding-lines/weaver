@@ -1,0 +1,13 @@
+{
+  "name": "create-database",
+  "preconditions": [
+    {"file_content": {
+      "path": ".env",
+      "contains": "DATABASE_URL"
+    }}
+  ],
+  "actions": [
+    "diesel setup",
+    "diesel migration run"
+  ]
+}
