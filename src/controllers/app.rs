@@ -2,8 +2,8 @@ use ::cli;
 use ::errors::*;
 use ::store::Store;
 use env_logger;
-use std::io;
 use super::{flows, weaver};
+use super::file_utils;
 
 /// Recommend a list of Flows for the current user.
 fn recommend() -> Result<()> {
@@ -37,8 +37,9 @@ pub fn run() -> Result<()> {
         FlowRun(name) => {
             flows::run(name)
         }
-        FlowCreate(name) => {
-            flows::create(name)
+        FlowCreate(name, global) => {
+            let actions = file_utils::read_stdin(50)?;
+            flows::create(name, global, actions)
         }
         MilestoneActivate(name) => {
             weaver::milestone_activate(name)
@@ -49,14 +50,11 @@ pub fn run() -> Result<()> {
         ShellPrompt => {
             println!("{}", weaver.active_milestone.as_ref()
                 .map_or("<not-set>", String::as_str));
-            // read any history lines
-            let mut input = String::new();
-            if io::stdin().read_line(&mut input).is_ok() {
+            for input in file_utils::read_stdin(1)? {
                 let mut store = Store::new()?;
-                store.add_shell(&input)
-            } else {
-                Ok(())
+                store.add_shell(&input)?;
             }
+            Ok(())
         }
     }
 }

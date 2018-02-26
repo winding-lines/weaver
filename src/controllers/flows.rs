@@ -2,15 +2,29 @@
 
 use ::entities::Flow;
 use ::errors::*;
-use std::path::PathBuf;
-use super::file_utils::{read_content, write_content};
+use std::fs;
+use std::path::{Path, PathBuf};
+use super::file_utils::{app_folder, read_content, write_content};
 use super::shell_proxy;
 use walkdir::WalkDir;
 
+/// Return the global or local folder for flows.
+fn flows_folder(global: bool) -> Result<PathBuf> {
+    let mut path = if global {
+        app_folder()?
+    } else {
+        PathBuf::new()
+    };
+    path.push("flows");
+    if !path.exists() {
+        fs::create_dir(&path).chain_err(|| "create flows folder")?;
+    }
+    Ok(path)
+}
 
-pub fn load() -> Result<Vec<Flow>> {
-    let mut out = Vec::new();
-    for entry in WalkDir::new("flows") {
+/// Load the flows in the given folder.
+pub fn load_folder(path: &Path, out: &mut Vec<Flow>) -> Result<()> {
+    for entry in WalkDir::new(path) {
         let entry = entry.chain_err(|| "listing flows")?;
         let path = entry.path();
         if let Some(os_name) = path.file_name() {
@@ -24,8 +38,17 @@ pub fn load() -> Result<Vec<Flow>> {
             }
         }
     }
+    Ok(())
+}
+
+/// Load all the flows both global and application.
+pub fn load() -> Result<Vec<Flow>> {
+    let mut out = Vec::new();
+    load_folder(&flows_folder(true)?, &mut out)?;
+    load_folder(&flows_folder(false)?, &mut out)?;
     return Ok(out);
 }
+
 
 /// From all the Flows recommend the ones which are active for the current state,
 /// i.e. their preconditions match.
@@ -59,14 +82,14 @@ pub fn run<T>(name: T) -> Result<()>
     Err(Error::from_kind(ErrorKind::from("flow not found")))
 }
 
-pub fn create(name: String) -> Result<()> {
-    let mut path = PathBuf::new();
-    path.push("flows");
+
+pub fn create(name: String, global: bool, actions: Vec<String>) -> Result<()> {
+    let mut path = flows_folder(global)?;
     path.push(format!("{}.flow.json", name));
     let flow = Flow {
         name: name,
         preconditions: vec![],
-        actions: vec![],
+        actions: actions,
     };
     let data = flow.to_str()?;
     write_content(&path, &data).chain_err(|| "create flow")

@@ -2,7 +2,7 @@ use ::cli;
 use ::errors::*;
 use std::fs;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Write, stdin};
 use std::path::{Path,PathBuf};
 
 /// Load the content of the given file.
@@ -38,3 +38,23 @@ pub fn app_folder() -> Result<PathBuf> {
         Err(Error::from_kind(ErrorKind::from("cannot get home folder")))
     }
 }
+
+/// Read up to limit lines from stdin.
+pub fn read_stdin(limit: usize) -> Result<Vec<String>> {
+    let mut out = Vec::new();
+    let mut count = 0;
+    while count < limit {
+        count += 1;
+        let mut input = String::new();
+        if stdin().read_line(&mut input).is_ok() {
+            let trimmed = input.trim();
+            if !trimmed.is_empty() {
+                out.push(String::from(trimmed));
+            }
+        } else {
+            break;
+        }
+    }
+    Ok(out)
+}
+
