@@ -4,5 +4,7 @@ create table actions (
   executed TEXT not null,
   kind VARCHAR not null,
   command VARCHAR not null,
-  location VARCHAR
+  location VARCHAR,
+  epic VARCHAR,
+  sent boolean
 );

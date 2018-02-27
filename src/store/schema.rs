@@ -5,5 +5,7 @@ table! {
         kind -> Text,
         command -> Text,
         location -> Nullable<Text>,
+        epic -> Nullable<Text>,
+        sent -> Nullable<Bool>,
     }
 }

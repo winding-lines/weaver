@@ -1,13 +1,13 @@
 use ::errors::*;
 use serde_json as json;
-use super::Milestone;
+use super::Epic;
 
 /// All the Milestones that Weaver knows about.
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub struct Weaver {
-    pub active_milestone: Option<String>, // Name of the active milestone.
+    pub active_epic: Option<String>, // Name of the active milestone.
     pub active_flow: Option<String>, // Active flow being executed.
-    milestones: Vec<Milestone>
+    milestones: Vec<Epic>
 }
 
 impl Weaver {

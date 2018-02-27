@@ -29,6 +29,6 @@ pub fn weaver_save(weaver: Weaver) -> Result<()> {
 /// Activate the milestone with the given name.
 pub fn milestone_activate(name: String) -> Result<()> {
     let mut weaver = weaver_init()?;
-    weaver.active_milestone = Some(name);
+    weaver.active_epic = Some(name);
     weaver_save(weaver)
 }

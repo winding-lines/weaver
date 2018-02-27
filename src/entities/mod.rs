@@ -2,9 +2,9 @@
 
 pub use self::flow::Flow;
 pub use self::weaver::Weaver;
-pub use self::milestone::Milestone;
+pub use self::epic::Epic;
 
 mod flow;
 mod weaver;
-mod milestone;
+mod epic;
 

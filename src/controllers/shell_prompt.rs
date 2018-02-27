@@ -17,11 +17,11 @@ pub fn check() -> Result<()> {
 
 /// Processes the actions when called from the PS1 prompt.
 pub fn run(weaver: &Weaver) -> Result<()> {
-    println!("{}", weaver.active_milestone.as_ref()
+    println!("{}", weaver.active_epic.as_ref()
         .map_or("<not-set>", String::as_str));
     for input in file_utils::read_stdin(1)? {
         let mut store = Store::new()?;
-        store.add_shell(&input)?;
+        store.add_shell_action(&input, weaver.active_epic.as_ref().map(String::as_str))?;
     }
     Ok(())
 }

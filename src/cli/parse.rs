@@ -6,10 +6,11 @@ const DESCRIPTION: &'static str = env!["CARGO_PKG_DESCRIPTION"];
 
 /// Commands returned by the parser for execution in the main loop.
 pub enum Command {
+    ActionHistory,
     FlowRecommend,
     FlowCreate(String, bool),
     FlowRun(String),
-    MilestoneActivate(String),
+    EpicActivate(String),
     Noop,
     ShellPrompt(bool),
 }
@@ -22,6 +23,7 @@ pub fn parse() -> Command {
         .arg(Arg::with_name("version")
             .short("V")
             .help("Display the version"))
+        .subcommand(SubCommand::with_name("actions"))
         .subcommand(SubCommand::with_name("run")
             .about("run the flow with the given name")
             .arg(Arg::with_name("NAME")
@@ -42,8 +44,8 @@ pub fn parse() -> Command {
             .arg(Arg::with_name("check")
                 .long("check")
                 .help("validate the setup")))
-        .subcommand(SubCommand::with_name("milestone")
-            .about("Set the active milestone that you are working towards")
+        .subcommand(SubCommand::with_name("epic")
+            .about("Set the current epic (task, story, project) that you are working towards")
             .arg(Arg::with_name("NAME")
                 .required(true)
                 .index(1)
@@ -63,12 +65,15 @@ pub fn parse() -> Command {
         let global = run.is_present("global");
         return Command::FlowCreate(String::from(name), global);
     }
-    if let Some(run) = matches.subcommand_matches("milestone") {
+    if let Some(run) = matches.subcommand_matches("epic") {
         let name = run.value_of("NAME").unwrap();
-        return Command::MilestoneActivate(String::from(name));
+        return Command::EpicActivate(String::from(name));
     }
     if let Some(prompt) = matches.subcommand_matches("prompt") {
         return Command::ShellPrompt(prompt.is_present("check"));
+    }
+    if let Some(_actions) = matches.subcommand_matches("actions") {
+        return Command::ActionHistory;
     }
 
     Command::FlowRecommend

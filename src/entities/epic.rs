@@ -8,7 +8,7 @@ pub struct FlowRun {
 
 /// High level Milestone being worked on.
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Milestone {
+pub struct Epic {
     name: String,
     start_time: String,
     end_time: String,

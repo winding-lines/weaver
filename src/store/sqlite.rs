@@ -23,7 +23,11 @@ impl Store {
         Ok(Store { connection })
     }
 
-    pub fn add_shell(&self, command: &str) -> Result<()> {
+    pub fn connection<'a>(&'a mut self) -> &'a SqliteConnection {
+        &self.connection
+    }
+
+    pub fn add_shell_action(&self, command: &str, epic: Option<&str>) -> Result<()> {
         let cwd = env::current_dir()
             .chain_err(|| "save command")?;
         let location = cwd.as_path().to_str();
@@ -34,6 +38,7 @@ impl Store {
             kind: "shell",
             command: &command,
             location,
+            epic,
         };
         debug!("inserting {:?} in actions table", insert);
         let count = diesel::insert_into(actions::table)
