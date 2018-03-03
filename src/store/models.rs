@@ -19,5 +19,7 @@ pub struct Action {
     pub location: Option<String>,
     pub epic: Option<String>,
     pub sent: Option<bool>,
+    pub annotation: Option<String>,
+    pub tags: Option<String>,
 }
 

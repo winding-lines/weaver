@@ -6,5 +6,7 @@ create table actions (
   command VARCHAR not null,
   location VARCHAR,
   epic VARCHAR,
-  sent boolean
+  sent boolean,
+  annotation text,
+  tags text
 );

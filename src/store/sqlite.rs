@@ -1,9 +1,9 @@
+use ::config::file_utils;
 use ::errors::*;
 use chrono::prelude::*;
 use diesel;
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
-use dotenv::dotenv;
 use std::env;
 use super::models::NewAction;
 use super::schema::actions;
@@ -15,11 +15,17 @@ pub struct Store {
 
 impl Store {
     pub fn new() -> Result<Store> {
-        let _ = dotenv().chain_err(|| "store config")?;
         let db_url = env::var("DATABASE_URL")
-            .chain_err(|| "store config")?;
+            .or_else(|_| {
+                if let Some(value) = file_utils::default_database()?.to_str() {
+                    Ok(String::from(value))
+                } else {
+                    return Err(Error::from_kind(ErrorKind::from("no database url")));
+                }
+            })?;
+        debug!("opening database {} ", &db_url);
         let connection = SqliteConnection::establish(&db_url)
-            .chain_err(|| "store config")?;
+            .chain_err(|| format!("Cannot open database {}", db_url))?;
         Ok(Store { connection })
     }
 

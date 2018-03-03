@@ -1,9 +1,10 @@
 use ::cli;
 use ::errors::*;
+use std::env;
 use std::fs;
 use std::fs::File;
-use std::io::{Read, Write, stdin};
-use std::path::{Path,PathBuf};
+use std::io::{Read, stdin, Write};
+use std::path::{Path, PathBuf};
 
 /// Load the content of the given file.
 pub fn read_content(path: &Path) -> Result<String> {
@@ -33,6 +34,21 @@ pub fn app_folder() -> Result<PathBuf> {
         if !path.exists() {
             fs::create_dir(&path).chain_err(|| "create weaver folder")?;
         }
+        Ok(path)
+    } else {
+        Err(Error::from_kind(ErrorKind::from("cannot get home folder")))
+    }
+}
+
+pub fn default_database() -> Result<PathBuf> {
+    if let Some(home) = env::home_dir() {
+        let mut path = PathBuf::new();
+        path.push(home);
+        path.push(cli::APP_FOLDER);
+        if !path.exists() {
+            fs::create_dir(&path).chain_err(|| "create weaver folder")?;
+        }
+        path.push("history.sqlite3");
         Ok(path)
     } else {
         Err(Error::from_kind(ErrorKind::from("cannot get home folder")))

@@ -16,4 +16,5 @@ serde_json = "1.0"
 walkdir = "2"
 log = "0.4"
 env_logger = "0.5"
-
+cursive = "0.8"
+cursive_table_view = {git = "https://github.com/winding-lines/cursive_table_view"}

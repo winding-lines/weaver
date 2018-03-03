@@ -3,6 +3,8 @@
 
 extern crate chrono;
 extern crate clap;
+extern crate cursive;
+extern crate cursive_table_view;
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
@@ -38,23 +40,42 @@ mod errors {
 ///
 
 mod cli;
+mod config;
+mod display;
 mod entities;
 mod controllers;
 mod store;
 
 fn main() {
+
+    // Setup the logger on the env variable WEAVER.
+    // This allows one to do `export WEAVER=debug` to get a lot more errors.
+    use std::env;
+    use env_logger::{Builder, Target};
+
+    // Use the builder api for more flexibility.
+    let mut builder = Builder::new();
+    builder.target(Target::Stdout);
+    if env::var("WEAVER").is_ok() {
+        builder.parse(&env::var("WEAVER").unwrap());
+    }
+    builder.init();
+
+    // Run the main loop, be concise with error reporting since we may run in PS1.
     if let Err(ref e) = controllers::app::run() {
-        println!("error: {}", e);
+        print!(" ERR `export WEAVER=error` for more");
+        error!("error {}", e);
 
         for e in e.iter().skip(1) {
-            println!("caused by: {}", e);
+            error!("caused by: {}", e);
         }
 
         // The backtrace is not always generated. Try to run this example
         // with `RUST_BACKTRACE=1`.
         if let Some(backtrace) = e.backtrace() {
-            println!("backtrace: {:?}", backtrace);
+            error!("backtrace: {:?}", backtrace);
         }
+        error!(" `export WEAVER=debug` for more details.");
 
         ::std::process::exit(1);
     }

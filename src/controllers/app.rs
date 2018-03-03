@@ -1,22 +1,23 @@
+use ::cli::Command::*;
+use ::cli::parse;
+use ::config::file_utils;
 use ::errors::*;
-use env_logger;
+use display;
+use store::{actions, Store};
 use super::{flows, shell_prompt, weaver};
-use super::file_utils;
-use store::{Store, actions};
 
 
 /// Main dispatch function;
 pub fn run() -> Result<()> {
-    use ::cli::parse;
-    use ::cli::Command::*;
-    env_logger::init();
     let weaver = weaver::weaver_init()?;
+    debug!("weaver initialized, active_epic {:?}", weaver.active_epic);
     let mut store = Store::new()?;
     match parse() {
         ActionHistory => {
             let epic = weaver.active_epic.as_ref().map(String::as_str);
             let actions = actions::history(&mut store, epic)?;
-            println!("{:?}", actions);
+            let selected = display::show(actions)?;
+            println!("selected {:?}", selected);
             Ok(())
         }
         FlowRecommend => {
@@ -30,7 +31,7 @@ pub fn run() -> Result<()> {
             flows::create(name, global, actions)
         }
         EpicActivate(name) => {
-            weaver::milestone_activate(name)
+            weaver::epic_activate(name)
         }
         Noop => {
             Ok(())
