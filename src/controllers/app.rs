@@ -3,8 +3,9 @@ use ::cli::parse;
 use ::config::file_utils;
 use ::errors::*;
 use display;
+use server;
 use store::{actions, Store};
-use super::{flows, shell_prompt, weaver};
+use super::{flows, shell_prompt, shell_proxy, weaver};
 
 
 /// Main dispatch function;
@@ -12,13 +13,18 @@ pub fn run() -> Result<()> {
     let weaver = weaver::weaver_init()?;
     debug!("weaver initialized, active_epic {:?}", weaver.active_epic);
     let mut store = Store::new()?;
-    match parse() {
+    let wanted = parse();
+    debug!("Executing cli command {:?}", wanted);
+    match wanted {
         ActionHistory => {
             let epic = weaver.active_epic.as_ref().map(String::as_str);
             let actions = actions::history(&mut store, epic)?;
-            let selected = display::show(actions)?;
-            println!("selected {:?}", selected);
-            Ok(())
+            if let Some(selection) = display::show(actions)? {
+                shell_proxy::run(selection).map(|_| ())
+            } else {
+                eprintln!("No command selected from history");
+                Ok(())
+            }
         }
         FlowRecommend => {
             flows::recommend()
@@ -35,6 +41,9 @@ pub fn run() -> Result<()> {
         }
         Noop => {
             Ok(())
+        }
+        Server => {
+            server::start().map(|_| ())
         }
         ShellPrompt(check) => {
             if check {

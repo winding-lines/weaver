@@ -5,6 +5,7 @@ const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const DESCRIPTION: &'static str = env!["CARGO_PKG_DESCRIPTION"];
 
 /// Commands returned by the parser for execution in the main loop.
+#[derive(Debug)]
 pub enum Command {
     ActionHistory,
     FlowRecommend,
@@ -12,6 +13,7 @@ pub enum Command {
     FlowRun(String),
     EpicActivate(String),
     Noop,
+    Server,
     ShellPrompt(bool),
 }
 
@@ -39,26 +41,26 @@ pub fn parse() -> Command {
             .arg(Arg::with_name("global")
                 .short("g")
                 .help("create a global flow")))
+        .subcommand(SubCommand::with_name("epic")
+            .about("Set the current epic (task, story, project) that you are working towards")
+            .arg(Arg::with_name("NAME")
+                .required(true)
+                .index(1)))
         .subcommand(SubCommand::with_name("prompt")
             .about("Generate the shell prompt, call this from PS1")
             .arg(Arg::with_name("check")
                 .long("check")
                 .help("validate the setup")))
-        .subcommand(SubCommand::with_name("epic")
-            .about("Set the current epic (task, story, project) that you are working towards")
-            .arg(Arg::with_name("NAME")
-                .required(true)
-                .index(1)
-            ))
+        .subcommand(SubCommand::with_name("server")
+            .about("Start the embedded API server"))
         .get_matches();
 
     if matches.is_present("version") {
         println!("{}", VERSION);
         return Command::Noop;
     }
-    if let Some(run) = matches.subcommand_matches("run") {
-        let name = run.value_of("NAME").unwrap();
-        return Command::FlowRun(String::from(name));
+    if let Some(_actions) = matches.subcommand_matches("actions") {
+        return Command::ActionHistory;
     }
     if let Some(run) = matches.subcommand_matches("create") {
         let name = run.value_of("NAME").unwrap();
@@ -72,9 +74,12 @@ pub fn parse() -> Command {
     if let Some(prompt) = matches.subcommand_matches("prompt") {
         return Command::ShellPrompt(prompt.is_present("check"));
     }
-    if let Some(_actions) = matches.subcommand_matches("actions") {
-        return Command::ActionHistory;
+    if let Some(run) = matches.subcommand_matches("run") {
+        let name = run.value_of("NAME").unwrap();
+        return Command::FlowRun(String::from(name));
     }
-
+    if let Some(_run) = matches.subcommand_matches("server") {
+        return Command::Server;
+    }
     Command::FlowRecommend
 }

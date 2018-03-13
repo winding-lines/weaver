@@ -9,6 +9,12 @@ use super::models::NewAction;
 use super::schema::actions;
 
 
+fn now() -> String {
+    let utc: DateTime<Utc> = Utc::now();
+    utc.to_rfc3339()
+}
+
+#[derive(StateData)]
 pub struct Store {
     connection: SqliteConnection
 }
@@ -37,8 +43,7 @@ impl Store {
         let cwd = env::current_dir()
             .chain_err(|| "save command")?;
         let location = cwd.as_path().to_str();
-        let utc: DateTime<Utc> = Utc::now();
-        let executed = utc.to_rfc3339();
+        let executed = now();
         let insert = NewAction {
             executed: &executed,
             kind: "shell",
@@ -53,6 +58,27 @@ impl Store {
             .chain_err(|| "save command")?;
         if count == 1 {
             Ok(())
+        } else {
+            Err(Error::from_kind(ErrorKind::from("Got bad numbers of rows in insert")))
+        }
+    }
+
+    pub fn add_url_action(&self, url: &str) -> Result<u64> {
+        let executed = now();
+        let insert = NewAction {
+            executed: &executed,
+            kind: "url",
+            command: url,
+            location: None,
+            epic: None,
+        };
+        debug!("inserting {:?} in actions table", insert);
+        let count = diesel::insert_into(actions::table)
+            .values(&insert)
+            .execute(&self.connection)
+            .chain_err(|| "save command")?;
+        if count == 1 {
+            Ok((1))
         } else {
             Err(Error::from_kind(ErrorKind::from("Got bad numbers of rows in insert")))
         }

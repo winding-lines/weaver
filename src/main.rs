@@ -11,8 +11,14 @@ extern crate dotenv;
 extern crate env_logger;
 #[macro_use]
 extern crate error_chain;
+extern crate futures;
+extern crate gotham;
+#[macro_use]
+extern crate gotham_derive;
+extern crate hyper;
 #[macro_use]
 extern crate log;
+extern crate mime;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -44,10 +50,10 @@ mod config;
 mod display;
 mod entities;
 mod controllers;
+mod server;
 mod store;
 
 fn main() {
-
     // Setup the logger on the env variable WEAVER.
     // This allows one to do `export WEAVER=debug` to get a lot more errors.
     use std::env;

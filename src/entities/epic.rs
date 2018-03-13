@@ -1,6 +1,6 @@
 /// Track the execution of a given Flow.
 #[derive(Deserialize, Serialize, Debug)]
-pub struct FlowRun {
+pub struct FlowState {
     name: String,
     start_time: String,
     end_time: String,
@@ -9,8 +9,9 @@ pub struct FlowRun {
 /// High level Milestone being worked on.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Epic {
+    id: u64,
     name: String,
     start_time: String,
     end_time: String,
-    flows: Vec<FlowRun>
+    flows: Vec<FlowState>
 }

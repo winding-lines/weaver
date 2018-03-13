@@ -1,10 +1,9 @@
 use ::errors::*;
 use cursive::align::{HAlign, VAlign};
 use cursive::Cursive;
-use cursive::direction::Orientation;
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
-use cursive::views::{BoxView, Dialog, DummyView, LinearLayout, TextView};
+use cursive::views::{BoxView, Dialog, DummyView, EditView, LinearLayout, TextView};
 use cursive_table_view::{TableView, TableViewItem};
 use std::cmp::Ordering;
 use std::sync::mpsc;
@@ -13,12 +12,14 @@ use std::time::Duration;
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 enum BasicColumn {
     Index,
+    Kind,
     Name,
 }
 
 #[derive(Clone, Debug)]
 pub struct NameWithId {
     pub name: String,
+    pub kind: String,
     pub id: usize,
 }
 
@@ -26,6 +27,7 @@ impl TableViewItem<BasicColumn> for NameWithId {
     fn to_column(&self, column: BasicColumn) -> String {
         match column {
             BasicColumn::Name => self.name.to_string(),
+            BasicColumn::Kind => self.kind.to_string(),
             BasicColumn::Index => format!("{}", self.id),
         }
     }
@@ -33,6 +35,7 @@ impl TableViewItem<BasicColumn> for NameWithId {
     fn cmp(&self, other: &Self, column: BasicColumn) -> Ordering where Self: Sized {
         match column {
             BasicColumn::Name => self.name.cmp(&other.name),
+            BasicColumn::Kind => self.kind.cmp(&other.kind),
             BasicColumn::Index => self.id.cmp(&other.id),
         }
     }
@@ -48,18 +51,25 @@ fn create_cursive() -> Cursive {
 }
 
 // Create the table for actions.
-fn create_table(labels: Vec<NameWithId>, tx: mpsc::Sender<String>) -> TableView<NameWithId, BasicColumn> {
+fn create_table(labels: Vec<NameWithId>, tx: mpsc::Sender<Option<String>>) -> TableView<NameWithId, BasicColumn> {
     let mut table = TableView::<NameWithId, BasicColumn>::new()
         .column(BasicColumn::Index, "#", |c| c.width(6))
+        .column(BasicColumn::Kind, "Kind", |c| c.align(HAlign::Left).width(6))
         .column(BasicColumn::Name, "Command", |c| c.align(HAlign::Left));
 
+    let last = labels.len() - 1;
     table.set_items(labels);
+    table.set_selected_row(last);
 
-    table.set_on_submit(move |siv: &mut Cursive, row: usize, index: usize| {
-        let value = siv.call_on_id("table", move |table: &mut TableView<NameWithId, BasicColumn>| {
-            format!("{:?}", table.borrow_item(index).unwrap())
-        }).unwrap();
-        tx.send(value).unwrap();
+    // Select the current entry when 'enter' is pressed, then end the application.
+    table.set_on_submit(move |siv: &mut Cursive, _row: usize, index: usize| {
+        if let Some(mut t) = siv.find_id::<TableView<NameWithId, BasicColumn>>("actions") {
+            let value = t.borrow_item(index).map(|s| s.name.clone());
+            tx.send(value).unwrap();
+        } else {
+            // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
+            eprintln!("cannot find table");
+        }
 
         /*
         siv.add_layer(
@@ -84,17 +94,23 @@ pub fn show(labels: Vec<NameWithId>) -> Result<(Option<String>)> {
 
     let (tx, rx) = mpsc::channel();
 
-    let mut layout = LinearLayout::new(Orientation::Horizontal);
-    layout.add_child(create_table(labels, tx).min_size((32, 20)));
+    let mut layout = LinearLayout::vertical();
+    layout.add_child(create_table(labels, tx)
+        .with_id("actions")
+        .min_size((64, 35)));
     layout.add_child(BoxView::with_fixed_size((4, 0), DummyView));
-    layout.add_child(TextView::new("q to quit\nenter to select").v_align(VAlign::Center));
+    let vertical = LinearLayout::horizontal()
+        .child(EditView::new().min_width(20))
+        .child(TextView::new("Ctrl-C to quit\n<Enter> to run")
+            .v_align(VAlign::Bottom));
+    layout.add_child(vertical);
     siv.add_layer(
-        Dialog::around(layout.min_size((50, 40))).title("Weaver")
+        Dialog::around(layout.min_size((70, 40))).title("~ weaver ~")
     );
 
     siv.run();
     if let Ok(selected) = rx.recv_timeout(Duration::from_millis(100)) {
-        Ok(Some(selected))
+        Ok(selected)
     } else {
         Ok(None)
     }
