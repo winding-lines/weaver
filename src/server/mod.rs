@@ -12,6 +12,7 @@ use mime;
 
 mod store_middleware;
 mod url_handler;
+mod epic_handler;
 
 fn index(state: State) -> (State, Response) {
     let res = create_response(
@@ -35,6 +36,8 @@ fn router() -> Router {
     build_router(chain, pipelines, |route| {
         route.get("/url").to(url_handler::get_handler);
         route.post("/url").to(url_handler::post_handler);
+        route.get("/epic").to(epic_handler::get_handler);
+        route.post("/epic").to(epic_handler::post_handler);
         route.get("/").to(index);
     })
 }

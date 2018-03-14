@@ -20,7 +20,13 @@ pub fn run() -> Result<()> {
             let epic = weaver.active_epic.as_ref().map(String::as_str);
             let actions = actions::history(&mut store, epic)?;
             if let Some(selection) = display::show(actions)? {
-                shell_proxy::run(selection).map(|_| ())
+                if selection.kind == "shell" {
+                    shell_proxy::run(selection.name)
+                        .map(|_| ())
+                } else {
+                    shell_proxy::run(format!("open {}", selection.name))
+                        .map(|_| ())
+                }
             } else {
                 eprintln!("No command selected from history");
                 Ok(())

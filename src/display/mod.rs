@@ -51,7 +51,7 @@ fn create_cursive() -> Cursive {
 }
 
 // Create the table for actions.
-fn create_table(labels: Vec<NameWithId>, tx: mpsc::Sender<Option<String>>) -> TableView<NameWithId, BasicColumn> {
+fn create_table(labels: Vec<NameWithId>, tx: mpsc::Sender<Option<NameWithId>>) -> TableView<NameWithId, BasicColumn> {
     let mut table = TableView::<NameWithId, BasicColumn>::new()
         .column(BasicColumn::Index, "#", |c| c.width(6))
         .column(BasicColumn::Kind, "Kind", |c| c.align(HAlign::Left).width(6))
@@ -64,7 +64,7 @@ fn create_table(labels: Vec<NameWithId>, tx: mpsc::Sender<Option<String>>) -> Ta
     // Select the current entry when 'enter' is pressed, then end the application.
     table.set_on_submit(move |siv: &mut Cursive, _row: usize, index: usize| {
         if let Some(mut t) = siv.find_id::<TableView<NameWithId, BasicColumn>>("actions") {
-            let value = t.borrow_item(index).map(|s| s.name.clone());
+            let value = t.borrow_item(index).map(|s| s.clone());
             tx.send(value).unwrap();
         } else {
             // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
@@ -89,7 +89,7 @@ fn create_table(labels: Vec<NameWithId>, tx: mpsc::Sender<Option<String>>) -> Ta
     table
 }
 
-pub fn show(labels: Vec<NameWithId>) -> Result<(Option<String>)> {
+pub fn show(labels: Vec<NameWithId>) -> Result<(Option<NameWithId>)> {
     let mut siv = create_cursive();
 
     let (tx, rx) = mpsc::channel();
