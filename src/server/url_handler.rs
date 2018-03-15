@@ -1,13 +1,14 @@
+use ::errors::*;
+use ::store::Store;
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError, IntoResponse};
 use gotham::http::response::create_response;
 use gotham::state::FromState;
 use gotham::state::State;
 use hyper::{Response, StatusCode};
-use hyper::Body;
+use hyper::{Body, Chunk};
 use mime;
 use serde_json as json;
-use ::store::Store;
 
 
 #[derive(Serialize, Deserialize)]
@@ -51,24 +52,32 @@ pub fn get_handler(state: State) -> (State, BrowserAction) {
     (state, product)
 }
 
+fn process_post(body: Chunk, store: &mut Store) -> Result<String> {
+    let input = body.to_vec();
+    let action: BrowserAction = json::from_slice(&input).expect("input");
+    let epic = store.epic()?;
+    let code = store.add_url_action(&action.url, epic.as_ref().map(String::as_str))?;
+    Ok(format!("{}", code))
+}
+
 pub fn post_handler(mut state: State) -> Box<HandlerFuture> {
     let f = Body::take_from(&mut state)
         .concat2()
         .then(move |full_body| match full_body {
             Ok(body) => {
                 debug!("received url");
-                let input = body.to_vec();
-                let action: BrowserAction = json::from_slice(&input).expect("input");
-                let res = {
-                    let store = state.borrow::<Store>();
-                    let resp_data = format!("{}", store.add_url_action(&action.url).expect("saved"));
-                    create_response(
-                        &state,
-                        StatusCode::Ok,
-                        Some((resp_data.into_bytes(), mime::TEXT_PLAIN)),
-                    )
-                };
-                future::ok((state, res))
+                match process_post(body, state.borrow_mut::<Store>()) {
+                    Ok(out) => {
+                        let res = create_response(
+                            &state,
+                            StatusCode::Ok,
+                            Some((out.into_bytes(), mime::TEXT_PLAIN)),
+                        );
+
+                        future::ok((state, res))
+                    }
+                    Err(e) => future::err((state, e.into_handler_error()))
+                }
             }
 
             Err(e) => future::err((state, e.into_handler_error())),

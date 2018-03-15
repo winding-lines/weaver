@@ -5,20 +5,18 @@ use ::errors::*;
 use display;
 use server;
 use store::{actions, Store};
-use super::{flows, shell_prompt, shell_proxy, weaver};
+use super::{flows, shell_prompt, shell_proxy};
 
 
 /// Main dispatch function;
 pub fn run() -> Result<()> {
-    let weaver = weaver::weaver_init()?;
-    debug!("weaver initialized, active_epic {:?}", weaver.active_epic);
     let mut store = Store::new()?;
     let wanted = parse();
     debug!("Executing cli command {:?}", wanted);
     match wanted {
         ActionHistory => {
-            let epic = weaver.active_epic.as_ref().map(String::as_str);
-            let actions = actions::history(&mut store, epic)?;
+            let epic = store.epic()?;
+            let actions = actions::history(&mut store, &epic.as_ref().map(String::as_str))?;
             if let Some(selection) = display::show(actions)? {
                 if selection.kind == "shell" {
                     shell_proxy::run(selection.name)
@@ -43,7 +41,7 @@ pub fn run() -> Result<()> {
             flows::create(name, global, actions)
         }
         EpicActivate(name) => {
-            weaver::epic_activate(name)
+            store.set_epic(name)
         }
         Noop => {
             Ok(())
@@ -55,7 +53,8 @@ pub fn run() -> Result<()> {
             if check {
                 shell_prompt::check()
             } else {
-                shell_prompt::run(&weaver)
+                let maybe_epic = store.epic()?;
+                shell_prompt::run(maybe_epic.as_ref().map(String::as_str))
             }
         }
     }

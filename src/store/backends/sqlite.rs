@@ -15,12 +15,12 @@ fn now() -> String {
 }
 
 #[derive(StateData)]
-pub struct Store {
+pub struct Sqlite {
     connection: SqliteConnection
 }
 
-impl Store {
-    pub fn new() -> Result<Store> {
+impl Sqlite {
+    pub fn new() -> Result<Sqlite> {
         let db_url = env::var("DATABASE_URL")
             .or_else(|_| {
                 if let Some(value) = file_utils::default_database()?.to_str() {
@@ -32,7 +32,7 @@ impl Store {
         debug!("opening database {} ", &db_url);
         let connection = SqliteConnection::establish(&db_url)
             .chain_err(|| format!("Cannot open database {}", db_url))?;
-        Ok(Store { connection })
+        Ok(Sqlite { connection })
     }
 
     pub fn connection<'a>(&'a mut self) -> &'a SqliteConnection {
@@ -63,14 +63,14 @@ impl Store {
         }
     }
 
-    pub fn add_url_action(&self, url: &str) -> Result<u64> {
+    pub fn add_url_action(&self, url: &str, epic: Option<&str>) -> Result<u64> {
         let executed = now();
         let insert = NewAction {
             executed: &executed,
             kind: "url",
             command: url,
             location: None,
-            epic: None,
+            epic: epic,
         };
         debug!("inserting {:?} in actions table", insert);
         let count = diesel::insert_into(actions::table)

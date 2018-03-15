@@ -3,7 +3,6 @@
 mod flows;
 mod shell_prompt;
 mod shell_proxy;
-pub mod weaver;
 
 pub mod app;
 

@@ -1,5 +1,4 @@
 use ::config::file_utils;
-use ::entities::Weaver;
 use ::errors::*;
 use ::store::Store;
 use std::env;
@@ -18,12 +17,11 @@ pub fn check() -> Result<()> {
 }
 
 /// Processes the actions when called from the PS1 prompt.
-pub fn run(weaver: &Weaver) -> Result<()> {
-    println!("{}", weaver.active_epic.as_ref()
-        .map_or("<not-set>", String::as_str));
+pub fn run(epic: Option<&str>) -> Result<()> {
+    println!("{}", epic.unwrap_or("<not-set>"));
     for input in file_utils::read_stdin(1)? {
         let mut store = Store::new()?;
-        store.add_shell_action(&input, weaver.active_epic.as_ref().map(String::as_str))?;
+        store.add_shell_action(&input, epic)?;
     }
     Ok(())
 }

@@ -2,12 +2,12 @@ use ::display::NameWithId;
 use ::errors::*;
 use ::store::Store;
 use diesel::prelude::*;
-use super::models::Action;
+use super::backends::models::Action;
 
-pub fn history<T: AsRef<str>>(store: &mut Store, _epic: Option<T>) -> Result<Vec<NameWithId>> {
-    use super::schema::actions::dsl::*;
+pub fn history<T: AsRef<str>>(store: &mut Store, _epic: &Option<T>) -> Result<Vec<NameWithId>> {
+    use super::backends::schema::actions::dsl::*;
 
-    let entries = actions.load::<Action>(store.connection())
+    let entries = actions.load::<Action>(store.sqlite_connection())
         .chain_err(|| "fetching actions")?;
     let mut out = Vec::new();
 
