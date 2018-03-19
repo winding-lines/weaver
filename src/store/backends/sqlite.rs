@@ -72,7 +72,7 @@ impl Sqlite {
             location: None,
             epic: epic,
         };
-        debug!("inserting {:?} in actions table", insert);
+        debug!("inserting {:?} in   actions table", insert);
         let count = diesel::insert_into(actions::table)
             .values(&insert)
             .execute(&self.connection)

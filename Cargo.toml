@@ -1,6 +1,6 @@
 [package]
 name = "weaver"
-version = "0.1.3"
+version = "0.1.4"
 description = "Manage actions, flows and milestones"
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
@@ -8,6 +8,7 @@ authors = ["Marius Seritan <git@winding-lines.com>"]
 clap = "2.30.0"
 cursive = "0.8"
 cursive_table_view = {git = "https://github.com/winding-lines/cursive_table_view"}
+termion = "1.5"
 
 error-chain = "0.11.0"
 diesel = { version = "1.0.0", features = ["sqlite"] }
