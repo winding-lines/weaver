@@ -11,16 +11,24 @@ use termion::terminal_size;
 
 mod table;
 mod filter_processor;
+mod selection_processor;
 
 use self::filter_processor::FilterMsg;
 
 // Create the Cursive environment.
 fn create_cursive() -> Cursive {
     let mut siv = Cursive::new();
+
+    // The global callback is triggered on the table
     siv.add_global_callback('q', |s| s.quit());
+
+    // set our custom theme to match the terminal
     let theme = custom_theme_from_cursive(&siv);
     siv.set_theme(theme);
+
+    // set the fps parameter to enable callbacks.
     siv.set_fps(60);
+
     siv
 }
 
@@ -40,28 +48,36 @@ pub fn show(actions: Vec<FormattedAction>) -> Result<(Option<FormattedAction>)> 
     let table_width = (width - 6) as usize;
 
     // communication channels between views and data processor.
-    let (table_tx, table_rx) = mpsc::channel();
+    let (submit_tx, submit_rx) = mpsc::channel();
+    let (select_tx, select_rx) = mpsc::channel();
     let (edit_tx, edit_rx) = mpsc::channel();
 
     let mut table = table::Table::new(actions, table_height);
     let initial = table.filter(None);
-    let processor = filter_processor::create(table, edit_rx, siv.cb_sink().clone());
+    let filter_proc = filter_processor::create(table, edit_rx, siv.cb_sink().clone());
+    let selection_proc = selection_processor::create(select_rx, siv.cb_sink().clone());
 
     // build the cursive scene
     let mut layout = LinearLayout::vertical();
-    layout.add_child(table::create_view(initial,table_tx)
+    layout.add_child(table::create_view(initial,select_tx.clone(), submit_tx)
         .with_id("actions")
         .min_height(table_height)
         .min_width(table_width));
     layout.add_child(BoxView::with_fixed_size((0, 2), DummyView));
-    let vertical = LinearLayout::horizontal()
-        .child(TextView::new("Filter: "))
+    let filter_pane = LinearLayout::horizontal()
+        .child(TextView::new("Filter:    "))
         .child(create_edit(edit_tx.clone())
             .with_id("filter")
             .min_width(20))
-        .child(TextView::new("     Ctrl-C to quit <Enter> to run")
+        .child(TextView::new("     Ctrl-C to quit, <Enter> to run")
             .v_align(VAlign::Bottom));
-    layout.add_child(vertical);
+    layout.add_child(filter_pane);
+    let command_pane = LinearLayout::horizontal()
+        .child(TextView::new("Selection: "))
+        .child(EditView::new()
+            .with_id("command")
+            .min_width((width-15) as usize));
+    layout.add_child(command_pane);
     siv.add_layer(
         Dialog::around(layout.min_size((70, height))).title("~ weaver ~")
     );
@@ -71,11 +87,17 @@ pub fn show(actions: Vec<FormattedAction>) -> Result<(Option<FormattedAction>)> 
     // Stop the filter processor
     edit_tx.send(FilterMsg::End)
         .expect("send end to filter");
-    processor.join()
-        .expect("join thread");
+    filter_proc.join()
+        .expect("join filter thread");
+
+    // Stop the selection processor
+    select_tx.send(selection_processor::SelectionMsg::End)
+        .expect("send end to select");
+    selection_proc.join()
+        .expect("join selection thread");
 
 
-    if let Ok(selected) = table_rx.recv_timeout(Duration::from_millis(100)) {
+    if let Ok(selected) = submit_rx.recv_timeout(Duration::from_millis(100)) {
         Ok(selected)
     } else {
         Ok(None)

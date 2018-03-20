@@ -6,6 +6,7 @@ use display;
 use server;
 use store::{actions, Store};
 use super::{flows, shell_prompt, shell_proxy};
+use ::config::ServerRun;
 
 
 /// Main dispatch function;
@@ -46,14 +47,17 @@ pub fn run() -> Result<()> {
         Noop => {
             Ok(())
         }
-        Server => {
-            server::start().map(|_| ())
+        Server(ref run) => {
+            server::start(run).map(|_| ())
         }
         ShellPrompt(check) => {
             if check {
                 shell_prompt::check()
             } else {
                 let maybe_epic = store.epic()?;
+                if store.weaver().start_server.unwrap_or(false) && !server::is_running() {
+                    let _ = server::start(&ServerRun::Daemonize)?;
+                }
                 shell_prompt::run(maybe_epic.as_ref().map(String::as_str))
             }
         }

@@ -1,5 +1,6 @@
 use diesel::sqlite::SqliteConnection;
 use ::errors::*;
+use ::entities::Weaver;
 
 pub mod actions;
 mod backends;
@@ -13,10 +14,10 @@ pub struct Store {
 impl Store {
     pub fn new() -> Result<Store> {
         backends::json_store::JsonStore::init()
-            .and_then(|weaver| {
+            .and_then(|json_store| {
                 backends::sqlite::Sqlite::new()
                     .and_then(|sqlite| Ok(Store {
-                        json_store: weaver,
+                        json_store,
                         sqlite,
                     }))
             })
@@ -31,6 +32,10 @@ impl Store {
     pub fn epic(&mut self) -> Result<Option<String>> {
         let _ = self.json_store.fresh()?;
         Ok(self.json_store.content.active_epic.clone())
+    }
+
+    pub fn weaver(&self) -> &Weaver {
+        &self.json_store.content
     }
 
     /// Return the active epic in a format that can be displayed, i.e. empty string for None.

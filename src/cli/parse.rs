@@ -1,3 +1,4 @@
+use ::config::ServerRun;
 use clap::{App, Arg, SubCommand};
 use super::APP_NAME;
 
@@ -13,7 +14,7 @@ pub enum Command {
     FlowRun(String),
     EpicActivate(String),
     Noop,
-    Server,
+    Server(ServerRun),
     ShellPrompt(bool),
 }
 
@@ -52,7 +53,10 @@ pub fn parse() -> Command {
                 .long("check")
                 .help("validate the setup")))
         .subcommand(SubCommand::with_name("server")
-            .about("Start the embedded API server"))
+            .about("Start the embedded API server")
+            .arg(Arg::with_name("foreground")
+                .long("fg")
+                .help("run in foreground, otherwise the default is daemon")))
         .get_matches();
 
     if matches.is_present("version") {
@@ -78,8 +82,13 @@ pub fn parse() -> Command {
         let name = run.value_of("NAME").unwrap();
         return Command::FlowRun(String::from(name));
     }
-    if let Some(_run) = matches.subcommand_matches("server") {
-        return Command::Server;
+    if let Some(run) = matches.subcommand_matches("server") {
+        let mode = if run.is_present("foreground") {
+            ServerRun::Foreground
+        } else {
+            ServerRun::Daemonize
+        };
+        return Command::Server(mode);
     }
     Command::FlowRecommend
 }
