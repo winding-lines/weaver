@@ -33,7 +33,12 @@ include instructions similar to the following.
 
 ```
 export PS1='{$( fc -ln -1 | weaver prompt)} \W $ '
+
+# Bind Ctrl-x w to run the weaver action
 bind '"\C-xw":"weaver actions\n"'
+
+# Bind Ctrl-x c to copy to clipboard the selected weaver action
+bind '"\C-xc":"weaver actions -c\n"'
 ```
 
 ### Usage

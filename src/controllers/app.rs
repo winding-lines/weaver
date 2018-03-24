@@ -1,7 +1,6 @@
 use ::cli::Command::*;
 use ::cli::parse;
-use ::config::file_utils;
-use ::config::ServerRun;
+use ::config::{ActionKind, file_utils, ServerRun};
 use ::errors::*;
 use display;
 use server;
@@ -15,13 +14,13 @@ pub fn run() -> Result<()> {
     let wanted = parse();
     debug!("Executing cli command {:?}", wanted);
     match wanted {
-        ActionHistory => {
+        ActionHistory(kind) => {
             let epic = store.epic()?;
             let actions = actions::history(&mut store, &epic.as_ref().map(String::as_str))?;
-            let user_selection = display::show(actions)?;
+            let user_selection = display::show(actions, kind)?;
             if let Some(action) = user_selection.action {
                 match user_selection.kind {
-                    Some(display::ActionKind::Run) => {
+                    Some(ActionKind::Run) => {
                         if action.kind == "shell" {
                             shell_proxy::run(action.name)
                                 .map(|_| ())
@@ -29,15 +28,20 @@ pub fn run() -> Result<()> {
                             shell_proxy::run(format!("open {}", action.name))
                                 .map(|_| ())
                         }
-                    },
-                    Some(display::ActionKind::Copy) => {
+                    }
+                    Some(ActionKind::Copy) => {
                         use clipboard::*;
                         if let Ok(mut ctx) = ClipboardContext::new() {
                             ctx.set_contents(action.name).expect("set clipboard");
                         }
                         Ok(())
-                    },
-                    Some(display::ActionKind::Cancel) => {
+                    }
+                    Some(ActionKind::Print) => {
+                        if action.kind == "shell" {
+                            print!("{}", action.name);
+                        } else {
+                            print!("open {}", action.name);
+                        }
                         Ok(())
                     }
                     None => {

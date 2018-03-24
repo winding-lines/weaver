@@ -3,13 +3,8 @@ use cursive::views::EditView;
 use std::sync::mpsc;
 use std::thread;
 use super::{FormattedAction, table, UserSelection};
+use config::ActionKind;
 
-#[derive(Debug)]
-pub enum ActionKind {
-    Run,
-    Copy,
-    Cancel,
-}
 
 /// Message types sent to the selection processor
 pub enum Msg {
@@ -35,6 +30,7 @@ pub enum Msg {
 /// - owns the current selections, receives and processes selection events
 /// - refreshes the UI with the filtered data or selection
 pub fn create(mut table: table::Table,
+              action_kind: ActionKind,
               rx: mpsc::Receiver<Msg>,
               self_tx: mpsc::Sender<Msg>,
               tx: mpsc::Sender<UserSelection>,
@@ -42,7 +38,7 @@ pub fn create(mut table: table::Table,
               -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let mut current_selection: Option<FormattedAction> = None;
-        let mut current_action: Option<ActionKind> = Some(ActionKind::Run);
+        let mut current_action: Option<ActionKind> = Some(action_kind);
 
         // Process messages until done.
         loop {

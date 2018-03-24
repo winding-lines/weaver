@@ -1,4 +1,4 @@
-use ::config::ServerRun;
+use ::config::{ActionKind, ServerRun};
 use clap::{App, Arg, SubCommand};
 use super::APP_NAME;
 
@@ -8,7 +8,7 @@ const DESCRIPTION: &'static str = env!["CARGO_PKG_DESCRIPTION"];
 /// Commands returned by the parser for execution in the main loop.
 #[derive(Debug)]
 pub enum Command {
-    ActionHistory,
+    ActionHistory(ActionKind),
     FlowRecommend,
     FlowCreate(String, bool),
     FlowRun(String),
@@ -26,7 +26,17 @@ pub fn parse() -> Command {
         .arg(Arg::with_name("version")
             .short("V")
             .help("Display the version"))
-        .subcommand(SubCommand::with_name("actions"))
+        .subcommand(SubCommand::with_name("actions")
+            .about("pick an action")
+            .arg(Arg::with_name("run")
+                .short("r")
+                .help("run the selected action"))
+            .arg(Arg::with_name("print")
+                .short("p")
+                .help("print the selected action"))
+            .arg(Arg::with_name("copy")
+                .short("c")
+                .help("copy the selected action to the clipboard")))
         .subcommand(SubCommand::with_name("run")
             .about("run the flow with the given name")
             .arg(Arg::with_name("NAME")
@@ -64,7 +74,14 @@ pub fn parse() -> Command {
         return Command::Noop;
     }
     if let Some(_actions) = matches.subcommand_matches("actions") {
-        return Command::ActionHistory;
+        let kind = if _actions.is_present("print") {
+            ActionKind::Print
+        } else if _actions.is_present("copy") {
+            ActionKind::Copy
+        } else {
+            ActionKind::Run
+        };
+        return Command::ActionHistory(kind);
     }
     if let Some(run) = matches.subcommand_matches("create") {
         let name = run.value_of("NAME").unwrap();

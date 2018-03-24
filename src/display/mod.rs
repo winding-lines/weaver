@@ -5,7 +5,7 @@ use cursive::event::Event;
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{BoxView, Dialog, DummyView, EditView, LinearLayout, TextView};
-pub use self::processor::ActionKind;
+use config::ActionKind;
 use self::processor::Msg;
 pub use self::table::FormattedAction;
 use std::sync::mpsc;
@@ -61,7 +61,7 @@ fn create_command_edit(tx: mpsc::Sender<Msg>) -> EditView {
 }
 
 /// Display the UI which allows the user to exlore and select one of the options.
-pub fn show(actions: Vec<FormattedAction>) -> Result<UserSelection> {
+pub fn show(actions: Vec<FormattedAction>, kind: ActionKind) -> Result<UserSelection> {
     // initialize cursive
     let mut siv = create_cursive();
 
@@ -79,7 +79,12 @@ pub fn show(actions: Vec<FormattedAction>) -> Result<UserSelection> {
 
     let mut table = table::Table::new(actions, table_height);
     let initial = table.filter(None);
-    let processor = processor::create(table, process_rx, process_tx.clone(), submit_tx, siv.cb_sink().clone());
+    let processor = processor::create(table,
+                                      kind,
+                                      process_rx,
+                                      process_tx.clone(),
+                                      submit_tx,
+                                      siv.cb_sink().clone());
 
     // build the cursive scene
     let mut layout = LinearLayout::vertical();
