@@ -14,6 +14,7 @@ use termion::terminal_size;
 mod table;
 mod processor;
 
+
 pub struct UserSelection {
     pub action: Option<FormattedAction>,
     pub kind: Option<ActionKind>,
@@ -88,7 +89,7 @@ pub fn show(actions: Vec<FormattedAction>) -> Result<UserSelection> {
         .min_width(table_width));
     layout.add_child(BoxView::with_fixed_size((0, 2), DummyView));
     let filter_pane = LinearLayout::horizontal()
-        .child(TextView::new("Filter:     "))
+        .child(TextView::new("Filter:    "))
         .child(create_filter_edit(process_tx.clone())
             .with_id("filter")
             .min_width(20))

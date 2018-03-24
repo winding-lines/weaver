@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+  "name": "Weaver",
+  "short_name": "Weaver",
+  "description": "Capture and document your dev flows",
+  "version": "0.1.1",
+  "icons": {
+    "16": "assets/images/icon16.png",
+    "48": "assets/images/icon48.png",
+    "128": "assets/images/icon128.png"
+  },
+  "browser_action": {
+    "default_icon": "assets/images/icon19.png"
+  },
+  "permissions": [
+    "http://*/*",
+    "https://*/*",
+    "webRequest",
+    "webNavigation"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  }
+}
