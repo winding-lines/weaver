@@ -1,26 +1,27 @@
 use ::errors::*;
 use cursive::align::VAlign;
 use cursive::Cursive;
+use cursive::event::Event;
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{BoxView, Dialog, DummyView, EditView, LinearLayout, TextView};
+pub use self::processor::ActionKind;
+use self::processor::Msg;
 pub use self::table::FormattedAction;
 use std::sync::mpsc;
-use std::time::Duration;
 use termion::terminal_size;
 
 mod table;
-mod filter_processor;
-mod selection_processor;
+mod processor;
 
-use self::filter_processor::FilterMsg;
+pub struct UserSelection {
+    pub action: Option<FormattedAction>,
+    pub kind: Option<ActionKind>,
+}
 
 // Create the Cursive environment.
 fn create_cursive() -> Cursive {
     let mut siv = Cursive::new();
-
-    // The global callback is triggered on the table
-    siv.add_global_callback('q', |s| s.quit());
 
     // set our custom theme to match the terminal
     let theme = custom_theme_from_cursive(&siv);
@@ -32,41 +33,63 @@ fn create_cursive() -> Cursive {
     siv
 }
 
-fn create_edit(tx: mpsc::Sender<FilterMsg>) -> EditView {
-    EditView::new().on_edit(move |_: &mut Cursive, text: &str, _position: usize| {
-        tx.send(FilterMsg::Filter(String::from(text)))
-            .expect("send to filter");
-    })
+fn send(tx: &mpsc::Sender<Msg>, msg: Msg) {
+    match tx.send(msg) {
+        Err(e) => error!("failed sending filter message {:?}", e),
+        Ok(_) => ()
+    }
 }
 
-/// Display the content in a table and allows the user to exlore and select one of the options.
-pub fn show(actions: Vec<FormattedAction>) -> Result<(Option<FormattedAction>)> {
+fn create_filter_edit(tx: mpsc::Sender<Msg>) -> EditView {
+    let tx2 = tx.clone();
+    EditView::new()
+        .on_edit(move |_: &mut Cursive, text: &str, _position: usize| {
+            send(&tx, Msg::Filter(String::from(text)));
+        })
+        .on_submit(move |_: &mut Cursive, _content: &str| {
+            send(&tx2, Msg::FilterSubmit);
+        })
+}
+
+fn create_command_edit(tx: mpsc::Sender<Msg>) -> EditView {
+    EditView::new()
+        .on_submit(move |_: &mut Cursive, content: &str| {
+            let message = Msg::CommandSubmit(Some(String::from(content)));
+            send(&tx, message);
+        })
+}
+
+/// Display the UI which allows the user to exlore and select one of the options.
+pub fn show(actions: Vec<FormattedAction>) -> Result<UserSelection> {
+    // initialize cursive
     let mut siv = create_cursive();
+
     // Fill the screen
     let (width, height) = terminal_size().chain_err(|| "terminal size")?;
     let table_height = (height - 8) as usize;
-    let table_width = (width - 6) as usize;
+    let table_width = (width - 7) as usize;
 
     // communication channels between views and data processor.
-    let (submit_tx, submit_rx) = mpsc::channel();
-    let (select_tx, select_rx) = mpsc::channel();
-    let (edit_tx, edit_rx) = mpsc::channel();
+    let (process_tx, process_rx) = mpsc::channel::<processor::Msg>();
+
+    // communication channel between processor and main function
+    let (submit_tx, submit_rx) = mpsc::channel::<UserSelection>();
+
 
     let mut table = table::Table::new(actions, table_height);
     let initial = table.filter(None);
-    let filter_proc = filter_processor::create(table, edit_rx, siv.cb_sink().clone());
-    let selection_proc = selection_processor::create(select_rx, siv.cb_sink().clone());
+    let processor = processor::create(table, process_rx, process_tx.clone(), submit_tx, siv.cb_sink().clone());
 
     // build the cursive scene
     let mut layout = LinearLayout::vertical();
-    layout.add_child(table::create_view(initial,select_tx.clone(), submit_tx)
+    layout.add_child(table::create_view(initial, process_tx.clone())
         .with_id("actions")
         .min_height(table_height)
         .min_width(table_width));
     layout.add_child(BoxView::with_fixed_size((0, 2), DummyView));
     let filter_pane = LinearLayout::horizontal()
-        .child(TextView::new("Filter:    "))
-        .child(create_edit(edit_tx.clone())
+        .child(TextView::new("Filter:     "))
+        .child(create_filter_edit(process_tx.clone())
             .with_id("filter")
             .min_width(20))
         .child(TextView::new("     Ctrl-C to quit, <Enter> to run")
@@ -74,34 +97,36 @@ pub fn show(actions: Vec<FormattedAction>) -> Result<(Option<FormattedAction>)> 
     layout.add_child(filter_pane);
     let command_pane = LinearLayout::horizontal()
         .child(TextView::new("Selection: "))
-        .child(EditView::new()
+        .child(create_command_edit(process_tx.clone())
             .with_id("command")
-            .min_width((width-15) as usize));
+            .min_width((width - 50) as usize));
     layout.add_child(command_pane);
     siv.add_layer(
-        Dialog::around(layout.min_size((70, height))).title("~ weaver ~")
-    );
+        Dialog::around(layout.min_size((70, height)))
+            .title("~ weaver ~")
+        /*.button("Run", |_s| {})
+        .button("Copy", |_s| {}) */);
+
+    // WIP: getting Copy/Paste to work
+    siv.add_global_callback(Event::AltChar('C'), |s| {
+        error!("Entered Alt-C");
+        s.quit()
+    });
+
+    // Do the initial display;
+    process_tx.send(Msg::Filter(String::from(""))).expect("initial 'filter'");
+
+    siv.focus_id("filter").expect("set focus on filter");
 
     siv.run();
 
     // Stop the filter processor
-    edit_tx.send(FilterMsg::End)
-        .expect("send end to filter");
-    filter_proc.join()
-        .expect("join filter thread");
+    send(&process_tx, processor::Msg::End);
 
-    // Stop the selection processor
-    select_tx.send(selection_processor::SelectionMsg::End)
-        .expect("send end to select");
-    selection_proc.join()
-        .expect("join selection thread");
+    let user_selection = submit_rx.recv();
+    let _ = processor.join();
 
-
-    if let Ok(selected) = submit_rx.recv_timeout(Duration::from_millis(100)) {
-        Ok(selected)
-    } else {
-        Ok(None)
-    }
+    user_selection.chain_err(|| "could not receive final result")
 }
 
 fn custom_theme_from_cursive(siv: &Cursive) -> Theme {

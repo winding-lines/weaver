@@ -1,12 +1,12 @@
 use ::cli::Command::*;
 use ::cli::parse;
 use ::config::file_utils;
+use ::config::ServerRun;
 use ::errors::*;
 use display;
 use server;
 use store::{actions, Store};
 use super::{flows, shell_prompt, shell_proxy};
-use ::config::ServerRun;
 
 
 /// Main dispatch function;
@@ -18,13 +18,32 @@ pub fn run() -> Result<()> {
         ActionHistory => {
             let epic = store.epic()?;
             let actions = actions::history(&mut store, &epic.as_ref().map(String::as_str))?;
-            if let Some(selection) = display::show(actions)? {
-                if selection.kind == "shell" {
-                    shell_proxy::run(selection.name)
-                        .map(|_| ())
-                } else {
-                    shell_proxy::run(format!("open {}", selection.name))
-                        .map(|_| ())
+            let user_selection = display::show(actions)?;
+            if let Some(action) = user_selection.action {
+                match user_selection.kind {
+                    Some(display::ActionKind::Run) => {
+                        if action.kind == "shell" {
+                            shell_proxy::run(action.name)
+                                .map(|_| ())
+                        } else {
+                            shell_proxy::run(format!("open {}", action.name))
+                                .map(|_| ())
+                        }
+                    },
+                    Some(display::ActionKind::Copy) => {
+                        use clipboard::*;
+                        if let Ok(mut ctx) = ClipboardContext::new() {
+                            ctx.set_contents(action.name).expect("set clipboard");
+                        }
+                        Ok(())
+                    },
+                    Some(display::ActionKind::Cancel) => {
+                        Ok(())
+                    }
+                    None => {
+                        eprintln!("No action kind passed in");
+                        Ok(())
+                    }
                 }
             } else {
                 eprintln!("No command selected from history");

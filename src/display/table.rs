@@ -3,7 +3,7 @@ use cursive::Cursive;
 use cursive_table_view::{TableView, TableViewItem};
 use std::cmp::Ordering;
 use std::sync::mpsc;
-use super::selection_processor::SelectionMsg;
+use super::processor::Msg;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum BasicColumn {
@@ -50,8 +50,7 @@ impl TableViewItem<BasicColumn> for FormattedAction {
 pub type TView = TableView<FormattedAction, BasicColumn>;
 
 // Create the Cursive table for actions.
-pub fn create_view(initial: Vec<FormattedAction>, select_tx: mpsc::Sender<SelectionMsg>,
-                   tx: mpsc::Sender<Option<FormattedAction>>) -> TView {
+pub fn create_view(initial: Vec<FormattedAction>, processor_tx: mpsc::Sender<Msg>) -> TView {
     let mut view = TView::new()
         .column(BasicColumn::Index, "#", |c| c.width(6))
         .column(BasicColumn::Kind, " ", |c| c.align(HAlign::Left).width(1))
@@ -60,30 +59,33 @@ pub fn create_view(initial: Vec<FormattedAction>, select_tx: mpsc::Sender<Select
         .column(BasicColumn::Annotation, "Annotation", |c| c.align(HAlign::Left).width(10));
 
     // Select the current entry when 'enter' is pressed, then end the application.
-    view.set_on_submit(move |siv: &mut Cursive, _row: usize, index: usize| {
-        if let Some(mut t) = siv.find_id::<TView>("actions") {
-            let value = t.borrow_item(index).map(|s| s.clone());
-            tx.send(value).expect("send submit");
-        } else {
-            // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
-            eprintln!("cannot find table");
-        }
+    {
+        let view_tx = processor_tx.clone();
+        view.set_on_submit(move |siv: &mut Cursive, _row: usize, index: usize| {
+            if let Some(mut t) = siv.find_id::<TView>("actions") {
+                let value = t.borrow_item(index).map(|s| s.clone());
+                view_tx.send(Msg::TableSubmit(value)).expect("send submit");
+            } else {
+                error!("cannot find table");
+            }
 
-        siv.quit();
-    });
+            siv.quit();
+        });
+    }
 
     // Notify the UI that the selection is changed.
-    view.set_on_select(move |siv: &mut Cursive, _row: usize, index: usize| {
-        if let Some(mut t) = siv.find_id::<TView>("actions") {
-            let value = t.borrow_item(index).map(|s| s.name.clone());
-            select_tx.send(SelectionMsg::Selection(value)).expect("send select");
-        } else {
-            // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
-            eprintln!("cannot find table");
-        }
-
-    });
-
+    {
+        let view_tx = processor_tx.clone();
+        view.set_on_select(move |siv: &mut Cursive, _row: usize, index: usize| {
+            if let Some(mut t) = siv.find_id::<TView>("actions") {
+                let value = t.borrow_item(index).map(|s| s.clone());
+                view_tx.send(Msg::Selection(value)).expect("send select");
+            } else {
+                // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
+                error!("cannot find table");
+            }
+        });
+    }
     redisplay(&mut view, initial);
 
     view

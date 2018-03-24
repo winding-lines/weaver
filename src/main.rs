@@ -3,6 +3,7 @@
 
 extern crate chrono;
 extern crate clap;
+extern crate clipboard;
 extern crate cursive;
 extern crate cursive_table_view;
 #[macro_use]
@@ -63,7 +64,8 @@ fn main() {
 
     // Use the builder api for more flexibility.
     let mut builder = Builder::new();
-    builder.target(Target::Stdout);
+    // send output to stderr in order to be able to debug Cursive layer
+    builder.target(Target::Stderr);
     if env::var("WEAVER").is_ok() {
         builder.parse(&env::var("WEAVER").unwrap());
     }
