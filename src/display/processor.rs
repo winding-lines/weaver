@@ -84,6 +84,7 @@ pub fn create(mut table: table::Table,
                             id: 0,
                             annotation: None,
                             epic: None,
+                            location: None,
                         });
                         sel.name = name;
                     }

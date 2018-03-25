@@ -65,7 +65,8 @@ fn add_output_radio_buttons(container: &mut LinearLayout, initial: &OutputKind) 
     container.add_child(TextView::new("<Enter> will: "));
     let spec = vec![
         (OutputKind::Run, "Run"),
-        (OutputKind::Copy, "Copy")];
+        (OutputKind::Copy, "Copy"),
+        (OutputKind::CopyWithContext, "Copy + context")];
 
     for (k, l) in spec {
         let is_selected = *initial == k;
@@ -76,7 +77,7 @@ fn add_output_radio_buttons(container: &mut LinearLayout, initial: &OutputKind) 
             run
         };
         container.add_child(run);
-        container.add_child(TextView::new("    "));
+        container.add_child(TextView::new("   "));
     };
 
     return output_group;
@@ -130,9 +131,7 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
         .child(TextView::new("Filter:       "))
         .child(create_filter_edit(process_tx.clone())
             .with_id("filter")
-            .min_width(20))
-        .child(TextView::new("     Ctrl-C to quit, <Enter> to run")
-            .v_align(VAlign::Bottom));
+            .min_width(20));
     layout.add_child(filter_pane);
 
     // build the command pane

@@ -21,6 +21,7 @@ pub struct FormattedAction {
     pub epic: Option<String>,
     pub kind: String,
     pub name: String,
+    pub location: Option<String>,
 }
 
 
@@ -144,6 +145,7 @@ impl Table {
                 epic: None,
                 kind: String::new(),
                 name: String::new(),
+                location: None,
             })
         };
 

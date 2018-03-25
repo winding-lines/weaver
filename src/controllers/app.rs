@@ -2,6 +2,7 @@ use ::cli::Command::*;
 use ::cli::parse;
 use ::config::{OutputKind, file_utils, ServerRun};
 use ::errors::*;
+use clipboard::{ClipboardContext, ClipboardProvider};
 use display;
 use server;
 use store::{actions, Store};
@@ -30,17 +31,25 @@ pub fn run() -> Result<()> {
                         }
                     }
                     Some(OutputKind::Copy) => {
-                        use clipboard::*;
+                        println!("Copying to clipboard: {}", action.name);
                         if let Ok(mut ctx) = ClipboardContext::new() {
                             ctx.set_contents(action.name).expect("set clipboard");
                         }
                         Ok(())
                     }
-                    Some(OutputKind::Print) => {
-                        if action.kind == "shell" {
-                            print!("{}", action.name);
+                    Some(OutputKind::CopyWithContext) => {
+                        let content = if action.kind == "shell" {
+                            if action.location.is_some() {
+                                format!("cd {} && {}", action.location.unwrap(), action.name)
+                            } else {
+                                action.name
+                            }
                         } else {
-                            print!("open {}", action.name);
+                            format!("open {}", action.name)
+                        };
+                        println!("Copying to clipboard: {}", content);
+                        if let Ok(mut ctx) = ClipboardContext::new() {
+                            ctx.set_contents(content).expect("set clipboard");
                         }
                         Ok(())
                     }

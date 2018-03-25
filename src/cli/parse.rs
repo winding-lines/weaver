@@ -31,12 +31,12 @@ pub fn parse() -> Command {
             .arg(Arg::with_name("run")
                 .short("r")
                 .help("run the selected action"))
-            .arg(Arg::with_name("print")
-                .short("p")
-                .help("print the selected action"))
             .arg(Arg::with_name("copy")
                 .short("c")
-                .help("copy the selected action to the clipboard")))
+                .help("copy the selected action to the clipboard"))
+            .arg(Arg::with_name("copy-with-context")
+                .short("w")
+                .help("copy the selected action and its context (working dir) to the clipboard")))
         .subcommand(SubCommand::with_name("run")
             .about("run the flow with the given name")
             .arg(Arg::with_name("NAME")
@@ -74,8 +74,8 @@ pub fn parse() -> Command {
         return Command::Noop;
     }
     if let Some(_actions) = matches.subcommand_matches("actions") {
-        let kind = if _actions.is_present("print") {
-            OutputKind::Print
+        let kind = if _actions.is_present("copy-with-context") {
+            OutputKind::CopyWithContext
         } else if _actions.is_present("copy") {
             OutputKind::Copy
         } else {

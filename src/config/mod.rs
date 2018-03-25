@@ -9,6 +9,6 @@ pub enum ServerRun {
 #[derive(Clone, Debug, PartialEq)]
 pub enum OutputKind {
     Copy,
-    Print,
+    CopyWithContext,
     Run,
 }

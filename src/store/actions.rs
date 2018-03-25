@@ -19,6 +19,7 @@ pub fn history<T: AsRef<str>>(store: &mut Store, _epic: &Option<T>) -> Result<Ve
             epic: entry.epic,
             kind: entry.kind,
             name: entry.command,
+            location: entry.location,
         });
     }
 
