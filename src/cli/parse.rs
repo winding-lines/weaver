@@ -1,4 +1,4 @@
-use ::config::{ActionKind, ServerRun};
+use ::config::{OutputKind, ServerRun};
 use clap::{App, Arg, SubCommand};
 use super::APP_NAME;
 
@@ -8,7 +8,7 @@ const DESCRIPTION: &'static str = env!["CARGO_PKG_DESCRIPTION"];
 /// Commands returned by the parser for execution in the main loop.
 #[derive(Debug)]
 pub enum Command {
-    ActionHistory(ActionKind),
+    ActionHistory(OutputKind),
     FlowRecommend,
     FlowCreate(String, bool),
     FlowRun(String),
@@ -75,11 +75,11 @@ pub fn parse() -> Command {
     }
     if let Some(_actions) = matches.subcommand_matches("actions") {
         let kind = if _actions.is_present("print") {
-            ActionKind::Print
+            OutputKind::Print
         } else if _actions.is_present("copy") {
-            ActionKind::Copy
+            OutputKind::Copy
         } else {
-            ActionKind::Run
+            OutputKind::Run
         };
         return Command::ActionHistory(kind);
     }

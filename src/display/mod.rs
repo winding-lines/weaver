@@ -1,11 +1,10 @@
 use ::errors::*;
+use config::OutputKind;
 use cursive::align::VAlign;
 use cursive::Cursive;
-use cursive::event::Event;
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
-use cursive::views::{BoxView, Dialog, DummyView, EditView, LinearLayout, TextView};
-use config::ActionKind;
+use cursive::views::{BoxView, Dialog, DummyView, EditView, LinearLayout, RadioGroup, TextView};
 use self::processor::Msg;
 pub use self::table::FormattedAction;
 use std::sync::mpsc;
@@ -17,7 +16,7 @@ mod processor;
 
 pub struct UserSelection {
     pub action: Option<FormattedAction>,
-    pub kind: Option<ActionKind>,
+    pub kind: Option<OutputKind>,
 }
 
 // Create the Cursive environment.
@@ -60,14 +59,38 @@ fn create_command_edit(tx: mpsc::Sender<Msg>) -> EditView {
         })
 }
 
+fn add_output_radio_buttons(container: &mut LinearLayout, initial: &OutputKind) -> RadioGroup<OutputKind> {
+    let mut output_group: RadioGroup<OutputKind> = RadioGroup::new();
+
+    container.add_child(TextView::new("<Enter> will: "));
+    let spec = vec![
+        (OutputKind::Run, "Run"),
+        (OutputKind::Copy, "Copy")];
+
+    for (k, l) in spec {
+        let is_selected = *initial == k;
+        let run = output_group.button(k, l);
+        let run = if is_selected {
+            run.selected()
+        } else {
+            run
+        };
+        container.add_child(run);
+        container.add_child(TextView::new("    "));
+    };
+
+    return output_group;
+}
+
 /// Display the UI which allows the user to exlore and select one of the options.
-pub fn show(actions: Vec<FormattedAction>, kind: ActionKind) -> Result<UserSelection> {
+pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelection> {
     // initialize cursive
     let mut siv = create_cursive();
 
     // Fill the screen
     let (width, height) = terminal_size().chain_err(|| "terminal size")?;
-    let table_height = (height - 8) as usize;
+    // need to leave some space at the bottom, the current constant found by experimentation.
+    let table_height = (height - 9) as usize;
     let table_width = (width - 7) as usize;
 
     // communication channels between views and data processor.
@@ -77,47 +100,55 @@ pub fn show(actions: Vec<FormattedAction>, kind: ActionKind) -> Result<UserSelec
     let (submit_tx, submit_rx) = mpsc::channel::<UserSelection>();
 
 
+    // Build the main components: table and processor.
     let mut table = table::Table::new(actions, table_height);
     let initial = table.filter(None);
+
+
+    // build the output selection pane
+    let mut output_pane = LinearLayout::horizontal();
+    let output_group: RadioGroup<OutputKind> = add_output_radio_buttons(&mut output_pane, &kind);
+
+
     let processor = processor::create(table,
-                                      kind,
                                       process_rx,
                                       process_tx.clone(),
                                       submit_tx,
                                       siv.cb_sink().clone());
 
-    // build the cursive scene
+
+    // build the table pane
     let mut layout = LinearLayout::vertical();
     layout.add_child(table::create_view(initial, process_tx.clone())
         .with_id("actions")
         .min_height(table_height)
         .min_width(table_width));
     layout.add_child(BoxView::with_fixed_size((0, 2), DummyView));
+
+    // build the filter pane
     let filter_pane = LinearLayout::horizontal()
-        .child(TextView::new("Filter:    "))
+        .child(TextView::new("Filter:       "))
         .child(create_filter_edit(process_tx.clone())
             .with_id("filter")
             .min_width(20))
         .child(TextView::new("     Ctrl-C to quit, <Enter> to run")
             .v_align(VAlign::Bottom));
     layout.add_child(filter_pane);
+
+    // build the command pane
     let command_pane = LinearLayout::horizontal()
-        .child(TextView::new("Selection: "))
+        .child(TextView::new("Selection:    "))
         .child(create_command_edit(process_tx.clone())
             .with_id("command")
             .min_width((width - 50) as usize));
     layout.add_child(command_pane);
-    siv.add_layer(
-        Dialog::around(layout.min_size((70, height)))
-            .title("~ weaver ~")
-        /*.button("Run", |_s| {})
-        .button("Copy", |_s| {}) */);
 
-    // WIP: getting Copy/Paste to work
-    siv.add_global_callback(Event::AltChar('C'), |s| {
-        error!("Entered Alt-C");
-        s.quit()
-    });
+    layout.add_child(output_pane);
+
+    // build top level scene
+    siv.add_layer(
+        Dialog::around(layout.min_size((width, height)))
+            .title("~ weaver ~"));
 
     // Do the initial display;
     process_tx.send(Msg::Filter(String::from(""))).expect("initial 'filter'");
@@ -132,7 +163,13 @@ pub fn show(actions: Vec<FormattedAction>, kind: ActionKind) -> Result<UserSelec
     let user_selection = submit_rx.recv();
     let _ = processor.join();
 
-    user_selection.chain_err(|| "could not receive final result")
+    // Extract the desired output kind, needs to be done in the same thread.
+    user_selection.map(|mut us| {
+        let kind = &*output_group.selection();
+        us.kind = Some(kind.clone());
+        us
+    })
+        .chain_err(|| "could not receive final result")
 }
 
 fn custom_theme_from_cursive(siv: &Cursive) -> Theme {

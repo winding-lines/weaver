@@ -1,9 +1,8 @@
 use cursive::{CbFunc as CursiveCbFunc, Cursive};
-use cursive::views::EditView;
+use cursive::views::{EditView};
 use std::sync::mpsc;
 use std::thread;
 use super::{FormattedAction, table, UserSelection};
-use config::ActionKind;
 
 
 /// Message types sent to the selection processor
@@ -21,7 +20,6 @@ pub enum Msg {
     // Events from the command edit view
     CommandSubmit(Option<String>),
 
-    Action(ActionKind),
 }
 
 
@@ -30,7 +28,6 @@ pub enum Msg {
 /// - owns the current selections, receives and processes selection events
 /// - refreshes the UI with the filtered data or selection
 pub fn create(mut table: table::Table,
-              action_kind: ActionKind,
               rx: mpsc::Receiver<Msg>,
               self_tx: mpsc::Sender<Msg>,
               tx: mpsc::Sender<UserSelection>,
@@ -38,7 +35,6 @@ pub fn create(mut table: table::Table,
               -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let mut current_selection: Option<FormattedAction> = None;
-        let mut current_action: Option<ActionKind> = Some(action_kind);
 
         // Process messages until done.
         loop {
@@ -122,18 +118,11 @@ pub fn create(mut table: table::Table,
                     cursive_sink.send(Box::new(update_table))
                         .expect("send to update_table");
                 }
-                Ok(Msg::Action(kind)) => {
-                    current_action = Some(kind);
-                    debug!("exiting in Action, current action {:?}", current_action);
-                    cursive_sink.send(Box::new(|siv: &mut Cursive| {
-                        siv.quit();
-                    })).expect("cursive send");
-                }
                 Ok(Msg::End) => {
                     debug!("Received end msg");
                     tx.send(UserSelection {
                         action: current_selection,
-                        kind: current_action,
+                        kind: None,
                     }).expect("send user selection");
                     return;
                 }

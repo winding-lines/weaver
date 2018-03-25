@@ -1,6 +1,6 @@
 use ::cli::Command::*;
 use ::cli::parse;
-use ::config::{ActionKind, file_utils, ServerRun};
+use ::config::{OutputKind, file_utils, ServerRun};
 use ::errors::*;
 use display;
 use server;
@@ -20,7 +20,7 @@ pub fn run() -> Result<()> {
             let user_selection = display::show(actions, kind)?;
             if let Some(action) = user_selection.action {
                 match user_selection.kind {
-                    Some(ActionKind::Run) => {
+                    Some(OutputKind::Run) => {
                         if action.kind == "shell" {
                             shell_proxy::run(action.name)
                                 .map(|_| ())
@@ -29,14 +29,14 @@ pub fn run() -> Result<()> {
                                 .map(|_| ())
                         }
                     }
-                    Some(ActionKind::Copy) => {
+                    Some(OutputKind::Copy) => {
                         use clipboard::*;
                         if let Ok(mut ctx) = ClipboardContext::new() {
                             ctx.set_contents(action.name).expect("set clipboard");
                         }
                         Ok(())
                     }
-                    Some(ActionKind::Print) => {
+                    Some(OutputKind::Print) => {
                         if action.kind == "shell" {
                             print!("{}", action.name);
                         } else {

@@ -6,8 +6,8 @@ pub enum ServerRun {
     Daemonize,
 }
 
-#[derive(Debug)]
-pub enum ActionKind {
+#[derive(Clone, Debug, PartialEq)]
+pub enum OutputKind {
     Copy,
     Print,
     Run,
