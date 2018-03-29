@@ -78,7 +78,7 @@ impl Sqlite {
             .execute(&self.connection)
             .chain_err(|| "save command")?;
         if count == 1 {
-            Ok((1))
+            Ok(1)
         } else {
             Err(Error::from_kind(ErrorKind::from("Got bad numbers of rows in insert")))
         }

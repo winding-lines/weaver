@@ -1,6 +1,5 @@
 use ::errors::*;
 use config::OutputKind;
-use cursive::align::VAlign;
 use cursive::Cursive;
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
@@ -145,9 +144,12 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
     layout.add_child(output_pane);
 
     // build top level scene
+    //siv.add_layer(
+    //    Dialog::around(layout.min_size((width, height)))
+    //       .padding((0, 0, 0, 0))
+    //        .title("~ weaver ~"));
     siv.add_layer(
-        Dialog::around(layout.min_size((width, height)))
-            .title("~ weaver ~"));
+        layout.min_size((width, height)));
 
     // Do the initial display;
     process_tx.send(Msg::Filter(String::from(""))).expect("initial 'filter'");

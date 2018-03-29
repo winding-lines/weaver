@@ -129,7 +129,9 @@ impl Table {
 
         if let Some(ref f) = self.filter {
             for entry in self.content.iter() {
-                if entry.name.contains(f) || f.is_empty() {
+                if entry.name.contains(f)
+                    || entry.epic.as_ref().map(|e|e.contains(f)).unwrap_or(false)
+                    || f.is_empty() {
                     content.push(entry.clone());
                 }
             }
