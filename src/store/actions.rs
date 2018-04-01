@@ -1,12 +1,11 @@
 use ::display::FormattedAction;
 use ::errors::*;
-use ::store::Store;
+use ::store::RealStore;
 use diesel::prelude::*;
 use super::backends::models::Action;
+use super::backends::schema::actions::dsl::*;
 
-pub fn history<T: AsRef<str>>(store: &mut Store, _epic: &Option<T>) -> Result<Vec<FormattedAction>> {
-    use super::backends::schema::actions::dsl::*;
-
+pub fn history<T: AsRef<str>>(store: &mut RealStore, _epic: &Option<T>) -> Result<Vec<FormattedAction>> {
     let entries = actions.load::<Action>(store.sqlite_connection())
         .chain_err(|| "fetching actions")?;
     let mut out = Vec::new();
@@ -24,4 +23,12 @@ pub fn history<T: AsRef<str>>(store: &mut Store, _epic: &Option<T>) -> Result<Ve
     }
 
     Ok(out)
+}
+
+pub fn last_url(store: &mut RealStore) -> Result<Option<(String, String)>> {
+    let entries = actions.limit(1)
+        .load::<Action>(store.sqlite_connection())
+        .chain_err(|| "loading last url")?;
+    let first = entries.into_iter().next();
+    Ok(first.map(|e| (e.command, e.location.unwrap_or("".into()))))
 }

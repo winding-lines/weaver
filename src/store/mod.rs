@@ -5,18 +5,22 @@ use ::entities::Weaver;
 pub mod actions;
 mod backends;
 
+pub trait Store {
+
+}
+
 #[derive(StateData)]
-pub struct Store {
+pub struct RealStore {
     json_store: backends::json_store::JsonStore,
     sqlite: backends::sqlite::Sqlite,
 }
 
-impl Store {
-    pub fn new() -> Result<Store> {
+impl RealStore {
+    pub fn new() -> Result<RealStore> {
         backends::json_store::JsonStore::init()
             .and_then(|json_store| {
                 backends::sqlite::Sqlite::new()
-                    .and_then(|sqlite| Ok(Store {
+                    .and_then(|sqlite| Ok(RealStore {
                         json_store,
                         sqlite,
                     }))
@@ -51,11 +55,15 @@ impl Store {
         self.sqlite.add_shell_action(command, epic)
     }
 
-    pub fn add_url_action(&self, url: &str, epic: Option<&str>) -> Result<u64> {
+    pub fn add_url_action(&self, url: &str, location: &str, epic: Option<&str>) -> Result<u64> {
         self.sqlite.add_url_action(url, epic)
     }
 
     pub fn sqlite_connection<'a>(&'a mut self) -> &'a SqliteConnection {
         self.sqlite.connection()
     }
+}
+
+impl Store for RealStore {
+
 }

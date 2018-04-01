@@ -5,6 +5,7 @@ use gotham::http::response::create_response;
 use gotham::pipeline::*;
 use gotham::pipeline::single::*;
 use gotham::router::builder::*;
+use gotham::middleware::{NewMiddleware,Middleware};
 use gotham::router::Router;
 use gotham::state::State;
 use hyper::{Response, StatusCode};
@@ -31,10 +32,11 @@ fn index(state: State) -> (State, Response) {
 
 /// Create a `Router`
 ///
-fn router() -> Router {
+fn router<M>(store_provider: M) -> Router
+    where M: NewMiddleware + Sized + Sync + Send + 'static {
     let (chain, pipelines) = single_pipeline(
         new_pipeline()
-            .add(store_middleware::StoreMiddleware)
+            .add(store_provider)
             .build()
     );
 
@@ -94,9 +96,10 @@ pub fn is_running() -> bool {
 pub fn start(run: &ServerRun) -> Result<Server> {
     let addr = "127.0.0.1:8464";
     println!("Listening for requests at http://{}", addr);
+    let store_provider = store_middleware::StoreMiddleware;
     match run {
         &ServerRun::Foreground => {
-            gotham::start(addr, router());
+            gotham::start(addr, router(store_provider));
         }
         &ServerRun::Daemonize => {
             let pid_file_ = pid_file()?;
@@ -109,7 +112,7 @@ pub fn start(run: &ServerRun) -> Result<Server> {
                 .umask(0o022);    // Set umask, `0o027` by default.
             let _ = daemonize.start()
                 .chain_err(|| "start in daemon mode")?;
-            gotham::start(addr, router());
+            gotham::start(addr, router(store_provider));
         }
     }
     Ok(Server {})
@@ -122,9 +125,30 @@ mod tests {
     use gotham::test::TestServer;
     use serde_json;
     use super::*;
+    use gotham::handler::HandlerFuture;
+
+    #[derive(StateData)]
+    struct TestStore {
+
+    }
+
+    #[derive(NewMiddleware, Copy, Clone, Default)]
+    struct TestStoreProvider {
+
+    }
+
+    impl Middleware for TestStoreProvider {
+        fn call<Chain>(self, mut state: State, chain: Chain) -> Box<HandlerFuture>
+            where Chain: FnOnce(State) -> Box<HandlerFuture> + 'static
+        {
+            state.put(TestStore{});
+            chain(state)
+        }
+    }
+
     #[test]
     fn get_product_response() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(router(TestStoreProvider {})).unwrap();
         let response = test_server
             .client()
             .get("http://localhost/url")
@@ -134,10 +158,8 @@ mod tests {
         assert_eq!(response.status(), StatusCode::Ok);
 
         let body = response.read_body().unwrap();
-        let expected_product = url_handler::BrowserAction {
-            url: "t-shirt".to_string(),
-        };
-        let expected_body = serde_json::to_string(&expected_product).expect("serialized product");
-        assert_eq!(&body[..], expected_body.as_bytes());
+        let product: Result<url_handler::BrowserAction> = serde_json::from_slice(&body)
+            .chain_err(|| "wut");
+        assert_eq!(product.is_ok(), true);
     }
 }

@@ -21,14 +21,11 @@ pub struct Sqlite {
 
 impl Sqlite {
     pub fn new() -> Result<Sqlite> {
-        let db_url = env::var("DATABASE_URL")
-            .or_else(|_| {
-                if let Some(value) = file_utils::default_database()?.to_str() {
-                    Ok(String::from(value))
-                } else {
-                    return Err(Error::from_kind(ErrorKind::from("no database url")));
-                }
-            })?;
+        let db_url = if let Some(value) = file_utils::default_database()?.to_str() {
+            String::from(value)
+        } else {
+            return Err(Error::from_kind(ErrorKind::from("no database url")));
+        };
         debug!("opening database {} ", &db_url);
         let connection = SqliteConnection::establish(&db_url)
             .chain_err(|| format!("Cannot open database {}", db_url))?;

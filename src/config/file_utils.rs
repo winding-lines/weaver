@@ -36,7 +36,7 @@ pub fn app_folder() -> Result<PathBuf> {
         }
         Ok(path)
     } else {
-        Err(Error::from_kind(ErrorKind::from("cannot get home folder")))
+        Err("cannot get home folder".into())
     }
 }
 

@@ -6,14 +6,12 @@ authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [dependencies]
 clap = "2.30.0"
-cursive = "0.8"
-cursive_table_view = {git = "https://github.com/winding-lines/cursive_table_view"}
 termion = "1.5"
 clipboard = "0.4"
 
+
 error-chain = "0.11"
 diesel = { version = "1.0.0", features = ["sqlite"] }
-dotenv = "0.9.0"
 chrono = "0.4"
 serde = "1.0"
 serde_derive = "1.0"
@@ -29,3 +27,14 @@ hyper = "0.11"
 futures = "0.1"
 mime = "0.3"
 daemonize = {git = "https://github.com/winding-lines/daemonize"}
+
+[dependencies.cursive]
+version = "0.8"
+# default-features = false
+# features = ["blt-backend"]
+
+[dependencies.cursive_table_view]
+git = "https://github.com/winding-lines/cursive_table_view"
+# default-features = false
+# features = ["blt-backend"]
+

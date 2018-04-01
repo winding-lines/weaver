@@ -3,7 +3,7 @@ use config::OutputKind;
 use cursive::Cursive;
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
-use cursive::views::{BoxView, Dialog, DummyView, EditView, LinearLayout, RadioGroup, TextView};
+use cursive::views::{BoxView, DummyView, EditView, LinearLayout, RadioGroup, TextView};
 use self::processor::Msg;
 pub use self::table::FormattedAction;
 use std::sync::mpsc;

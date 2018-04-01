@@ -1,6 +1,6 @@
 use ::config::file_utils;
 use ::errors::*;
-use ::store::Store;
+use ::store::RealStore;
 use std::env;
 
 /// Check to see if the environment is setup properly.
@@ -20,7 +20,7 @@ pub fn check() -> Result<()> {
 pub fn run(epic: Option<&str>) -> Result<()> {
     println!("{}", epic.unwrap_or("<not-set>"));
     for input in file_utils::read_stdin(1)? {
-        let mut store = Store::new()?;
+        let mut store = RealStore::new()?;
         store.add_shell_action(&input, epic)?;
     }
     Ok(())

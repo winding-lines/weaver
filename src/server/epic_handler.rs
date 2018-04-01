@@ -1,4 +1,4 @@
-use ::store::Store;
+use ::store::RealStore;
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::http::response::create_response;
@@ -17,7 +17,7 @@ struct SetEpic {
 pub fn get_handler(mut state: State) -> (State, Response) {
     let res = {
         let epic = {
-            let store = state.borrow_mut::<Store>();
+            let store = state.borrow_mut::<RealStore>();
             store.epic_display()
         };
         create_response(
@@ -40,7 +40,7 @@ pub fn post_handler(mut state: State) -> Box<HandlerFuture> {
                 let action: SetEpic = json::from_slice(&input).expect("input");
                 let res = {
                     {
-                        let mut store = state.borrow_mut::<Store>();
+                        let mut store = state.borrow_mut::<RealStore>();
                         store.set_epic(action.name).expect("activate epic");
                     }
                     create_response(

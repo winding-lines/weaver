@@ -5,13 +5,13 @@ use ::errors::*;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use display;
 use server;
-use store::{actions, Store};
-use super::{flows, shell_prompt, shell_proxy};
+use store::{actions, RealStore};
+use super::{data, flows, shell_prompt, shell_proxy};
 
 
 /// Main dispatch function;
 pub fn run() -> Result<()> {
-    let mut store = Store::new()?;
+    let mut store = RealStore::new()?;
     let wanted = parse();
     debug!("Executing cli command {:?}", wanted);
     match wanted {
@@ -72,6 +72,9 @@ pub fn run() -> Result<()> {
         FlowCreate(name, global) => {
             let actions = file_utils::read_stdin(50)?;
             flows::create(name, global, actions)
+        }
+        Data(sub) => {
+            data::run(sub)
         }
         EpicActivate(name) => {
             store.set_epic(name)

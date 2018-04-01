@@ -1,5 +1,5 @@
 use ::errors::*;
-use ::store::Store;
+use ::store::{actions, RealStore};
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError, IntoResponse};
 use gotham::http::response::create_response;
@@ -11,9 +11,11 @@ use mime;
 use serde_json as json;
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct BrowserAction {
     pub url: String,
+    pub transition_type: String,
 }
 
 /// Implements `gotham::handler::IntoResponse` trait for `Product`
@@ -44,15 +46,28 @@ impl IntoResponse for BrowserAction {
 /// Note that this function returns a `(State, Product)` instead of the usual `(State, Response)`.
 /// As we've implemented `IntoResponse` above Gotham will correctly handle this and call our
 /// `into_response` method when appropriate.
-pub fn get_handler(state: State) -> (State, BrowserAction) {
-    let product = BrowserAction {
-        url: "t-shirt".to_string(),
+pub fn get_handler(mut state: State) -> (State, BrowserAction) {
+
+
+    let last = {
+        // Leaking test setup in here, need to figure out better dependeny injection.
+        if let Some(store) = state.try_borrow_mut::<RealStore>() {
+            actions::last_url(store)
+                .unwrap_or(None)
+        } else {
+            None
+        }
     };
+
+    let product = last.map(|l| BrowserAction {
+        url:  l.0,
+        transition_type: l.1,
+    }).unwrap_or_else(|| BrowserAction::default());
 
     (state, product)
 }
 
-fn process_post(body: Chunk, store: &mut Store) -> Result<String> {
+fn process_post(body: Chunk, store: &mut RealStore) -> Result<String> {
     let input = body.to_vec();
     let action: BrowserAction = json::from_slice(&input).expect("input");
     let epic = store.epic()?;
@@ -66,7 +81,7 @@ pub fn post_handler(mut state: State) -> Box<HandlerFuture> {
         .then(move |full_body| match full_body {
             Ok(body) => {
                 debug!("received url");
-                match process_post(body, state.borrow_mut::<Store>()) {
+                match process_post(body, state.borrow_mut::<RealStore>()) {
                     Ok(out) => {
                         let res = create_response(
                             &state,

@@ -8,7 +8,6 @@ extern crate cursive;
 extern crate cursive_table_view;
 #[macro_use]
 extern crate diesel;
-extern crate dotenv;
 extern crate daemonize;
 extern crate env_logger;
 #[macro_use]
