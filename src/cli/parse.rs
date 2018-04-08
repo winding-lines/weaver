@@ -16,18 +16,18 @@ pub enum Command {
     Noop,
     Server(ServerRun),
     ShellPrompt(bool),
-    Data(DataSubCommand)
+    Data(DataSubCommand),
 }
 
 
 /// Data subcommands.
 #[derive(Debug)]
 pub enum DataSubCommand {
-    Sqlite
+    Sqlite,
 }
 
 // Constants for command names
-const COMMAND_ACTIONS :&str = "actions";
+const COMMAND_ACTIONS: &str = "actions";
 const COMMAND_RUN: &str = "run";
 const COMMAND_CREATE: &str = "create";
 const COMMAND_EPIC: &str = "epic";
@@ -86,7 +86,8 @@ pub fn parse() -> Command {
                 .help("run in foreground, otherwise the default is daemon")))
         .subcommand(SubCommand::with_name(COMMAND_DATA)
             .about("Manipulate the stored data")
-            .subcommand(SubCommand::with_name("sqlite")))
+            .subcommand(SubCommand::with_name("sqlite")
+                .about("Start an sqlite3 shell")))
         .get_matches();
 
     if matches.is_present("version") {

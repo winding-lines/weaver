@@ -7,7 +7,6 @@ use cursive::views::{BoxView, DummyView, EditView, LinearLayout, RadioGroup, Tex
 use self::processor::Msg;
 pub use self::table::FormattedAction;
 use std::sync::mpsc;
-use termion::terminal_size;
 
 mod table;
 mod processor;
@@ -20,7 +19,7 @@ pub struct UserSelection {
 
 // Create the Cursive environment.
 fn create_cursive() -> Cursive {
-    let mut siv = Cursive::new();
+    let mut siv = Cursive::default();
 
     // set our custom theme to match the terminal
     let theme = custom_theme_from_cursive(&siv);
@@ -88,10 +87,10 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
     let mut siv = create_cursive();
 
     // Fill the screen
-    let (width, height) = terminal_size().chain_err(|| "terminal size")?;
+    let screen = siv.screen_size();
     // need to leave some space at the bottom, the current constant found by experimentation.
-    let table_height = (height - 9) as usize;
-    let table_width = (width - 7) as usize;
+    let table_height = (screen.y - 9) as usize;
+    let table_width = (screen.x - 7) as usize;
 
     // communication channels between views and data processor.
     let (process_tx, process_rx) = mpsc::channel::<processor::Msg>();
@@ -138,7 +137,7 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
         .child(TextView::new("Selection:    "))
         .child(create_command_edit(process_tx.clone())
             .with_id("command")
-            .min_width((width - 50) as usize));
+            .min_width((screen.x - 50) as usize));
     layout.add_child(command_pane);
 
     layout.add_child(output_pane);
@@ -149,7 +148,7 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
     //       .padding((0, 0, 0, 0))
     //        .title("~ weaver ~"));
     siv.add_layer(
-        layout.min_size((width, height)));
+        layout.min_size((screen.x, screen.y)));
 
     // Do the initial display;
     process_tx.send(Msg::Filter(String::from(""))).expect("initial 'filter'");

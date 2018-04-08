@@ -2,10 +2,10 @@ use ::errors::*;
 use daemonize::Daemonize;
 use gotham;
 use gotham::http::response::create_response;
+use gotham::middleware::{NewMiddleware, Middleware};
 use gotham::pipeline::*;
 use gotham::pipeline::single::*;
 use gotham::router::builder::*;
-use gotham::middleware::{NewMiddleware,Middleware};
 use gotham::router::Router;
 use gotham::state::State;
 use hyper::{Response, StatusCode};
@@ -83,13 +83,12 @@ pub fn is_running() -> bool {
             // We were able to bind to the address => no server is listening.
             drop(listener);
             false
-        },
+        }
         Err(_) => {
             debug!("Error binding to {}, assume the server is running.", SERVER_ADDRESS);
             true
         }
     }
-
 }
 
 /// Start a server and use a `Router` to dispatch requests
@@ -119,29 +118,24 @@ pub fn start(run: &ServerRun) -> Result<Server> {
 }
 
 
-
 #[cfg(test)]
 mod tests {
+    use gotham::handler::HandlerFuture;
     use gotham::test::TestServer;
     use serde_json;
     use super::*;
-    use gotham::handler::HandlerFuture;
 
     #[derive(StateData)]
-    struct TestStore {
-
-    }
+    struct TestStore {}
 
     #[derive(NewMiddleware, Copy, Clone, Default)]
-    struct TestStoreProvider {
-
-    }
+    struct TestStoreProvider {}
 
     impl Middleware for TestStoreProvider {
         fn call<Chain>(self, mut state: State, chain: Chain) -> Box<HandlerFuture>
             where Chain: FnOnce(State) -> Box<HandlerFuture> + 'static
         {
-            state.put(TestStore{});
+            state.put(TestStore {});
             chain(state)
         }
     }

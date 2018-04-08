@@ -67,11 +67,11 @@ pub fn get_handler(mut state: State) -> (State, BrowserAction) {
     (state, product)
 }
 
-fn process_post(body: Chunk, store: &mut RealStore) -> Result<String> {
+fn process_post(body: Chunk, mut store: &mut RealStore) -> Result<String> {
     let input = body.to_vec();
     let action: BrowserAction = json::from_slice(&input).expect("input");
     let epic = store.epic()?;
-    let code = store.add_url_action(&action.url, epic.as_ref().map(String::as_str))?;
+    let code = actions::add_url_action(&mut store, &action.url, action.transition_type.as_str(), epic.as_ref().map(String::as_str))?;
     Ok(format!("{}", code))
 }
 

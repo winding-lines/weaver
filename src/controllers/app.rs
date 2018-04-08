@@ -74,7 +74,7 @@ pub fn run() -> Result<()> {
             flows::create(name, global, actions)
         }
         Data(sub) => {
-            data::run(sub)
+            data::run(&mut store, sub)
         }
         EpicActivate(name) => {
             store.set_epic(name)
@@ -93,7 +93,7 @@ pub fn run() -> Result<()> {
                 if store.weaver().start_server.unwrap_or(false) && !server::is_running() {
                     let _ = server::start(&ServerRun::Daemonize)?;
                 }
-                shell_prompt::run(maybe_epic.as_ref().map(String::as_str))
+                shell_prompt::run(&mut store, maybe_epic.as_ref().map(String::as_str))
             }
         }
     }

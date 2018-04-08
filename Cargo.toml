@@ -1,6 +1,6 @@
 [package]
 name = "weaver"
-version = "0.1.4"
+version = "0.2.0"
 description = "Manage actions, flows and milestones"
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
@@ -29,12 +29,15 @@ mime = "0.3"
 daemonize = {git = "https://github.com/winding-lines/daemonize"}
 
 [dependencies.cursive]
-version = "0.8"
+git = "https://github.com/gyscos/Cursive"
+rev = "b34fb14957f877"
+# version = "0.8"
 # default-features = false
 # features = ["blt-backend"]
 
 [dependencies.cursive_table_view]
 git = "https://github.com/winding-lines/cursive_table_view"
+rev = "d494c29921"
 # default-features = false
 # features = ["blt-backend"]
 

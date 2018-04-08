@@ -2,13 +2,13 @@
   "name": "create-database",
   "preconditions": [
     {"file_content": {
-      "path": ".env",
-      "contains": "DATABASE_URL"
+      "path": "Cargo.toml",
+      "contains": "diesel"
     }}
   ],
   "actions": [
-    "diesel setup",
-    "diesel migration redo",
-    "diesel print-schema > src/store/schema.rs"
+    "diesel setup --database-url $HOME/.weaver/history.sqlite3",
+    "diesel migration run --database-url $HOME/.weaver/history.sqlite3",
+    "diesel print-schema --database-url $HOME/.weaver/history.sqlite3 > src/store/backends/schema.rs"
   ]
 }

@@ -32,8 +32,14 @@ pub use errors::*;
 
 // `error_chain!` creates.
 mod errors {
+
     // Create the Error, ErrorKind, ResultExt, and Result types
-    error_chain! {}
+    error_chain! {
+        foreign_links {
+            Diesel(::diesel::result::Error);
+        }
+    }
+
 }
 
 

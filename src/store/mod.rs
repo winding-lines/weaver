@@ -1,31 +1,46 @@
-use diesel::sqlite::SqliteConnection;
-use ::errors::*;
+use ::config::file_utils;
 use ::entities::Weaver;
+use ::errors::*;
+use diesel::sqlite::SqliteConnection;
+
 
 pub mod actions;
+mod db;
 mod backends;
 
-pub trait Store {
-
-}
+pub type Connection = SqliteConnection;
 
 #[derive(StateData)]
 pub struct RealStore {
     json_store: backends::json_store::JsonStore,
-    sqlite: backends::sqlite::Sqlite,
+    pub connection: Connection,
+}
+
+fn open_sqlite() -> Result<Connection> {
+    use diesel::Connection as DieselConnection;
+    let db_url = if let Some(value) = file_utils::default_database()?.to_str() {
+        String::from(value)
+    } else {
+        return Err(Error::from_kind(ErrorKind::from("no database url")));
+    };
+    debug!("opening database {} ", &db_url);
+    let connection = SqliteConnection::establish(&db_url)
+        .chain_err(|| format!("Cannot open database {}", db_url))?;
+    Ok(connection)
 }
 
 impl RealStore {
     pub fn new() -> Result<RealStore> {
         backends::json_store::JsonStore::init()
             .and_then(|json_store| {
-                backends::sqlite::Sqlite::new()
-                    .and_then(|sqlite| Ok(RealStore {
+                open_sqlite()
+                    .and_then(|connection| Ok(RealStore {
                         json_store,
-                        sqlite,
+                        connection,
                     }))
             })
     }
+
 
     pub fn set_epic(&mut self, name: String) -> Result<()> {
         self.json_store.fresh()?;
@@ -50,20 +65,8 @@ impl RealStore {
             None => String::from(""),
         }
     }
-
-    pub fn add_shell_action(&self, command: &str, epic: Option<&str>) -> Result<()> {
-        self.sqlite.add_shell_action(command, epic)
-    }
-
-    pub fn add_url_action(&self, url: &str, location: &str, epic: Option<&str>) -> Result<u64> {
-        self.sqlite.add_url_action(url, epic)
-    }
-
-    pub fn sqlite_connection<'a>(&'a mut self) -> &'a SqliteConnection {
-        self.sqlite.connection()
-    }
 }
 
-impl Store for RealStore {
 
-}
+
+
