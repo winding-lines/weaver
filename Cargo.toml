@@ -30,14 +30,14 @@ daemonize = {git = "https://github.com/winding-lines/daemonize"}
 
 [dependencies.cursive]
 git = "https://github.com/gyscos/Cursive"
-rev = "b34fb14957f877"
+rev = "2729e77838b2312054251"
 # version = "0.8"
 # default-features = false
 # features = ["blt-backend"]
 
 [dependencies.cursive_table_view]
 git = "https://github.com/winding-lines/cursive_table_view"
-rev = "d494c29921"
+rev = "f8e5d7096af6a03948"
 # default-features = false
 # features = ["blt-backend"]
 

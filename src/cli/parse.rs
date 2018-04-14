@@ -1,5 +1,5 @@
 use ::config::{OutputKind, ServerRun};
-use clap::{App, Arg, SubCommand};
+use clap::{App, Arg, ArgGroup, SubCommand};
 use super::APP_NAME;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -44,16 +44,32 @@ pub fn parse() -> Command {
             .short("V")
             .help("Display the version"))
         .subcommand(SubCommand::with_name(COMMAND_ACTIONS)
-            .about("pick an action")
+            .about("select one of your earlier actions")
             .arg(Arg::with_name("run")
+                .long("run")
                 .short("r")
                 .help("run the selected action"))
             .arg(Arg::with_name("copy")
+                .long("copy")
                 .short("c")
                 .help("copy the selected action to the clipboard"))
-            .arg(Arg::with_name("copy-with-context")
-                .short("w")
-                .help("copy the selected action and its context (working dir) to the clipboard")))
+            .arg(Arg::with_name("print")
+                .long("print")
+                .short("p")
+                .help("print the selected action"))
+            .arg(Arg::with_name("path")
+                .long("op")
+                .help("output the path"))
+            .arg(Arg::with_name("command")
+                .long("oc")
+                .help("output the command"))
+            .arg(Arg::with_name("path-with-command")
+                .long("opc")
+                .help(" output the path and the command"))
+            .group(ArgGroup::with_name("output-channel")
+                .args(&["run", "copy", "print"]))
+            .group(ArgGroup::with_name("output-content")
+                .args(&["path", "command", "path-with-command"])))
         .subcommand(SubCommand::with_name(COMMAND_RUN)
             .about("run the flow with the given name")
             .arg(Arg::with_name("NAME")
@@ -95,14 +111,21 @@ pub fn parse() -> Command {
         return Command::Noop;
     }
     if let Some(_actions) = matches.subcommand_matches(COMMAND_ACTIONS) {
-        let kind = if _actions.is_present("copy-with-context") {
-            OutputKind::CopyWithContext
-        } else if _actions.is_present("copy") {
-            OutputKind::Copy
-        } else {
-            OutputKind::Run
+        use config::{Content, Channel};
+
+        let content = match _actions.value_of("output-content") {
+            Some("path") => Content::Path,
+            Some("path-with-command") => Content::PathWithCommand,
+            Some("command") | None => Content::Command,
+            Some(_) => panic!("bad output-content"),
         };
-        return Command::ActionHistory(kind);
+        let channel = match _actions.value_of("output-channel") {
+            Some("run") => Channel::Run,
+            Some("copy") => Channel::Copy,
+            Some("print") | None => Channel::Print,
+            Some(_) => panic!("bad output-channel"),
+        };
+        return Command::ActionHistory(OutputKind {content, channel});
     }
     if let Some(run) = matches.subcommand_matches(COMMAND_CREATE) {
         let name = run.value_of("NAME").unwrap();

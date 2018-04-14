@@ -3,13 +3,15 @@ use config::OutputKind;
 use cursive::Cursive;
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
-use cursive::views::{BoxView, DummyView, EditView, LinearLayout, RadioGroup, TextView};
+use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
 use self::processor::Msg;
-pub use self::table::FormattedAction;
+pub use self::formatted_action::FormattedAction;
 use std::sync::mpsc;
 
 mod table;
 mod processor;
+mod output_kind;
+mod formatted_action;
 
 
 pub struct UserSelection {
@@ -57,29 +59,6 @@ fn create_command_edit(tx: mpsc::Sender<Msg>) -> EditView {
         })
 }
 
-fn add_output_radio_buttons(container: &mut LinearLayout, initial: &OutputKind) -> RadioGroup<OutputKind> {
-    let mut output_group: RadioGroup<OutputKind> = RadioGroup::new();
-
-    container.add_child(TextView::new("<Enter> will: "));
-    let spec = vec![
-        (OutputKind::Run, "Run"),
-        (OutputKind::Copy, "Copy"),
-        (OutputKind::CopyWithContext, "Copy + context")];
-
-    for (k, l) in spec {
-        let is_selected = *initial == k;
-        let run = output_group.button(k, l);
-        let run = if is_selected {
-            run.selected()
-        } else {
-            run
-        };
-        container.add_child(run);
-        container.add_child(TextView::new("   "));
-    };
-
-    return output_group;
-}
 
 /// Display the UI which allows the user to exlore and select one of the options.
 pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelection> {
@@ -104,12 +83,8 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
     let initial = table.filter(None);
 
 
-    // build the output selection pane
-    let mut output_pane = LinearLayout::horizontal();
-    let output_group: RadioGroup<OutputKind> = add_output_radio_buttons(&mut output_pane, &kind);
-
-
     let processor = processor::create(table,
+                                      kind.clone(),
                                       process_rx,
                                       process_tx.clone(),
                                       submit_tx,
@@ -140,6 +115,10 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
             .min_width((screen.x - 50) as usize));
     layout.add_child(command_pane);
 
+    // build the output kind UI
+    let mut output_pane = LinearLayout::horizontal();
+    output_pane.add_child(TextView::new(format!("<Enter> will: {} {}, hit <Esc> to change", &kind.channel, &kind.content)));
+    output_kind::setup_output_selection(&mut siv, process_tx.clone());
     layout.add_child(output_pane);
 
     // build top level scene
@@ -164,11 +143,7 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
     let _ = processor.join();
 
     // Extract the desired output kind, needs to be done in the same thread.
-    user_selection.map(|mut us| {
-        let kind = &*output_group.selection();
-        us.kind = Some(kind.clone());
-        us
-    })
+    user_selection
         .chain_err(|| "could not receive final result")
 }
 

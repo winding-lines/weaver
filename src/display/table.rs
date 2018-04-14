@@ -4,6 +4,7 @@ use cursive_table_view::{TableView, TableViewItem};
 use std::cmp::Ordering;
 use std::sync::mpsc;
 use super::processor::Msg;
+use super::formatted_action::FormattedAction;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum BasicColumn {
@@ -13,17 +14,6 @@ pub enum BasicColumn {
     Kind,
     Name,
 }
-
-#[derive(Clone, Debug)]
-pub struct FormattedAction {
-    pub annotation: Option<String>,
-    pub id: usize,
-    pub epic: Option<String>,
-    pub kind: String,
-    pub name: String,
-    pub location: Option<String>,
-}
-
 
 impl TableViewItem<BasicColumn> for FormattedAction {
     fn to_column(&self, column: BasicColumn) -> String {

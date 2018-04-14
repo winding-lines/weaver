@@ -1,6 +1,6 @@
 use ::cli::Command::*;
 use ::cli::parse;
-use ::config::{OutputKind, file_utils, ServerRun};
+use ::config::{file_utils, OutputKind, ServerRun};
 use ::errors::*;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use display;
@@ -9,48 +9,39 @@ use store::{actions, RealStore};
 use super::{data, flows, shell_prompt, shell_proxy};
 
 
+
 /// Main dispatch function;
 pub fn run() -> Result<()> {
     let mut store = RealStore::new()?;
     let wanted = parse();
     debug!("Executing cli command {:?}", wanted);
     match wanted {
-        ActionHistory(kind) => {
+        ActionHistory(output_kind) => {
+            use config::Channel::*;
+
             let epic = store.epic()?;
             let actions = actions::history(&mut store, &epic.as_ref().map(String::as_str))?;
-            let user_selection = display::show(actions, kind)?;
+            let user_selection = display::show(actions, output_kind)?;
             if let Some(action) = user_selection.action {
                 match user_selection.kind {
-                    Some(OutputKind::Run) => {
+                    Some(OutputKind { channel: Run, content: ref e }) => {
                         if action.kind == "shell" {
-                            shell_proxy::run(action.name)
+                            shell_proxy::run(action.as_shell_command( e))
                                 .map(|_| ())
                         } else {
                             shell_proxy::run(format!("open {}", action.name))
                                 .map(|_| ())
                         }
                     }
-                    Some(OutputKind::Copy) => {
-                        println!("Copying to clipboard: {}", action.name);
+                    Some(OutputKind { channel: Copy, content: ref e }) => {
+                        eprintln!("Copying to clipboard: {}", action.name);
                         if let Ok(mut ctx) = ClipboardContext::new() {
-                            ctx.set_contents(action.name).expect("set clipboard");
+                            ctx.set_contents(action.as_shell_command(e)).expect("set clipboard");
                         }
                         Ok(())
                     }
-                    Some(OutputKind::CopyWithContext) => {
-                        let content = if action.kind == "shell" {
-                            if action.location.is_some() {
-                                format!("cd {} && {}", action.location.unwrap(), action.name)
-                            } else {
-                                action.name
-                            }
-                        } else {
-                            format!("open {}", action.name)
-                        };
-                        println!("Copying to clipboard: {}", content);
-                        if let Ok(mut ctx) = ClipboardContext::new() {
-                            ctx.set_contents(content).expect("set clipboard");
-                        }
+                    Some(OutputKind { channel: Print, content: ref e }) => {
+                        println!("{}", action.as_shell_command(e));
                         Ok(())
                     }
                     None => {
