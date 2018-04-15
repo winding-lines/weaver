@@ -3,8 +3,8 @@ use cursive::Cursive;
 use cursive_table_view::{TableView, TableViewItem};
 use std::cmp::Ordering;
 use std::sync::mpsc;
-use super::processor::Msg;
 use super::formatted_action::FormattedAction;
+use super::processor::Msg;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum BasicColumn {
@@ -120,7 +120,7 @@ impl Table {
         if let Some(ref f) = self.filter {
             for entry in self.content.iter() {
                 if entry.name.contains(f)
-                    || entry.epic.as_ref().map(|e|e.contains(f)).unwrap_or(false)
+                    || entry.epic.as_ref().map(|e| e.contains(f)).unwrap_or(false)
                     || f.is_empty() {
                     content.push(entry.clone());
                 }

@@ -1,16 +1,17 @@
 use ::errors::*;
 use config::OutputKind;
 use cursive::Cursive;
+use cursive::event::{Event, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
-use self::processor::Msg;
 pub use self::formatted_action::FormattedAction;
+use self::processor::Msg;
 use std::sync::mpsc;
 
 mod table;
 mod processor;
-mod output_kind;
+mod output_selector;
 mod formatted_action;
 
 
@@ -59,6 +60,18 @@ fn create_command_edit(tx: mpsc::Sender<Msg>) -> EditView {
         })
 }
 
+/// Setup the ESC key to open up the Output Kind selector.
+fn setup_global_keys(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
+    {
+        let my_ch = ch.clone();
+        siv.add_global_callback(Event::CtrlChar('g'), move |_s| {
+            my_ch.send(Msg::JumpToSelection).expect("send JumpToSelection");
+        });
+    }
+    siv.add_global_callback(Event::Key(Key::Esc), move |_s| {
+        ch.send(Msg::ShowOutputSelector).expect("send ShowKind");
+    });
+}
 
 /// Display the UI which allows the user to exlore and select one of the options.
 pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelection> {
@@ -117,8 +130,8 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
 
     // build the output kind UI
     let mut output_pane = LinearLayout::horizontal();
-    output_pane.add_child(TextView::new(format!("<Enter> will: {} {}, hit <Esc> to change", &kind.channel, &kind.content)));
-    output_kind::setup_output_selection(&mut siv, process_tx.clone());
+    output_pane.add_child(TextView::new(format!("<Enter> will: {} {}| <Esc> to change | Ctrl-G to jump to selection", &kind.channel, &kind.content)));
+    setup_global_keys(&mut siv, process_tx.clone());
     layout.add_child(output_pane);
 
     // build top level scene
@@ -137,7 +150,7 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
     siv.run();
 
     // Stop the filter processor
-    send(&process_tx, processor::Msg::End);
+    send(&process_tx, processor::Msg::ExtractState);
 
     let user_selection = submit_rx.recv();
     let _ = processor.join();

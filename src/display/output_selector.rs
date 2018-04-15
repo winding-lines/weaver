@@ -24,6 +24,7 @@ fn all_content() -> Vec<Content> {
     ]
 }
 
+/// Create radio buttons for all the `values`, select the one matching `initial`.
 fn create_radio_group<T>(container: &mut LinearLayout, values: Vec<T>, initial: &T) -> RadioGroup<T>
     where T: Display + PartialEq + 'static {
     let mut group: RadioGroup<T> = RadioGroup::new();
@@ -86,10 +87,3 @@ pub fn show_output_selection(siv: &mut Cursive, kind: OutputKind, ch: mpsc::Send
     )
 }
 
-/// Setup the ESC key to open up the Output Kind selector.
-pub fn setup_output_selection(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
-    siv.add_global_callback(Event::Key(Key::Esc), move |_s| {
-// Notify the processor so that it can start the UI with the current state.
-        ch.send(Msg::ShowKind).expect("send ShowKind");
-    });
-}

@@ -5,12 +5,12 @@ use std::sync::{Arc, Mutex};
 use std::sync::mpsc;
 use std::thread;
 use super::{FormattedAction, table, UserSelection};
-use super::output_kind;
+use super::output_selector;
 
 
 /// Message types sent to the selection processor
 pub enum Msg {
-    End,
+    ExtractState,
 
     // Events from the table
     Selection(Option<FormattedAction>),
@@ -21,12 +21,14 @@ pub enum Msg {
     FilterSubmit,
 
     // Events from the Output Kind selection
-    ShowKind,
     SelectKind(config::OutputKind),
 
     // Events from the command edit view
     CommandSubmit(Option<String>),
 
+    // Global events
+    ShowOutputSelector,
+    JumpToSelection,
 }
 
 /// State for the processor.
@@ -34,11 +36,13 @@ struct Processor {
     pub formatted_action: Option<FormattedAction>,
     // output_kind needs to be accessed from multiple threads.
     pub output_kind: Arc<Mutex<config::OutputKind>>,
-    pub cursive_sink: mpsc::Sender<Box<CursiveCbFunc>>,
+    table: table::Table,
+    cursive_sink: mpsc::Sender<Box<CursiveCbFunc>>,
+    // A transmit channel to the Processors main loop
+    self_tx: mpsc::Sender<Msg>,
 }
 
 impl Processor {
-
     fn _update_ui(&mut self) {
         // Build the content to display.
         let content = self.formatted_action.as_ref().map(|f| {
@@ -55,21 +59,71 @@ impl Processor {
         };
         self.cursive_sink.send(Box::new(update_command))
             .expect("send to command");
-
     }
 
     fn select_action(&mut self, selection: Option<FormattedAction>) {
         self.formatted_action = selection;
         self._update_ui();
-
     }
 
-    fn select_kind(&mut self, kind: config::OutputKind ) {
+    fn select_kind(&mut self, kind: config::OutputKind) {
         {
             let mut mine = self.output_kind.lock().unwrap();
             *mine = kind;
         }
         self._update_ui();
+    }
+
+    // Handle a submit from the coammand edit view.
+    fn submit_command(&mut self, f: Option<String>) {
+        let name = f.unwrap_or(String::from(""));
+        let sel = self.formatted_action.get_or_insert(FormattedAction {
+            name: name.clone(),
+            kind: String::from("shell"),
+            id: 0,
+            annotation: None,
+            epic: None,
+            location: None,
+        });
+        sel.name = name;
+    }
+
+    // Filter the displayed commands to match the given string,
+    // optionally selects the given row.
+    fn filter(&mut self, f: Option<String>, selected_row: Option<usize>) {
+        debug!("Received filter message {:?}", f);
+        let content = self.table.filter(f);
+        let tx = self.self_tx.clone();
+        let update_table = move |siv: &mut Cursive| {
+            if let Some(mut tview) = siv.find_id::<table::TView>("actions") {
+                tview.clear();
+                let select = content.len();
+                tview.set_items(content);
+                if select > 0 {
+                    let index = selected_row.unwrap_or(select - 1);
+                    tview.set_selected_row(index);
+                    let selected = tview.borrow_item(index).map(|s| s.clone());
+
+                    // Update the rest of the system with the selection.
+                    // Since there are state changes need to defer to the processor.
+                    tx.send(Msg::Selection(selected)).expect("send selection");
+                }
+            };
+        };
+        self.cursive_sink.send(Box::new(update_table))
+            .expect("send to update_table");
+    }
+
+    // Display the output selector UI with the current state.
+    fn show_output_selector(&mut self) {
+        let my_tx = self.self_tx.clone();
+        let my_kind = Arc::clone(&self.output_kind);
+        let show_kind = move |siv: &mut Cursive| {
+            let k = my_kind.lock().unwrap();
+            output_selector::show_output_selection(siv, (*k).clone(), my_tx);
+        };
+        self.cursive_sink.send(Box::new(show_kind))
+            .expect("cursive send show kind");
     }
 
     fn exit(&mut self) {
@@ -84,7 +138,7 @@ impl Processor {
 /// - owns the Table data, receives and processes filter events
 /// - owns the current selections, receives and processes selection events
 /// - refreshes the UI with the filtered data or selection
-pub fn create(mut table: table::Table,
+pub fn create(table: table::Table,
               kind: config::OutputKind,
               rx: mpsc::Receiver<Msg>,
               self_tx: mpsc::Sender<Msg>,
@@ -93,9 +147,11 @@ pub fn create(mut table: table::Table,
               -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let mut processor = Processor {
+            table,
             formatted_action: None,
             output_kind: Arc::new(Mutex::new(kind)),
             cursive_sink,
+            self_tx,
         };
 
         // Process messages until done.
@@ -118,62 +174,26 @@ pub fn create(mut table: table::Table,
 
                 Ok(Msg::CommandSubmit(f)) => {
                     // Handle a string submitted from the command box.
-                    let name = f.unwrap_or(String::from(""));
-
-                    {
-                        let mut sel = processor.formatted_action.get_or_insert(FormattedAction {
-                            name: name.clone(),
-                            kind: String::from("shell"),
-                            id: 0,
-                            annotation: None,
-                            epic: None,
-                            location: None,
-                        });
-                        sel.name = name;
-                    }
-
-
+                    processor.submit_command(f);
                     debug!("Exiting in EditSubmit, selection {:?}", processor.formatted_action);
                     processor.exit();
                 }
 
                 Ok(Msg::Filter(f)) => {
-                    debug!("Received filter message {:?}", f);
-                    let content = table.filter(Some(f));
-                    let tx = self_tx.clone();
-                    let update_table = move |siv: &mut Cursive| {
-                        if let Some(mut tview) = siv.find_id::<table::TView>("actions") {
-                            tview.clear();
-                            let select = content.len();
-                            tview.set_items(content);
-                            if select > 0 {
-                                let index = select - 1;
-                                tview.set_selected_row(index);
-                                let selected = tview.borrow_item(index).map(|s| s.clone());
-
-                                // Update the rest of the system with the selection.
-                                // Since there are state changes need to defer to the processor.
-                                tx.send(Msg::Selection(selected)).expect("send selection");
-                            }
-                        };
-                    };
-                    processor.cursive_sink.send(Box::new(update_table))
-                        .expect("send to update_table");
+                    processor.filter(Some(f), None);
                 }
-                Ok(Msg::ShowKind) => {
-                    let my_tx = self_tx.clone();
-                    let my_kind = Arc::clone(&processor.output_kind);
-                    let show_kind = move |siv: &mut Cursive| {
-                        let k = my_kind.lock().unwrap();
-                        output_kind::show_output_selection(siv, (*k).clone(), my_tx);
-                    };
-                    processor.cursive_sink.send(Box::new(show_kind))
-                        .expect("cursive send show kind");
+                Ok(Msg::JumpToSelection) => {
+                    debug!("Received JumpToSelection");
+                    let current_id = processor.formatted_action.as_ref().map(|a| a.id-1);
+                    processor.filter(None, current_id);
+                }
+                Ok(Msg::ShowOutputSelector) => {
+                    processor.show_output_selector();
                 }
                 Ok(Msg::SelectKind(k)) => {
                     processor.select_kind(k);
                 }
-                Ok(Msg::End) => {
+                Ok(Msg::ExtractState) => {
                     debug!("Received end msg");
                     let mine = processor.output_kind.lock().unwrap();
                     tx.send(UserSelection {
