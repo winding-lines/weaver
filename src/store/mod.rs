@@ -53,6 +53,11 @@ impl RealStore {
         Ok(self.json_store.content.active_epic.clone())
     }
 
+    pub fn epic_names(&mut self) -> Result<Vec<String>> {
+        db::epics::fetch_all(&self.connection)
+    }
+
+
     pub fn weaver(&self) -> &Weaver {
         &self.json_store.content
     }

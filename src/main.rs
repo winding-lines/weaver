@@ -21,6 +21,7 @@ extern crate hyper;
 extern crate log;
 extern crate mime;
 extern crate serde;
+extern crate sys_info;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
@@ -37,6 +38,7 @@ mod errors {
     error_chain! {
         foreign_links {
             Diesel(::diesel::result::Error);
+            SysInfo(::sys_info::Error);
         }
     }
 

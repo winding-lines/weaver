@@ -4,6 +4,7 @@ use ::store::db;
 use ::store::RealStore;
 use chrono::prelude::*;
 use std::env;
+use sys_info;
 
 
 pub struct NewAction<'a> {
@@ -12,6 +13,7 @@ pub struct NewAction<'a> {
     pub command: &'a str,
     pub location: Option<&'a str>,
     pub epic: Option<&'a str>,
+    pub host: &'a str,
 }
 
 fn now() -> String {
@@ -30,6 +32,7 @@ pub fn last_url(store: &RealStore) -> Result<Option<(String, String)>> {
 }
 
 pub fn add_shell_action(store: &RealStore, command: &str, epic: Option<&str>) -> Result<(u64)> {
+    let host = sys_info::hostname()?;
     let cwd = env::current_dir()
         .chain_err(|| "save command")?;
     let location = cwd.as_path().to_str();
@@ -40,18 +43,21 @@ pub fn add_shell_action(store: &RealStore, command: &str, epic: Option<&str>) ->
         command: &command,
         location,
         epic,
+        host: &host,
     };
     db::actions2::insert(&store.connection, insert)
 }
 
 pub fn add_url_action(store: &RealStore, url: &str, location: &str, epic: Option<&str>) -> Result<u64> {
+    let host = sys_info::hostname()?;
     let executed = now();
     let insert = NewAction {
         executed: &executed,
         kind: "url",
         command: url,
         location: Some(location),
-        epic: epic,
+        epic,
+        host: &host,
     };
     db::actions2::insert(&store.connection, insert)
 }

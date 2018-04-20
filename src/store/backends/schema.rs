@@ -7,6 +7,7 @@ table! {
         epic_id -> Nullable<Integer>,
         sent -> Nullable<Bool>,
         annotation -> Nullable<Text>,
+        host_id -> Nullable<Integer>,
     }
 }
 
@@ -26,6 +27,13 @@ table! {
 }
 
 table! {
+    hosts (id) {
+        id -> Nullable<Integer>,
+        name -> Text,
+    }
+}
+
+table! {
     locations (id) {
         id -> Nullable<Integer>,
         location -> Text,
@@ -34,11 +42,13 @@ table! {
 
 joinable!(actions2 -> commands (command_id));
 joinable!(actions2 -> epics (epic_id));
+joinable!(actions2 -> hosts (host_id));
 joinable!(actions2 -> locations (location_id));
 
 allow_tables_to_appear_in_same_query!(
     actions2,
     commands,
     epics,
+    hosts,
     locations,
 );

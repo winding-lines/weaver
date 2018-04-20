@@ -9,6 +9,7 @@ use super::output_selector;
 
 
 /// Message types sent to the selection processor
+#[derive(Clone)]
 pub enum Msg {
     ExtractState,
 
@@ -29,10 +30,13 @@ pub enum Msg {
     // Global events
     ShowOutputSelector,
     JumpToSelection,
+    JumpToPrevMatch,
+    JumpToNextMatch,
 }
 
 /// State for the processor.
 struct Processor {
+    // current selected formatted action
     pub formatted_action: Option<FormattedAction>,
     // output_kind needs to be accessed from multiple threads.
     pub output_kind: Arc<Mutex<config::OutputKind>>,
@@ -114,6 +118,18 @@ impl Processor {
             .expect("send to update_table");
     }
 
+    fn jump_to_next(&mut self) {
+        if let Some(ref _current) = self.formatted_action {
+            unimplemented!();
+        }
+    }
+
+    fn jump_to_prev(&mut self) {
+        if let Some(ref _current) = self.formatted_action {
+            unimplemented!();
+        }
+    }
+
     // Display the output selector UI with the current state.
     fn show_output_selector(&mut self) {
         let my_tx = self.self_tx.clone();
@@ -186,6 +202,12 @@ pub fn create(table: table::Table,
                     debug!("Received JumpToSelection");
                     let current_id = processor.formatted_action.as_ref().map(|a| a.id-1);
                     processor.filter(None, current_id);
+                }
+                Ok(Msg::JumpToNextMatch) => {
+                    processor.jump_to_next();
+                }
+                Ok(Msg::JumpToPrevMatch) => {
+                    processor.jump_to_prev();
                 }
                 Ok(Msg::ShowOutputSelector) => {
                     processor.show_output_selector();

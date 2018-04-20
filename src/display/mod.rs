@@ -60,14 +60,19 @@ fn create_command_edit(tx: mpsc::Sender<Msg>) -> EditView {
         })
 }
 
-/// Setup the ESC key to open up the Output Kind selector.
 fn setup_global_keys(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
-    {
+    let mapping = vec![
+        (Event::CtrlChar('g'), Msg::JumpToSelection),
+        (Event::CtrlChar('p'), Msg::JumpToPrevMatch),
+        (Event::CtrlChar('n'), Msg::JumpToNextMatch),
+    ];
+    for (cursive_ev, processor_msg) in mapping.into_iter() {
         let my_ch = ch.clone();
-        siv.add_global_callback(Event::CtrlChar('g'), move |_s| {
-            my_ch.send(Msg::JumpToSelection).expect("send JumpToSelection");
+        siv.add_global_callback(cursive_ev, move |_siv| {
+            my_ch.send(processor_msg.clone()).expect("send JumpToSelection");
         });
     }
+    // Setup the ESC key to open up the Output Kind selector.
     siv.add_global_callback(Event::Key(Key::Esc), move |_s| {
         ch.send(Msg::ShowOutputSelector).expect("send ShowKind");
     });

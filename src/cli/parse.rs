@@ -13,6 +13,7 @@ pub enum Command {
     FlowCreate(String, bool),
     FlowRun(String),
     EpicActivate(String),
+    EpicList,
     Noop,
     Server(ServerRun),
     ShellPrompt(bool),
@@ -86,10 +87,12 @@ pub fn parse() -> Command {
                 .short("g")
                 .help("create a global flow")))
         .subcommand(SubCommand::with_name(COMMAND_EPIC)
-            .about("Set the current epic (task, story, project) that you are working towards")
+            .about("Manage epics - longer term projects/deliverables you are working on")
             .arg(Arg::with_name("NAME")
-                .required(true)
-                .index(1)))
+                .index(1))
+            .arg(Arg::with_name("list")
+                .short("l")
+                .help("list current epics")))
         .subcommand(SubCommand::with_name(COMMAND_PROMPT)
             .about("Generate the shell prompt, call this from PS1")
             .arg(Arg::with_name("check")
@@ -133,8 +136,11 @@ pub fn parse() -> Command {
         return Command::FlowCreate(String::from(name), global);
     }
     if let Some(run) = matches.subcommand_matches(COMMAND_EPIC) {
-        let name = run.value_of("NAME").unwrap();
-        return Command::EpicActivate(String::from(name));
+        if let Some(name ) = run.value_of("NAME") {
+            return Command::EpicActivate(String::from(name));
+        } else {
+            return Command::EpicList;
+        }
     }
     if let Some(prompt) = matches.subcommand_matches(COMMAND_PROMPT) {
         return Command::ShellPrompt(prompt.is_present("check"));

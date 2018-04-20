@@ -18,6 +18,7 @@ struct Action2 {
     epic_id: Option<i32>,
     sent: Option<bool>,
     annotation: Option<String>,
+    host_id: Option<i32>,
 }
 
 #[derive(Queryable)]
@@ -96,13 +97,15 @@ pub fn insert(connection: &Connection, action: NewAction) -> Result<u64> {
             None
         };
         let command_id = db::commands::fetch_or_create_id(connection, &action.kind, &action.command)?;
+        let host_id = db::hosts::fetch_or_create_id(connection, action.host)?;
         let migrated = (
             actions2::dsl::command_id.eq(command_id),
             actions2::dsl::executed.eq(action.executed),
             actions2::dsl::location_id.eq(location_id),
             actions2::dsl::epic_id.eq(epic_id),
             actions2::dsl::sent.eq(false),
-            actions2::dsl::annotation.eq(String::new())
+            actions2::dsl::annotation.eq(String::new()),
+            actions2::dsl::host_id.eq(host_id)
         );
         let count = diesel::insert_into(actions2::table)
             .values(migrated)
