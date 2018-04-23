@@ -1,5 +1,5 @@
 use ::config::file_utils;
-use ::errors::*;
+use weaver_error::*;
 use ::store::RealStore;
 use ::store::actions;
 use std::env;

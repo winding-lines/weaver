@@ -3,7 +3,7 @@ use ::config::file_utils::{app_folder, read_content, write_content};
 /// Handle operations on flows.
 
 use ::entities::Flow;
-use ::errors::*;
+use weaver_error::*;
 use std::fs;
 use std::path::{Path, PathBuf};
 use super::shell_proxy;

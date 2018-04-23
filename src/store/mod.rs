@@ -1,7 +1,7 @@
 use ::config::file_utils;
 use ::entities::Weaver;
-use ::errors::*;
 use diesel::sqlite::SqliteConnection;
+use weaver_error::*;
 
 
 pub mod actions;

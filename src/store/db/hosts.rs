@@ -1,8 +1,8 @@
-use diesel;
-use diesel::prelude::*;
-use ::errors::*;
 use ::store::backends::schema::hosts;
 use ::store::Connection;
+use diesel;
+use diesel::prelude::*;
+use weaver_error::*;
 
 // Fetch the id for the given host, if present.
 pub fn fetch_id(connection: &Connection, host: &str) -> Result<Option<i32>> {

@@ -15,7 +15,7 @@ pub enum Command {
     EpicActivate(String),
     EpicList,
     Noop,
-    Server(ServerRun),
+    Server(ServerSubCommand),
     ShellPrompt(bool),
     Data(DataSubCommand),
 }
@@ -25,6 +25,13 @@ pub enum Command {
 #[derive(Debug)]
 pub enum DataSubCommand {
     Sqlite,
+}
+
+/// Server subcommands
+#[derive(Debug)]
+pub enum ServerSubCommand {
+    Start(ServerRun),
+    Check,
 }
 
 // Constants for command names
@@ -99,10 +106,16 @@ pub fn parse() -> Command {
                 .long("check")
                 .help("validate the setup")))
         .subcommand(SubCommand::with_name(COMMAND_SERVER)
-            .about("Start the embedded API server")
-            .arg(Arg::with_name("foreground")
-                .long("fg")
-                .help("run in foreground, otherwise the default is daemon")))
+            .about("Interact with the embedded API server")
+            .subcommand(SubCommand::with_name("check")
+                .about("Check to see that the server exists"))
+            .subcommand(SubCommand::with_name("start")
+                .about("Start the server")
+                .arg(Arg::with_name("foreground")
+                    .global(true)
+                    .long("fg")
+                    .help("run in foreground, otherwise the default is daemon"))
+            ))
         .subcommand(SubCommand::with_name(COMMAND_DATA)
             .about("Manipulate the stored data")
             .subcommand(SubCommand::with_name("sqlite")
@@ -128,7 +141,7 @@ pub fn parse() -> Command {
             Some("print") | None => Channel::Print,
             Some(_) => panic!("bad output-channel"),
         };
-        return Command::ActionHistory(OutputKind {content, channel});
+        return Command::ActionHistory(OutputKind { content, channel });
     }
     if let Some(run) = matches.subcommand_matches(COMMAND_CREATE) {
         let name = run.value_of("NAME").unwrap();
@@ -136,7 +149,7 @@ pub fn parse() -> Command {
         return Command::FlowCreate(String::from(name), global);
     }
     if let Some(run) = matches.subcommand_matches(COMMAND_EPIC) {
-        if let Some(name ) = run.value_of("NAME") {
+        if let Some(name) = run.value_of("NAME") {
             return Command::EpicActivate(String::from(name));
         } else {
             return Command::EpicList;
@@ -150,12 +163,18 @@ pub fn parse() -> Command {
         return Command::FlowRun(String::from(name));
     }
     if let Some(run) = matches.subcommand_matches(COMMAND_SERVER) {
-        let mode = if run.is_present("foreground") {
-            ServerRun::Foreground
-        } else {
-            ServerRun::Daemonize
-        };
-        return Command::Server(mode);
+        if run.subcommand_matches("check").is_some() {
+            return Command::Server(ServerSubCommand::Check);
+        }
+        if let Some(start) = run.subcommand_matches("start") {
+            let mode = if start.is_present("foreground") {
+                ServerRun::Foreground
+            } else {
+                ServerRun::Daemonize
+            };
+            return Command::Server(ServerSubCommand::Start(mode));
+        }
+        unreachable!()
     }
     if let Some(run) = matches.subcommand_matches(COMMAND_DATA) {
         if run.subcommand_matches("sqlite").is_some() {

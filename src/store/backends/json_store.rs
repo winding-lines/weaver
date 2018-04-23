@@ -1,7 +1,7 @@
 use ::config::file_utils;
 use ::entities::Weaver;
-use ::errors::*;
 use std::time::SystemTime;
+use weaver_error::{Result, ResultExt};
 
 #[derive(Default)]
 pub struct JsonStore {

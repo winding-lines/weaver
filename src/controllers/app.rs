@@ -1,12 +1,12 @@
 use ::cli::Command::*;
+use ::cli::ServerSubCommand;
 use ::cli::parse;
 use ::config::{file_utils, OutputKind, ServerRun};
-use ::errors::*;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use display;
-use server;
 use store::{actions, RealStore};
-use super::{data, flows, shell_prompt, shell_proxy};
+use super::{data, server, flows, shell_prompt, shell_proxy};
+use weaver_error::*;
 
 fn run_history(mut store: &mut RealStore, output_kind: OutputKind) -> Result<()> {
     use config::Channel::*;
@@ -47,13 +47,14 @@ fn run_history(mut store: &mut RealStore, output_kind: OutputKind) -> Result<()>
     }
 }
 
+
 /// Main dispatch function;
 pub fn run() -> Result<()> {
     let mut store = RealStore::new()?;
     let wanted = parse();
     debug!("Executing cli command {:?}", wanted);
     match wanted {
-        ActionHistory(output_kind) => run_history(& mut store, output_kind),
+        ActionHistory(output_kind) => run_history(&mut store, output_kind),
         FlowRecommend => {
             flows::recommend()
         }
@@ -80,8 +81,11 @@ pub fn run() -> Result<()> {
         Noop => {
             Ok(())
         }
-        Server(ref run) => {
-            server::start(run).map(|_| ())
+        Server(ServerSubCommand::Start(ref mode)) => {
+            server::start(mode).map(|_| ())
+        }
+        Server(ServerSubCommand::Check) => {
+            server::check()
         }
         ShellPrompt(check) => {
             if check {

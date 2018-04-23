@@ -1,11 +1,11 @@
 use ::display::FormattedAction;
-use ::errors::*;
 use ::store::actions::NewAction;
 use ::store::backends::schema::*;
 use ::store::Connection;
 use ::store::db;
 use diesel;
 use diesel::prelude::*;
+use weaver_error::*;
 
 
 #[derive(Queryable)]
@@ -68,7 +68,6 @@ pub fn fetch_all(connection: &Connection) -> Result<Vec<FormattedAction>> {
 }
 
 pub fn last_url(connection: &Connection) -> Result<Option<(String, String)>> {
-
     let entries = actions2::dsl::actions2
         .inner_join(commands::dsl::commands)
         .left_join(locations::table)

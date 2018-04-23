@@ -1,0 +1,15 @@
+[package]
+name = "weaver-rpc"
+version = "0.1.0"
+description = "Implement rpc between weaver client and server"
+authors = ["Marius Seritan <git@winding-lines.com>"]
+
+[dependencies]
+grpcio = "0.2"
+futures = "^0.1.15"
+protobuf = "1.2"
+weaver-error = {path = "../weaver-error"}
+
+[build-dependencies]
+protoc-grpcio = "0.1"
+

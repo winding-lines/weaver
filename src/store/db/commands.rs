@@ -1,8 +1,8 @@
-use diesel;
-use diesel::prelude::*;
-use ::errors::*;
 use ::store::backends::schema::commands;
 use ::store::Connection;
+use diesel;
+use diesel::prelude::*;
+use weaver_error::{Result, ResultExt};
 
 /// Fetch the id for the given epic, if present.
 pub fn fetch_id(connection: &Connection, kind: &str, command: &str) -> Result<Option<i32>> {

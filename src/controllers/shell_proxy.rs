@@ -1,4 +1,4 @@
-use ::errors::*;
+use weaver_error::*;
 use std::env;
 use std::ffi::OsStr;
 use std::fmt::Debug;

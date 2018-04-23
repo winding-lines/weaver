@@ -1,6 +1,6 @@
 use ::cli::DataSubCommand;
 use ::config::file_utils;
-use ::errors::*;
+use weaver_error::*;
 use std::process::Command;
 use store::RealStore;
 

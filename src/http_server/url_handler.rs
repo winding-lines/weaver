@@ -1,4 +1,3 @@
-use ::errors::*;
 use ::store::{actions, RealStore};
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError, IntoResponse};
@@ -9,6 +8,7 @@ use hyper::{Response, StatusCode};
 use hyper::{Body, Chunk};
 use mime;
 use serde_json as json;
+use weaver_error::*;
 
 
 #[derive(Serialize, Deserialize, Default)]
@@ -47,8 +47,6 @@ impl IntoResponse for BrowserAction {
 /// As we've implemented `IntoResponse` above Gotham will correctly handle this and call our
 /// `into_response` method when appropriate.
 pub fn get_handler(mut state: State) -> (State, BrowserAction) {
-
-
     let last = {
         // Leaking test setup in here, need to figure out better dependeny injection.
         if let Some(store) = state.try_borrow_mut::<RealStore>() {
@@ -60,7 +58,7 @@ pub fn get_handler(mut state: State) -> (State, BrowserAction) {
     };
 
     let product = last.map(|l| BrowserAction {
-        url:  l.0,
+        url: l.0,
         transition_type: l.1,
     }).unwrap_or_else(|| BrowserAction::default());
 

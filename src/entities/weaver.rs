@@ -1,6 +1,6 @@
-use ::errors::*;
 use serde_json as json;
 use super::Epic;
+use weaver_error::*;
 
 /// All the Milestones that Weaver knows about.
 #[derive(Deserialize, Serialize, Debug)]

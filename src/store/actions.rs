@@ -1,10 +1,10 @@
 use ::display::FormattedAction;
-use ::errors::*;
 use ::store::db;
 use ::store::RealStore;
 use chrono::prelude::*;
 use std::env;
 use sys_info;
+use weaver_error::{Result, ResultExt};
 
 
 pub struct NewAction<'a> {

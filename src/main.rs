@@ -1,6 +1,3 @@
-// `error_chain!` can recurse deeply
-#![recursion_limit = "1024"]
-
 extern crate chrono;
 extern crate clap;
 extern crate clipboard;
@@ -10,8 +7,6 @@ extern crate cursive_table_view;
 extern crate diesel;
 extern crate daemonize;
 extern crate env_logger;
-#[macro_use]
-extern crate error_chain;
 extern crate futures;
 extern crate gotham;
 #[macro_use]
@@ -28,22 +23,9 @@ extern crate serde_json;
 extern crate termion;
 extern crate walkdir;
 
-// Re-export the error types for the overall app.
-pub use errors::*;
-
-// `error_chain!` creates.
-mod errors {
-
-    // Create the Error, ErrorKind, ResultExt, and Result types
-    error_chain! {
-        foreign_links {
-            Diesel(::diesel::result::Error);
-            SysInfo(::sys_info::Error);
-        }
-    }
-
-}
-
+// Workspace crates
+extern crate weaver_error;
+extern crate weaver_rpc;
 
 /// A command line tool to create, discover and recommend flows.
 ///
@@ -60,7 +42,7 @@ mod config;
 mod display;
 mod entities;
 mod controllers;
-mod server;
+mod http_server;
 mod store;
 
 fn main() {

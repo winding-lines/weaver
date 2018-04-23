@@ -1,4 +1,3 @@
-use ::errors::*;
 use config::OutputKind;
 use cursive::Cursive;
 use cursive::event::{Event, Key};
@@ -8,6 +7,7 @@ use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
 pub use self::formatted_action::FormattedAction;
 use self::processor::Msg;
 use std::sync::mpsc;
+use weaver_error::*;
 
 mod table;
 mod processor;

@@ -1,7 +1,7 @@
-use ::errors::*;
 use serde_json as json;
 use std::fs::File;
 use std::io::prelude::*;
+use weaver_error::*;
 
 /// To be implemented by Preconditions.
 trait Matcher {
@@ -51,7 +51,6 @@ pub struct Flow {
 }
 
 impl Flow {
-
     pub fn load_from_string(contents: &str) -> Result<Flow> {
         let script: Flow = json::from_str(&contents)
             .chain_err(|| "parsing flow")?;
