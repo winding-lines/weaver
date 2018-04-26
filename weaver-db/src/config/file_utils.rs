@@ -1,10 +1,10 @@
-use ::cli;
 use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::{Read, stdin, Write};
 use std::path::{Path, PathBuf};
 use weaver_error::*;
+use super::APP_FOLDER;
 
 /// Load the content of the given file.
 pub fn read_content(path: &Path) -> Result<String> {
@@ -30,7 +30,7 @@ pub fn app_folder() -> Result<PathBuf> {
     if let Some(home) = env::home_dir() {
         let mut path = PathBuf::new();
         path.push(home);
-        path.push(cli::APP_FOLDER);
+        path.push(APP_FOLDER);
         if !path.exists() {
             fs::create_dir(&path).chain_err(|| "create weaver folder")?;
         }
@@ -44,7 +44,7 @@ pub fn default_database() -> Result<PathBuf> {
     if let Some(home) = env::home_dir() {
         let mut path = PathBuf::new();
         path.push(home);
-        path.push(cli::APP_FOLDER);
+        path.push(APP_FOLDER);
         if !path.exists() {
             fs::create_dir(&path).chain_err(|| "create weaver folder")?;
         }

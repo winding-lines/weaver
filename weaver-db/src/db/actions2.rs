@@ -1,8 +1,8 @@
-use ::display::FormattedAction;
-use ::store::actions::NewAction;
-use ::store::backends::schema::*;
-use ::store::Connection;
-use ::store::db;
+use ::actions::NewAction;
+use ::backends::schema::*;
+use ::Connection;
+use ::db;
+use ::entities::FormattedAction;
 use diesel;
 use diesel::prelude::*;
 use weaver_error::*;

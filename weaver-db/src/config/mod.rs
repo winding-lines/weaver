@@ -1,6 +1,8 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 pub mod file_utils;
 
+pub const APP_FOLDER: &'static str = ".weaver";
+
 
 #[derive(Debug)]
 pub enum ServerRun {

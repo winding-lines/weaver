@@ -1,6 +1,6 @@
-use ::display::FormattedAction;
-use ::store::db;
-use ::store::RealStore;
+use ::entities::FormattedAction;
+use ::db;
+use ::Connection;
 use chrono::prelude::*;
 use std::env;
 use sys_info;
@@ -21,17 +21,17 @@ fn now() -> String {
     utc.to_rfc3339()
 }
 
-pub fn history<T: AsRef<str>>(store: &mut RealStore, _epic: &Option<T>) -> Result<Vec<FormattedAction>> {
-    db::actions2::fetch_all(&store.connection)
+pub fn history<T: AsRef<str>>(connection: &Connection, _epic: &Option<T>) -> Result<Vec<FormattedAction>> {
+    db::actions2::fetch_all(connection)
 }
 
 
 // Return the last url action from the store.
-pub fn last_url(store: &RealStore) -> Result<Option<(String, String)>> {
-    db::actions2::last_url(&store.connection)
+pub fn last_url(connection: &Connection) -> Result<Option<(String, String)>> {
+    db::actions2::last_url(connection)
 }
 
-pub fn add_shell_action(store: &RealStore, command: &str, epic: Option<&str>) -> Result<(u64)> {
+pub fn add_shell_action(connection: &Connection, command: &str, epic: Option<&str>) -> Result<(u64)> {
     let host = sys_info::hostname()?;
     let cwd = env::current_dir()
         .chain_err(|| "save command")?;
@@ -45,10 +45,10 @@ pub fn add_shell_action(store: &RealStore, command: &str, epic: Option<&str>) ->
         epic,
         host: &host,
     };
-    db::actions2::insert(&store.connection, insert)
+    db::actions2::insert(connection, insert)
 }
 
-pub fn add_url_action(store: &RealStore, url: &str, location: &str, epic: Option<&str>) -> Result<u64> {
+pub fn add_url_action(connection: &Connection, url: &str, location: &str, epic: Option<&str>) -> Result<u64> {
     let host = sys_info::hostname()?;
     let executed = now();
     let insert = NewAction {
@@ -59,7 +59,7 @@ pub fn add_url_action(store: &RealStore, url: &str, location: &str, epic: Option
         epic,
         host: &host,
     };
-    db::actions2::insert(&store.connection, insert)
+    db::actions2::insert(connection, insert)
 }
 
 /* Kept for reference

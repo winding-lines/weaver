@@ -9,6 +9,8 @@ grpcio = "0.2"
 futures = "^0.1.15"
 protobuf = "1.2"
 weaver-error = {path = "../weaver-error"}
+weaver-db = {path = "../weaver-db"}
+log = "*"
 
 [build-dependencies]
 protoc-grpcio = "0.1"

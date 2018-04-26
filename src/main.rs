@@ -3,8 +3,6 @@ extern crate clap;
 extern crate clipboard;
 extern crate cursive;
 extern crate cursive_table_view;
-#[macro_use]
-extern crate diesel;
 extern crate daemonize;
 extern crate env_logger;
 extern crate futures;
@@ -16,7 +14,6 @@ extern crate hyper;
 extern crate log;
 extern crate mime;
 extern crate serde;
-extern crate sys_info;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
@@ -24,6 +21,7 @@ extern crate termion;
 extern crate walkdir;
 
 // Workspace crates
+extern crate weaver_db;
 extern crate weaver_error;
 extern crate weaver_rpc;
 
@@ -38,12 +36,9 @@ extern crate weaver_rpc;
 ///
 
 mod cli;
-mod config;
 mod display;
-mod entities;
 mod controllers;
 mod http_server;
-mod store;
 
 fn main() {
     // Setup the logger on the env variable WEAVER.

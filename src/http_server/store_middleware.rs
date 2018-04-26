@@ -1,18 +1,49 @@
-use ::store::RealStore;
+use ::weaver_db::RealStore;
 use gotham::handler::HandlerFuture;
-use gotham::middleware::Middleware;
+use gotham::middleware::{Middleware, NewMiddleware};
 use gotham::state::State;
+use std::io;
+use std::sync::Arc;
+use super::StoreData;
 
-#[derive(NewMiddleware, Copy, Clone, Default)]
-pub struct StoreMiddleware;
+pub struct StoreMiddleware {
+    store: Arc<RealStore>
+}
 
-impl Middleware for StoreMiddleware {
+
+pub struct StoreMiddlewareImpl {
+    data: StoreData,
+}
+
+impl StoreMiddleware {
+    pub fn new(store: Arc<RealStore>) -> StoreMiddleware {
+        StoreMiddleware {
+            store
+        }
+    }
+}
+
+impl Middleware for StoreMiddlewareImpl {
     fn call<Chain>(self, mut state: State, chain: Chain) -> Box<HandlerFuture>
         where Chain: FnOnce(State) -> Box<HandlerFuture> + 'static
     {
-        state.put(RealStore::new().expect("store"));
+        state.put::<StoreData>(self.data);
         chain(state)
     }
 }
 
+impl NewMiddleware for StoreMiddleware {
+    type Instance = StoreMiddlewareImpl;
 
+    fn new_middleware(&self) -> io::Result<StoreMiddlewareImpl> {
+        let epic = self.store.epic()
+            .map_err(|_| io::Error::new(io::ErrorKind::Other, "bad epic"))?;
+        Ok(StoreMiddlewareImpl {
+            data: StoreData {
+                connection: self.store.connection()
+                    .map_err(|_| io::Error::new(io::ErrorKind::Other, "store connection"))?,
+                epic,
+            }
+        })
+    }
+}

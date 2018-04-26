@@ -1,11 +1,11 @@
 use ::cli::DataSubCommand;
-use ::config::file_utils;
+use weaver_db::config::file_utils;
 use weaver_error::*;
 use std::process::Command;
-use store::RealStore;
+use weaver_db::RealStore;
 
 /// Execute subcommands for the Data command.
-pub fn run(_store: &mut RealStore, command: DataSubCommand) -> Result<()> {
+pub fn run(_store: & RealStore, command: DataSubCommand) -> Result<()> {
     match command {
         DataSubCommand::Sqlite => {
             if let Some(db_path) = file_utils::default_database()?.to_str() {

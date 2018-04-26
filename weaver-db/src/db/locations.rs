@@ -1,5 +1,5 @@
-use ::store::backends::schema::locations;
-use ::store::Connection;
+use ::backends::schema::locations;
+use ::Connection;
 use diesel;
 use diesel::prelude::*;
 use weaver_error::*;

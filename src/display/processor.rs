@@ -1,4 +1,3 @@
-use config;
 use cursive::{CbFunc as CursiveCbFunc, Cursive};
 use cursive::views::EditView;
 use std::sync::{Arc, Mutex};
@@ -6,6 +5,7 @@ use std::sync::mpsc;
 use std::thread;
 use super::{FormattedAction, table, UserSelection};
 use super::output_selector;
+use weaver_db::config;
 
 
 /// Message types sent to the selection processor
@@ -200,7 +200,7 @@ pub fn create(table: table::Table,
                 }
                 Ok(Msg::JumpToSelection) => {
                     debug!("Received JumpToSelection");
-                    let current_id = processor.formatted_action.as_ref().map(|a| a.id-1);
+                    let current_id = processor.formatted_action.as_ref().map(|a| a.id - 1);
                     processor.filter(None, current_id);
                 }
                 Ok(Msg::JumpToNextMatch) => {

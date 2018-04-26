@@ -1,13 +1,11 @@
 use ::cli;
-use ::config::file_utils::{app_folder, read_content, write_content};
-/// Handle operations on flows.
-
-use ::entities::Flow;
-use weaver_error::*;
 use std::fs;
 use std::path::{Path, PathBuf};
 use super::shell_proxy;
 use walkdir::WalkDir;
+use weaver_db::config::file_utils::{app_folder, read_content, write_content};
+use weaver_db::entities::Flow;
+use weaver_error::*;
 
 /// Return the global or local folder for flows.
 fn flows_folder(global: bool) -> Result<PathBuf> {

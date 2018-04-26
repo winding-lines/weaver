@@ -1,18 +1,17 @@
-use config::OutputKind;
 use cursive::Cursive;
 use cursive::event::{Event, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
-pub use self::formatted_action::FormattedAction;
 use self::processor::Msg;
 use std::sync::mpsc;
+use weaver_db::entities::FormattedAction;
+use weaver_db::config::OutputKind;
 use weaver_error::*;
 
 mod table;
 mod processor;
 mod output_selector;
-mod formatted_action;
 
 
 pub struct UserSelection {

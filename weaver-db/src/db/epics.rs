@@ -1,5 +1,5 @@
-use ::store::backends::schema::epics;
-use ::store::Connection;
+use ::backends::schema::epics;
+use ::Connection;
 use diesel;
 use diesel::prelude::*;
 use weaver_error::{Result, ResultExt};

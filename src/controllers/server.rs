@@ -1,10 +1,12 @@
-use ::config::{file_utils, ServerRun};
 use ::http_server;
 use daemonize::Daemonize;
 use std::fs;
 use std::net::{TcpListener, ToSocketAddrs};
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::thread;
+use weaver_db::config::{file_utils, ServerRun};
+use weaver_db::RealStore;
 use weaver_error::*;
 use weaver_rpc;
 
@@ -53,7 +55,7 @@ fn is_listening(http_addr: &str) -> bool {
 pub struct Server;
 
 /// Start a server and use a `Router` to dispatch requests
-pub fn start(run: &ServerRun) -> Result<Server> {
+pub fn start(run: &ServerRun, store: Arc<RealStore>) -> Result<Server> {
     match run {
         &ServerRun::Foreground => {}
         &ServerRun::Daemonize => {
@@ -69,10 +71,11 @@ pub fn start(run: &ServerRun) -> Result<Server> {
                 .chain_err(|| "start in daemon mode")?;
         }
     }
-    thread::spawn( || {
-        let _http = http_server::start(HTTP_ADDRESS);
+    let one_store = Arc::clone(&store);
+    thread::spawn(move || {
+        let _http = http_server::start(HTTP_ADDRESS, one_store);
     });
-    let rpc = weaver_rpc::server::Server::new(RPC_ADDRESS)?;
+    let rpc = weaver_rpc::server::Server::new(RPC_ADDRESS, store)?;
     rpc.start();
 
     Ok(Server)

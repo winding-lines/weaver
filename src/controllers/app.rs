@@ -1,18 +1,19 @@
 use ::cli::Command::*;
-use ::cli::ServerSubCommand;
 use ::cli::parse;
-use ::config::{file_utils, OutputKind, ServerRun};
+use ::cli::ServerSubCommand;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use display;
-use store::{actions, RealStore};
-use super::{data, server, flows, shell_prompt, shell_proxy};
+use std::sync::Arc;
+use super::{data, flows, server, shell_prompt, shell_proxy};
+use weaver_db::{actions, RealStore};
+use weaver_db::config::{file_utils, OutputKind, ServerRun};
 use weaver_error::*;
 
-fn run_history(mut store: &mut RealStore, output_kind: OutputKind) -> Result<()> {
-    use config::Channel::*;
+fn run_history(store: &RealStore, output_kind: OutputKind) -> Result<()> {
+    use weaver_db::config::Channel::*;
 
     let epic = store.epic()?;
-    let actions = actions::history(&mut store, &epic.as_ref().map(String::as_str))?;
+    let actions = actions::history(&store.connection()?, &epic.as_ref().map(String::as_str))?;
     let user_selection = display::show(actions, output_kind)?;
     if let Some(action) = user_selection.action {
         match user_selection.kind {
@@ -50,11 +51,11 @@ fn run_history(mut store: &mut RealStore, output_kind: OutputKind) -> Result<()>
 
 /// Main dispatch function;
 pub fn run() -> Result<()> {
-    let mut store = RealStore::new()?;
+    let store = Arc::new(RealStore::new()?);
     let wanted = parse();
     debug!("Executing cli command {:?}", wanted);
     match wanted {
-        ActionHistory(output_kind) => run_history(&mut store, output_kind),
+        ActionHistory(output_kind) => run_history(&*store, output_kind),
         FlowRecommend => {
             flows::recommend()
         }
@@ -66,10 +67,10 @@ pub fn run() -> Result<()> {
             flows::create(name, global, actions)
         }
         Data(sub) => {
-            data::run(&mut store, sub)
+            data::run(&*store, sub)
         }
         EpicActivate(name) => {
-            store.set_epic(name)
+            RealStore::save_epic(name)
         }
         EpicList => {
             store.epic_names().map(|names| {
@@ -82,7 +83,7 @@ pub fn run() -> Result<()> {
             Ok(())
         }
         Server(ServerSubCommand::Start(ref mode)) => {
-            server::start(mode).map(|_| ())
+            server::start(mode, store).map(|_| ())
         }
         Server(ServerSubCommand::Check) => {
             server::check()
@@ -93,9 +94,10 @@ pub fn run() -> Result<()> {
             } else {
                 let maybe_epic = store.epic()?;
                 if store.weaver().start_server.unwrap_or(false) && !server::is_running() {
-                    let _ = server::start(&ServerRun::Daemonize)?;
+                    let my_store = Arc::clone(&store);
+                    let _ = server::start(&ServerRun::Daemonize, my_store)?;
                 }
-                shell_prompt::run(&mut store, maybe_epic.as_ref().map(String::as_str))
+                shell_prompt::run(& store, maybe_epic.as_ref().map(String::as_str))
             }
         }
     }

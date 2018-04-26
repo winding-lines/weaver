@@ -1,8 +1,8 @@
-use ::config::file_utils;
-use weaver_error::*;
-use ::store::RealStore;
-use ::store::actions;
 use std::env;
+use weaver_db::actions;
+use weaver_db::config::file_utils;
+use weaver_db::RealStore;
+use weaver_error::*;
 
 /// Check to see if the environment is setup properly.
 pub fn check() -> Result<()> {
@@ -18,7 +18,7 @@ pub fn check() -> Result<()> {
 }
 
 /// Processes the actions when called from the PS1 prompt.
-pub fn run(mut store: &mut RealStore, epic: Option<&str>) -> Result<()> {
+pub fn run(store: & RealStore, epic: Option<&str>) -> Result<()> {
 
 
     // output the current epic so that it can end up in the prompt
@@ -26,7 +26,7 @@ pub fn run(mut store: &mut RealStore, epic: Option<&str>) -> Result<()> {
 
     // save any shell history items in the store
     for input in file_utils::read_stdin(1)? {
-        actions::add_shell_action(&mut store, &input, epic)?;
+        actions::add_shell_action(&store.connection()?, &input, epic)?;
     }
     Ok(())
 }

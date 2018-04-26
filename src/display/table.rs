@@ -3,8 +3,8 @@ use cursive::Cursive;
 use cursive_table_view::{TableView, TableViewItem};
 use std::cmp::Ordering;
 use std::sync::mpsc;
-use super::formatted_action::FormattedAction;
 use super::processor::Msg;
+use weaver_db::entities::FormattedAction;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum BasicColumn {

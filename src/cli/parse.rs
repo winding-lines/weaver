@@ -1,4 +1,4 @@
-use ::config::{OutputKind, ServerRun};
+use ::weaver_db::config::{OutputKind, ServerRun};
 use clap::{App, Arg, ArgGroup, SubCommand};
 use super::APP_NAME;
 
@@ -127,7 +127,7 @@ pub fn parse() -> Command {
         return Command::Noop;
     }
     if let Some(_actions) = matches.subcommand_matches(COMMAND_ACTIONS) {
-        use config::{Content, Channel};
+        use weaver_db::config::{Content, Channel};
 
         let content = match _actions.value_of("output-content") {
             Some("path") => Content::Path,

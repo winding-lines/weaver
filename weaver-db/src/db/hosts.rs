@@ -1,5 +1,5 @@
-use ::store::backends::schema::hosts;
-use ::store::Connection;
+use ::backends::schema::hosts;
+use ::Connection;
 use diesel;
 use diesel::prelude::*;
 use weaver_error::*;

@@ -1,0 +1,15 @@
+[package]
+name = "weaver-db"
+version = "0.1.0"
+authors = ["Marius Seritan <git@winding-lines.com>"]
+
+[dependencies]
+diesel = { version = "1.2", features = ["sqlite"] }
+chrono = "*"
+sys-info = "*"
+log = "*"
+serde = "*"
+serde_derive = "*"
+serde_json = "*"
+
+weaver-error = {path="../weaver-error"}

@@ -1,4 +1,4 @@
-use ::store::{actions, RealStore};
+use ::weaver_db::actions;
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError, IntoResponse};
 use gotham::http::response::create_response;
@@ -8,6 +8,7 @@ use hyper::{Response, StatusCode};
 use hyper::{Body, Chunk};
 use mime;
 use serde_json as json;
+use super::StoreData;
 use weaver_error::*;
 
 
@@ -49,8 +50,8 @@ impl IntoResponse for BrowserAction {
 pub fn get_handler(mut state: State) -> (State, BrowserAction) {
     let last = {
         // Leaking test setup in here, need to figure out better dependeny injection.
-        if let Some(store) = state.try_borrow_mut::<RealStore>() {
-            actions::last_url(store)
+        if let Some(store) = state.try_borrow_mut::<StoreData>() {
+            actions::last_url(&store.connection)
                 .unwrap_or(None)
         } else {
             None
@@ -65,11 +66,11 @@ pub fn get_handler(mut state: State) -> (State, BrowserAction) {
     (state, product)
 }
 
-fn process_post(body: Chunk, mut store: &mut RealStore) -> Result<String> {
+fn process_post(body: Chunk, store: &StoreData) -> Result<String> {
     let input = body.to_vec();
     let action: BrowserAction = json::from_slice(&input).expect("input");
-    let epic = store.epic()?;
-    let code = actions::add_url_action(&mut store, &action.url, action.transition_type.as_str(), epic.as_ref().map(String::as_str))?;
+    let epic = &store.epic;
+    let code = actions::add_url_action(&store.connection, &action.url, action.transition_type.as_str(), epic.as_ref().map(String::as_str))?;
     Ok(format!("{}", code))
 }
 
@@ -79,7 +80,7 @@ pub fn post_handler(mut state: State) -> Box<HandlerFuture> {
         .then(move |full_body| match full_body {
             Ok(body) => {
                 debug!("received url");
-                match process_post(body, state.borrow_mut::<RealStore>()) {
+                match process_post(body, state.borrow::<StoreData>()) {
                     Ok(out) => {
                         let res = create_response(
                             &state,

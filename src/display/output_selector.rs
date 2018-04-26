@@ -1,4 +1,3 @@
-use config::{Channel, Content, OutputKind};
 use cursive::Cursive;
 use cursive::event::{Event, Key};
 use cursive::view::Margins;
@@ -7,6 +6,7 @@ use std::cmp::PartialEq;
 use std::fmt::Display;
 use std::sync::mpsc;
 use super::processor::Msg;
+use weaver_db::config::{Channel, Content, OutputKind};
 
 fn all_channel() -> Vec<Channel> {
     vec![

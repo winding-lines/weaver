@@ -1,5 +1,5 @@
-use ::store::backends::schema::commands;
-use ::store::Connection;
+use ::backends::schema::commands;
+use ::Connection;
 use diesel;
 use diesel::prelude::*;
 use weaver_error::{Result, ResultExt};

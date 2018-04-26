@@ -9,6 +9,7 @@ use proto::hello_grpc::{self, Greeter};
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
 use weaver_error::{Result, ResultExt};
+use weaver_db::RealStore;
 
 #[derive(Clone)]
 struct GreeterService;
@@ -26,7 +27,7 @@ impl Greeter for GreeterService {
 pub struct Server(grpcio::Server);
 
 impl Server {
-    pub fn new(rpc_addr: &str) -> Result<Server> {
+    pub fn new(rpc_addr: &str, _store: Arc<RealStore>) -> Result<Server> {
         match rpc_addr.to_socket_addrs().map(|ref mut i| i.next()) {
             Ok(Some(a)) => {
                 let env = Arc::new(Environment::new(1));
