@@ -1,4 +1,4 @@
-use ::actions::NewAction;
+use ::local_api::NewAction;
 use ::backends::schema::*;
 use ::Connection;
 use ::db;

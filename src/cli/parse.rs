@@ -1,6 +1,7 @@
 use ::weaver_db::config::{OutputKind, ServerRun};
-use clap::{App, Arg, ArgGroup, SubCommand};
+use clap::{App, Arg, ArgGroup, SubCommand, ArgMatches};
 use super::APP_NAME;
+use super::ServerConfig;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const DESCRIPTION: &'static str = env!["CARGO_PKG_DESCRIPTION"];
@@ -8,7 +9,7 @@ const DESCRIPTION: &'static str = env!["CARGO_PKG_DESCRIPTION"];
 /// Commands returned by the parser for execution in the main loop.
 #[derive(Debug)]
 pub enum Command {
-    ActionHistory(OutputKind),
+    ActionHistory(OutputKind, bool),
     FlowRecommend,
     FlowCreate(String, bool),
     FlowRun(String),
@@ -18,6 +19,11 @@ pub enum Command {
     Server(ServerSubCommand),
     ShellPrompt(bool),
     Data(DataSubCommand),
+}
+
+pub struct CommandAndConfig {
+    pub command: Command,
+    pub server: ServerConfig,
 }
 
 
@@ -34,6 +40,7 @@ pub enum ServerSubCommand {
     Check,
 }
 
+
 // Constants for command names
 const COMMAND_ACTIONS: &str = "actions";
 const COMMAND_RUN: &str = "run";
@@ -44,7 +51,11 @@ const COMMAND_SERVER: &str = "server";
 const COMMAND_DATA: &str = "data";
 
 /// Parse a Command from the command line options.
-pub fn parse() -> Command {
+pub fn parse() -> CommandAndConfig {
+
+    // For now the server config is hardcoded.
+    let server = ServerConfig::current();
+
     let matches = App::new(APP_NAME)
         .version(VERSION)
         .about(DESCRIPTION)
@@ -65,6 +76,9 @@ pub fn parse() -> Command {
                 .long("print")
                 .short("p")
                 .help("print the selected action"))
+            .group(ArgGroup::with_name("output-channel")
+                .args(&["run", "copy", "print"]))
+
             .arg(Arg::with_name("path")
                 .long("op")
                 .help("output the path"))
@@ -74,10 +88,11 @@ pub fn parse() -> Command {
             .arg(Arg::with_name("path-with-command")
                 .long("opc")
                 .help(" output the path and the command"))
-            .group(ArgGroup::with_name("output-channel")
-                .args(&["run", "copy", "print"]))
             .group(ArgGroup::with_name("output-content")
-                .args(&["path", "command", "path-with-command"])))
+                .args(&["path", "command", "path-with-command"]))
+            .arg(Arg::with_name("grpc")
+                .long("grpc")))
+
         .subcommand(SubCommand::with_name(COMMAND_RUN)
             .about("run the flow with the given name")
             .arg(Arg::with_name("NAME")
@@ -122,26 +137,34 @@ pub fn parse() -> Command {
                 .about("Start an sqlite3 shell")))
         .get_matches();
 
+    CommandAndConfig {
+        command: parse_command(matches),
+        server: server,
+    }
+}
+
+fn parse_command(matches: ArgMatches)-> Command {
     if matches.is_present("version") {
         println!("{}", VERSION);
         return Command::Noop;
     }
-    if let Some(_actions) = matches.subcommand_matches(COMMAND_ACTIONS) {
+    if let Some(actions) = matches.subcommand_matches(COMMAND_ACTIONS) {
         use weaver_db::config::{Content, Channel};
 
-        let content = match _actions.value_of("output-content") {
+        let content = match actions.value_of("output-content") {
             Some("path") => Content::Path,
             Some("path-with-command") => Content::PathWithCommand,
             Some("command") | None => Content::Command,
             Some(_) => panic!("bad output-content"),
         };
-        let channel = match _actions.value_of("output-channel") {
+        let channel = match actions.value_of("output-channel") {
             Some("run") => Channel::Run,
             Some("copy") => Channel::Copy,
             Some("print") | None => Channel::Print,
             Some(_) => panic!("bad output-channel"),
         };
-        return Command::ActionHistory(OutputKind { content, channel });
+        let grpc = actions.is_present("grpc");
+        return Command::ActionHistory(OutputKind { content, channel}, grpc );
     }
     if let Some(run) = matches.subcommand_matches(COMMAND_CREATE) {
         let name = run.value_of("NAME").unwrap();

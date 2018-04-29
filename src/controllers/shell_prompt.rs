@@ -1,5 +1,5 @@
 use std::env;
-use weaver_db::actions;
+use weaver_db::local_api;
 use weaver_db::config::file_utils;
 use weaver_db::RealStore;
 use weaver_error::*;
@@ -26,7 +26,7 @@ pub fn run(store: & RealStore, epic: Option<&str>) -> Result<()> {
 
     // save any shell history items in the store
     for input in file_utils::read_stdin(1)? {
-        actions::add_shell_action(&store.connection()?, &input, epic)?;
+        local_api::add_shell_action(&store.connection()?, &input, epic)?;
     }
     Ok(())
 }

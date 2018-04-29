@@ -17,7 +17,7 @@ use diesel::sqlite::SqliteConnection;
 use weaver_error::*;
 
 
-pub mod actions;
+pub mod local_api;
 pub mod entities;
 mod db;
 mod backends;

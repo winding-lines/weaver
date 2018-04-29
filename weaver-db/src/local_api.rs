@@ -1,6 +1,6 @@
-use ::entities::FormattedAction;
-use ::db;
 use ::Connection;
+use ::db;
+use ::entities::FormattedAction;
 use chrono::prelude::*;
 use std::env;
 use sys_info;
@@ -21,7 +21,7 @@ fn now() -> String {
     utc.to_rfc3339()
 }
 
-pub fn history<T: AsRef<str>>(connection: &Connection, _epic: &Option<T>) -> Result<Vec<FormattedAction>> {
+pub fn history<T: Into<String>>(_epic: Option<T>, connection: &Connection) -> Result<Vec<FormattedAction>> {
     db::actions2::fetch_all(connection)
 }
 

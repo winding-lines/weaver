@@ -1,40 +1,25 @@
-extern crate futures;
-extern crate grpcio;
-
 use futures::Future;
 use futures::sync::oneshot;
-use grpcio::{Environment, RpcContext, ServerBuilder, UnarySink};
-use proto::hello::{HelloReply, HelloRequest};
-use proto::hello_grpc::{self, Greeter};
+use grpcio::{self, Environment, ServerBuilder};
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
-use weaver_error::{Result, ResultExt};
+use super::{greeter, historian};
 use weaver_db::RealStore;
+use weaver_error::{Result, ResultExt};
 
-#[derive(Clone)]
-struct GreeterService;
-
-impl Greeter for GreeterService {
-    fn say_hello(&self, ctx: RpcContext, req: HelloRequest, sink: UnarySink<HelloReply>) {
-        let mut reply = HelloReply::new();
-        reply.set_message(format!("Hello back {}", req.get_name()));
-        let f = sink.success(reply)
-            .map_err(move |err| eprintln!("Failed to reply: {:?}", err));
-        ctx.spawn(f)
-    }
-}
 
 pub struct Server(grpcio::Server);
 
+
 impl Server {
-    pub fn new(rpc_addr: &str, _store: Arc<RealStore>) -> Result<Server> {
+    pub fn new(rpc_addr: &str, store: Arc<RealStore>) -> Result<Server> {
         match rpc_addr.to_socket_addrs().map(|ref mut i| i.next()) {
             Ok(Some(a)) => {
                 let env = Arc::new(Environment::new(1));
-                let service = hello_grpc::create_greeter(GreeterService);
-                let inner = ServerBuilder::new(env)
-                    .register_service(service)
-                    .bind(format!("{}",a.ip()), a.port())
+                let inner = ServerBuilder::new(env);
+                let inner = greeter::register(inner);
+                let inner = historian::register(inner, store);
+                let inner = inner.bind(format!("{}", a.ip()), a.port())
                     .build()
                     .chain_err(|| "grpc server start")?;
                 for &(ref host, port) in inner.bind_addrs() {

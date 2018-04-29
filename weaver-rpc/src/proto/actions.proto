@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package actions;
+
+service Historian {
+    rpc list (Epic) returns (History) {
+    }
+}
+
+message Epic {
+    string name = 1;
+}
+
+message History {
+    repeated FormattedAction action = 1;
+}
+
+message FormattedAction {
+    uint32 id = 1;
+    string kind = 2;
+    string name = 3;
+    string location = 4;
+    string epic = 5;
+    string annotation = 6;
+}

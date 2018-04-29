@@ -9,10 +9,7 @@ use weaver_db::config::{file_utils, ServerRun};
 use weaver_db::RealStore;
 use weaver_error::*;
 use weaver_rpc;
-
-const HTTP_ADDRESS: &'static str = "127.0.0.1:8464";
-const RPC_ADDRESS: &'static str = "127.0.0.1:8465";
-
+use cli::ServerConfig;
 
 fn server_folder() -> Result<PathBuf> {
     file_utils::app_folder().and_then(|mut path| {
@@ -55,7 +52,7 @@ fn is_listening(http_addr: &str) -> bool {
 pub struct Server;
 
 /// Start a server and use a `Router` to dispatch requests
-pub fn start(run: &ServerRun, store: Arc<RealStore>) -> Result<Server> {
+pub fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> Result<Server> {
     match run {
         &ServerRun::Foreground => {}
         &ServerRun::Daemonize => {
@@ -72,23 +69,24 @@ pub fn start(run: &ServerRun, store: Arc<RealStore>) -> Result<Server> {
         }
     }
     let one_store = Arc::clone(&store);
+    let http_address = config.http_address.clone();
     thread::spawn(move || {
-        let _http = http_server::start(HTTP_ADDRESS, one_store);
+        let _http = http_server::start(&http_address, one_store);
     });
-    let rpc = weaver_rpc::server::Server::new(RPC_ADDRESS, store)?;
+    let rpc = weaver_rpc::server::Server::new(&config.rpc_address, store)?;
     rpc.start();
 
     Ok(Server)
 }
 
-pub fn is_running() -> bool {
-    is_listening(HTTP_ADDRESS)
+pub fn is_running(config: &ServerConfig) -> bool {
+    is_listening(&config.http_address)
 }
 
-pub fn check() -> Result<()> {
-    println!("http listening {}", is_listening(HTTP_ADDRESS));
-    println!("rpc listening {}", is_listening(RPC_ADDRESS));
-    let rpc = weaver_rpc::client::check(RPC_ADDRESS)?;
+pub fn check(config: &ServerConfig) -> Result<()> {
+    println!("http listening {}", is_listening(&config.http_address));
+    println!("rpc listening {}", is_listening(&config.rpc_address));
+    let rpc = weaver_rpc::client::check(&config.rpc_address)?;
     println!("rpc status {}", rpc);
     Ok(())
 }

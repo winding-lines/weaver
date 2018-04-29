@@ -1,4 +1,4 @@
-use ::weaver_db::actions;
+use ::weaver_db::local_api;
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError, IntoResponse};
 use gotham::http::response::create_response;
@@ -51,7 +51,7 @@ pub fn get_handler(mut state: State) -> (State, BrowserAction) {
     let last = {
         // Leaking test setup in here, need to figure out better dependeny injection.
         if let Some(store) = state.try_borrow_mut::<StoreData>() {
-            actions::last_url(&store.connection)
+            local_api::last_url(&store.connection)
                 .unwrap_or(None)
         } else {
             None
@@ -70,7 +70,7 @@ fn process_post(body: Chunk, store: &StoreData) -> Result<String> {
     let input = body.to_vec();
     let action: BrowserAction = json::from_slice(&input).expect("input");
     let epic = &store.epic;
-    let code = actions::add_url_action(&store.connection, &action.url, action.transition_type.as_str(), epic.as_ref().map(String::as_str))?;
+    let code = local_api::add_url_action(&store.connection, &action.url, action.transition_type.as_str(), epic.as_ref().map(String::as_str))?;
     Ok(format!("{}", code))
 }
 

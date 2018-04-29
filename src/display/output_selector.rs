@@ -47,14 +47,16 @@ fn create_radio_group<T>(container: &mut LinearLayout, values: Vec<T>, initial: 
 /// Display the Outpu selector with the current state selected.
 pub fn show_output_selection(siv: &mut Cursive, kind: OutputKind, ch: mpsc::Sender<Msg>) {
     let mut output_pane = LinearLayout::vertical();
-    output_pane.add_child(TextView::new("Output channel:"));
-    let channel_group = create_radio_group(&mut output_pane,
-                                           all_channel(),
-                                           &kind.channel);
+
     output_pane.add_child(TextView::new("Output content:"));
     let content_group = create_radio_group(&mut output_pane,
                                            all_content(),
                                            &kind.content);
+
+    output_pane.add_child(TextView::new("Output channel:"));
+    let channel_group = create_radio_group(&mut output_pane,
+                                           all_channel(),
+                                           &kind.channel);
     output_pane.add_child(TextView::new("<ESC> to exit"));
 
     let esc_handler = {
@@ -64,13 +66,12 @@ pub fn show_output_selection(siv: &mut Cursive, kind: OutputKind, ch: mpsc::Send
         let my_content = content_group.clone();
         let channel = ch.clone();
 
-        // Build the actual handler and take over the above handles.
+        // Build the actual handler and take over the above UI handles.
         // We need to use the handles when invoked to get the value at that time.
         move |s: &mut Cursive| {
             let kind = OutputKind {
                 channel: (&*my_channel.selection()).clone(),
                 content: (&*my_content.selection()).clone(),
-
             };
 
             channel.send(Msg::SelectKind(kind)).expect("Send SelectKind message");
