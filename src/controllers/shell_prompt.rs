@@ -1,7 +1,8 @@
 use std::env;
-use weaver_db::local_api;
+use local_api;
 use weaver_db::config::file_utils;
 use weaver_db::RealStore;
+use weaver_db::entities::NewAction;
 use weaver_error::*;
 
 /// Check to see if the environment is setup properly.
@@ -26,7 +27,8 @@ pub fn run(store: & RealStore, epic: Option<&str>) -> Result<()> {
 
     // save any shell history items in the store
     for input in file_utils::read_stdin(1)? {
-        local_api::add_shell_action(&store.connection()?, &input, epic)?;
+        let action = NewAction::build_from_shell( &input, epic)?;
+        local_api::insert_action(action, &store.destination())?;
     }
     Ok(())
 }

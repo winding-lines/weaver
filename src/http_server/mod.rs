@@ -9,7 +9,7 @@ use gotham::state::State;
 use hyper::{Response, StatusCode};
 use mime;
 use weaver_error::*;
-use weaver_db::{Connection, RealStore};
+use weaver_db::{Destination, RealStore};
 use std::sync::Arc;
 
 
@@ -17,10 +17,11 @@ mod store_middleware;
 mod url_handler;
 mod epic_handler;
 
+
 #[derive(StateData)]
 pub struct StoreData {
     epic: Option<String>,
-    connection: Connection,
+    destination: Destination,
 }
 
 fn index(state: State) -> (State, Response) {

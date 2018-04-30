@@ -16,25 +16,36 @@ use ::entities::Weaver;
 use diesel::sqlite::SqliteConnection;
 use weaver_error::*;
 
-
-pub mod local_api;
 pub mod entities;
 mod db;
 mod backends;
 pub mod config;
 
 pub type Connection = SqliteConnection;
+pub use db::actions2;
+
+pub enum ApiConfig {
+    Local,
+    Remote(String),
+}
+
+pub enum Destination {
+    Local(Result<Connection>),
+    Remote(String),
+}
 
 pub struct RealStore {
     json_store: backends::json_store::JsonStore,
+    config: ApiConfig,
 }
 
 
 impl RealStore {
-    pub fn new() -> Result<RealStore> {
+    pub fn new(config: ApiConfig) -> Result<RealStore> {
         let json_store = backends::json_store::JsonStore::init()?;
         Ok(RealStore {
             json_store,
+            config,
         })
     }
 
@@ -49,6 +60,13 @@ impl RealStore {
         let connection = SqliteConnection::establish(&db_url)
             .chain_err(|| format!("Cannot open database {}", db_url))?;
         Ok(connection)
+    }
+
+    pub fn destination(&self) -> Destination {
+        match &self.config {
+            &ApiConfig::Local => Destination::Local(self.connection()),
+            &ApiConfig::Remote(ref a) => Destination::Remote(a.clone()),
+        }
     }
 
     /// Save this epic name in the local storage,

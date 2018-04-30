@@ -1,8 +1,7 @@
-use ::local_api::NewAction;
 use ::backends::schema::*;
 use ::Connection;
 use ::db;
-use ::entities::FormattedAction;
+use ::entities::{FormattedAction, NewAction};
 use diesel;
 use diesel::prelude::*;
 use weaver_error::*;
@@ -96,7 +95,7 @@ pub fn insert(connection: &Connection, action: NewAction) -> Result<u64> {
             None
         };
         let command_id = db::commands::fetch_or_create_id(connection, &action.kind, &action.command)?;
-        let host_id = db::hosts::fetch_or_create_id(connection, action.host)?;
+        let host_id = db::hosts::fetch_or_create_id(connection, &action.host)?;
         let migrated = (
             actions2::dsl::command_id.eq(command_id),
             actions2::dsl::executed.eq(action.executed),

@@ -1,24 +1,19 @@
 use ::cli::Command::*;
 use ::cli::parse;
-use ::cli::{CommandAndConfig, ServerConfig, ServerSubCommand};
+use ::cli::{CommandAndConfig, ServerSubCommand};
 use clipboard::{ClipboardContext, ClipboardProvider};
 use display;
 use std::sync::Arc;
 use super::{data, flows, server, shell_prompt, shell_proxy};
-use weaver_db::{local_api, RealStore};
+use local_api;
+use weaver_db::{Destination, RealStore};
 use weaver_db::config::{file_utils, OutputKind, ServerRun};
 use weaver_error::*;
-use weaver_rpc;
 
-fn run_history(store: &RealStore, config: &ServerConfig, output_kind: OutputKind, grpc: bool) -> Result<()> {
+fn run_history(destination: &Destination, output_kind: OutputKind, epic: Option<String>) -> Result<()> {
     use weaver_db::config::Channel::*;
 
-    let epic = store.epic()?;
-    let actions = if grpc {
-        weaver_rpc::client::history(epic, &config.rpc_address)?
-    } else {
-        local_api::history(epic, &store.connection()? )?
-    };
+    let actions = local_api::history(epic, &destination)?;
     let user_selection = display::show(actions, output_kind)?;
     if let Some(action) = user_selection.action {
         match user_selection.kind {
@@ -56,11 +51,12 @@ fn run_history(store: &RealStore, config: &ServerConfig, output_kind: OutputKind
 
 /// Main dispatch function;
 pub fn run() -> Result<()> {
-    let store = Arc::new(RealStore::new()?);
-    let CommandAndConfig { command, server: server_config} = parse();
+    let CommandAndConfig { command, server_config, api_config} = parse();
+    let store = Arc::new(RealStore::new(api_config)?);
     debug!("Executing cli command {:?}", command);
+    let epic = store.epic()?;
     match command {
-        ActionHistory(output_kind, grpc) => run_history(&*store, &server_config, output_kind, grpc),
+        ActionHistory(output_kind) => run_history( &store.destination(), output_kind, epic),
         FlowRecommend => {
             flows::recommend()
         }

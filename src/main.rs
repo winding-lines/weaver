@@ -39,6 +39,7 @@ mod cli;
 mod display;
 mod controllers;
 mod http_server;
+mod local_api;
 
 fn main() {
     // Setup the logger on the env variable WEAVER.

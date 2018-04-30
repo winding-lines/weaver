@@ -1,4 +1,5 @@
 use ::weaver_db::config::{OutputKind, ServerRun};
+use ::weaver_db::ApiConfig;
 use clap::{App, Arg, ArgGroup, SubCommand, ArgMatches};
 use super::APP_NAME;
 use super::ServerConfig;
@@ -9,7 +10,7 @@ const DESCRIPTION: &'static str = env!["CARGO_PKG_DESCRIPTION"];
 /// Commands returned by the parser for execution in the main loop.
 #[derive(Debug)]
 pub enum Command {
-    ActionHistory(OutputKind, bool),
+    ActionHistory(OutputKind),
     FlowRecommend,
     FlowCreate(String, bool),
     FlowRun(String),
@@ -23,7 +24,8 @@ pub enum Command {
 
 pub struct CommandAndConfig {
     pub command: Command,
-    pub server: ServerConfig,
+    pub server_config: ServerConfig,
+    pub api_config: ApiConfig,
 }
 
 
@@ -62,6 +64,9 @@ pub fn parse() -> CommandAndConfig {
         .arg(Arg::with_name("version")
             .short("V")
             .help("Display the version"))
+        .arg(Arg::with_name("grpc")
+            .long("grpc")
+            .help("Make a remote call to get the data"))
         .subcommand(SubCommand::with_name(COMMAND_ACTIONS)
             .about("select one of your earlier actions")
             .arg(Arg::with_name("run")
@@ -89,9 +94,7 @@ pub fn parse() -> CommandAndConfig {
                 .long("opc")
                 .help(" output the path and the command"))
             .group(ArgGroup::with_name("output-content")
-                .args(&["path", "command", "path-with-command"]))
-            .arg(Arg::with_name("grpc")
-                .long("grpc")))
+                .args(&["path", "command", "path-with-command"])))
 
         .subcommand(SubCommand::with_name(COMMAND_RUN)
             .about("run the flow with the given name")
@@ -137,9 +140,17 @@ pub fn parse() -> CommandAndConfig {
                 .about("Start an sqlite3 shell")))
         .get_matches();
 
+    let api_config = if matches.is_present("grpc") {
+        let rpc_address = server.rpc_address.clone();
+        ApiConfig::Remote(rpc_address)
+    } else {
+        ApiConfig::Local
+    };
     CommandAndConfig {
         command: parse_command(matches),
-        server: server,
+        server_config: server,
+        // TODO: allow the API Config to be changed
+        api_config,
     }
 }
 
@@ -163,8 +174,7 @@ fn parse_command(matches: ArgMatches)-> Command {
             Some("print") | None => Channel::Print,
             Some(_) => panic!("bad output-channel"),
         };
-        let grpc = actions.is_present("grpc");
-        return Command::ActionHistory(OutputKind { content, channel}, grpc );
+        return Command::ActionHistory(OutputKind { content, channel} );
     }
     if let Some(run) = matches.subcommand_matches(COMMAND_CREATE) {
         let name = run.value_of("NAME").unwrap();

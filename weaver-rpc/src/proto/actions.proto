@@ -3,8 +3,8 @@ syntax = "proto3";
 package actions;
 
 service Historian {
-    rpc list (Epic) returns (History) {
-    }
+    rpc list (Epic) returns (History);
+    rpc add (NewAction) returns (CreatedAction);
 }
 
 message Epic {
@@ -22,4 +22,17 @@ message FormattedAction {
     string location = 4;
     string epic = 5;
     string annotation = 6;
+}
+
+message NewAction {
+    string command = 1;
+    string kind = 2;
+    string location = 3;
+    string epic = 4;
+    string host = 5;
+    string executed = 6;
+}
+
+message CreatedAction {
+    uint64 id = 1;
 }

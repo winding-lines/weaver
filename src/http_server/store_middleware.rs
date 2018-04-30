@@ -40,8 +40,7 @@ impl NewMiddleware for StoreMiddleware {
             .map_err(|_| io::Error::new(io::ErrorKind::Other, "bad epic"))?;
         Ok(StoreMiddlewareImpl {
             data: StoreData {
-                connection: self.store.connection()
-                    .map_err(|_| io::Error::new(io::ErrorKind::Other, "store connection"))?,
+                destination: self.store.destination(),
                 epic,
             }
         })
