@@ -23,6 +23,7 @@ pub mod config;
 
 pub type Connection = SqliteConnection;
 pub use db::actions2;
+pub use db::epics;
 
 pub enum ApiConfig {
     Local,
@@ -80,11 +81,6 @@ impl RealStore {
     pub fn epic(&self) -> Result<Option<String>> {
         // let _ = self.json_store.fresh()?;
         Ok(self.json_store.content.active_epic.clone())
-    }
-
-    pub fn epic_names(&self) -> Result<Vec<String>> {
-        let connection = self.connection()?;
-        db::epics::fetch_all(&connection)
     }
 
 

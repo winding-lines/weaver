@@ -1,10 +1,10 @@
 use futures::Future;
 use grpcio::{RpcContext, ServerBuilder, UnarySink};
-use proto::actions::{CreatedAction, Epic, FormattedAction as OutputAction, History, NewAction as InputAction};
+use proto::actions::{CreatedAction, Epic, FormattedAction as OutputAction, History, NewAction as InputAction, Epics};
 use proto::actions_grpc::{self, Historian};
 use protobuf::repeated::RepeatedField;
 use std::sync::Arc;
-use weaver_db::{RealStore, actions2};
+use weaver_db::{RealStore, actions2, epics};
 use weaver_db::entities::NewAction;
 
 #[derive(Clone)]
@@ -74,6 +74,30 @@ impl Historian for HistorianService {
             }
         }
     }
+
+    fn fetch_epics(&self, ctx: RpcContext, req: Epic, sink: UnarySink<Epics>) {
+        let mut reply = Epics::new();
+        match self.0.connection()
+            .and_then(|c| epics::fetch_all(&c)) {
+            Ok(epics) => {
+                let mut output = RepeatedField::new();
+                for epic in epics.into_iter() {
+                    output.push(epic);
+                }
+                reply.set_name(output);
+                let f = sink.success(reply)
+                    .map_err(move |err| eprintln!("Failed to reply: {:?}", err));
+                ctx.spawn(f)
+            }
+            Err(e) => {
+                /* TODO: figure out how to fail a call.
+                let status = RpcStatus::new(RpcStatusCode::Unknown, None);
+                let f = sink.fail(status);
+                ctx.spawn(f);
+                */
+                eprintln!("Failed to fetch actions {:?}", e);
+            }
+        };    }
 }
 
 // Register current service with the Server Builder.

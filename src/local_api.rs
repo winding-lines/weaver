@@ -1,4 +1,4 @@
-use weaver_db::{actions2, Destination};
+use weaver_db::{actions2, epics, Destination};
 use weaver_db::entities::{FormattedAction, NewAction};
 use weaver_error::{Result};
 use weaver_rpc::client;
@@ -32,6 +32,16 @@ pub fn insert_action(new_action: NewAction, destination: &Destination) -> Result
         Destination::Local(Err(_)) => Err("bad connection".into()),
         Destination::Remote(ref rpc_addr) =>
             client::add(new_action, rpc_addr)
+    }
+}
+
+pub fn epic_names(destination: &Destination) -> Result<Vec<String>> {
+    match *destination {
+        Destination::Local(Ok(ref connection)) =>
+            epics::fetch_all(&connection),
+        Destination::Local(Err(_)) => Err("bad connection".into()),
+        Destination::Remote(ref rpc_addr) =>
+            client::fetch_epics(rpc_addr)
     }
 }
 

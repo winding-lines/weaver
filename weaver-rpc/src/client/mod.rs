@@ -51,6 +51,7 @@ pub fn history<T>(epic: Option<T>, rpc_addr: &str) -> Result<Vec<FormattedAction
 
 pub fn add(req: NewAction, rpc_addr: &str) -> Result<u64> {
     use proto::actions::NewAction as InputAction;
+
     let env = Arc::new(EnvBuilder::new().build());
     let ch = ChannelBuilder::new(env).connect(rpc_addr);
     let client = HistorianClient::new(ch);
@@ -68,4 +69,17 @@ pub fn add(req: NewAction, rpc_addr: &str) -> Result<u64> {
 
 pub fn last_url(_rpc_addr: &str) -> Result<Option<(String, String)>> {
    unimplemented!()
+}
+
+pub fn fetch_epics(rpc_addr: &str) -> Result<Vec<String>> {
+    use proto::actions::Epic;
+
+    let env = Arc::new(EnvBuilder::new().build());
+    let ch = ChannelBuilder::new(env).connect(rpc_addr);
+    let client = HistorianClient::new(ch);
+    let epic = Epic::new();
+
+    client.fetch_epics(&epic)
+        .map(|c| c.name.into_vec())
+        .chain_err(|| "rpc fetch_epics")
 }

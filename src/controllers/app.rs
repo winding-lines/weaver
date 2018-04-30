@@ -74,7 +74,7 @@ pub fn run() -> Result<()> {
             RealStore::save_epic(name)
         }
         EpicList => {
-            store.epic_names().map(|names| {
+            local_api::epic_names(&store.destination()).map(|names| {
                 for n in names {
                     println!("{}", n)
                 }

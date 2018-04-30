@@ -5,6 +5,7 @@ package actions;
 service Historian {
     rpc list (Epic) returns (History);
     rpc add (NewAction) returns (CreatedAction);
+    rpc fetch_epics (Epic) returns (Epics);
 }
 
 message Epic {
@@ -35,4 +36,8 @@ message NewAction {
 
 message CreatedAction {
     uint64 id = 1;
+}
+
+message Epics {
+    repeated string name = 1;
 }
