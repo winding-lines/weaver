@@ -67,6 +67,9 @@ pub fn parse() -> CommandAndConfig {
         .arg(Arg::with_name("grpc")
             .long("grpc")
             .help("Make a remote call to get the data"))
+        .arg(Arg::with_name("local")
+            .long("local")
+            .help("Get the data from a local database"))
         .subcommand(SubCommand::with_name(COMMAND_ACTIONS)
             .about("select one of your earlier actions")
             .arg(Arg::with_name("run")
@@ -140,11 +143,11 @@ pub fn parse() -> CommandAndConfig {
                 .about("Start an sqlite3 shell")))
         .get_matches();
 
-    let api_config = if matches.is_present("grpc") {
+    let api_config = if matches.is_present("local") {
+        ApiConfig::Local
+    } else {
         let rpc_address = server.rpc_address.clone();
         ApiConfig::Remote(rpc_address)
-    } else {
-        ApiConfig::Local
     };
     CommandAndConfig {
         command: parse_command(matches),
