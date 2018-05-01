@@ -40,6 +40,7 @@ struct Processor {
     pub formatted_action: Option<FormattedAction>,
     // output_kind needs to be accessed from multiple threads.
     pub output_kind: Arc<Mutex<config::OutputKind>>,
+    pub env: Arc<config::Environment>,
     table: table::Table,
     cursive_sink: mpsc::Sender<Box<CursiveCbFunc>>,
     // A transmit channel to the Processors main loop
@@ -51,7 +52,7 @@ impl Processor {
         // Build the content to display.
         let content = self.formatted_action.as_ref().map(|f| {
             let data = self.output_kind.lock().unwrap();
-            f.clone().as_shell_command(&(*data).content)
+            f.clone().to_shell_command(&(*data).content, &self.env)
         }).unwrap_or(String::from(""));
 
 
@@ -156,6 +157,7 @@ impl Processor {
 /// - refreshes the UI with the filtered data or selection
 pub fn create(table: table::Table,
               kind: config::OutputKind,
+              env: Arc<config::Environment>,
               rx: mpsc::Receiver<Msg>,
               self_tx: mpsc::Sender<Msg>,
               tx: mpsc::Sender<UserSelection>,
@@ -166,6 +168,7 @@ pub fn create(table: table::Table,
             table,
             formatted_action: None,
             output_kind: Arc::new(Mutex::new(kind)),
+            env,
             cursive_sink,
             self_tx,
         };

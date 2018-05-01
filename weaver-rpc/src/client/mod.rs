@@ -5,6 +5,7 @@ use proto::actions_grpc::HistorianClient;
 use proto::hello::HelloRequest;
 use proto::hello_grpc::GreeterClient;
 use std::sync::Arc;
+use weaver_db::config;
 use weaver_db::entities::{FormattedAction, NewAction};
 use weaver_error::{Result, ResultExt};
 
@@ -21,16 +22,17 @@ pub fn check(rpc_addr: &str) -> Result<bool> {
     Ok(true)
 }
 
-pub fn history<T>(epic: Option<T>, rpc_addr: &str) -> Result<Vec<FormattedAction>>
-    where T: Into<String> {
+pub fn history(env: &config::Environment, rpc_addr: &str) -> Result<Vec<FormattedAction>> {
     use proto::actions::Epic;
 
-    let env = Arc::new(EnvBuilder::new().build());
-    let ch = ChannelBuilder::new(env).connect(rpc_addr);
-    let client = HistorianClient::new(ch);
+    let client = {
+        let env = Arc::new(EnvBuilder::new().build());
+        let ch = ChannelBuilder::new(env).connect(rpc_addr);
+        HistorianClient::new(ch)
+    };
 
     let mut request = Epic::new();
-    if let Some(n) = epic {
+    if let Some(n) = env.epic() {
         request.set_name(n.into());
     }
     let reply = client.list(&request).chain_err(|| "rpc history")?;
@@ -58,8 +60,8 @@ pub fn add(req: NewAction, rpc_addr: &str) -> Result<u64> {
     let mut new_action = InputAction::new();
     new_action.set_command(req.command.into());
     new_action.set_kind( req.kind.into());
-    new_action.set_location( req.location.unwrap_or("".into()));
-    new_action.set_epic( req.epic.map(String::from).unwrap_or("".into()));
+    new_action.set_location( req.location.unwrap_or("").into());
+    new_action.set_epic( req.epic.unwrap_or("").into());
     new_action.set_host( req.host);
     new_action.set_executed( req.executed);
     client.add(&new_action)

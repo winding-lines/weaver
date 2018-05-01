@@ -1,5 +1,8 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 pub mod file_utils;
+mod environment;
+
+pub use self::environment::Environment;
 
 pub const APP_FOLDER: &'static str = ".weaver";
 

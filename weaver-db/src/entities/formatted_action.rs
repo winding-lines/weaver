@@ -11,18 +11,19 @@ pub struct FormattedAction {
     pub location: Option<String>,
 }
 
+
 impl FormattedAction {
-    pub fn as_shell_command(self, env: &config::Content) -> String {
+    pub fn to_shell_command(self, content: &config::Content, env: &config::Environment) -> String {
         use config::Content::*;
 
-        match *env {
+        match *content {
             Path => {
-                self.location.map(|a| format!("cd {}", a))
+                self.location.map(|a| format!("cd {}", env.localized_path(&a)))
                     .unwrap_or(String::from(""))
             }
             PathWithCommand => {
                 if self.location.is_some() {
-                    format!("cd {} && {}", self.location.unwrap(), self.name)
+                    format!("cd {} && {}", env.localized_path(&self.location.unwrap()), self.name)
                 } else {
                     self.name
                 }

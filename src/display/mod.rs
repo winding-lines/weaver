@@ -5,8 +5,9 @@ use cursive::traits::*;
 use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
 use self::processor::Msg;
 use std::sync::mpsc;
+use std::sync::Arc;
 use weaver_db::entities::FormattedAction;
-use weaver_db::config::OutputKind;
+use weaver_db::config::{Environment, OutputKind};
 use weaver_error::*;
 
 mod table;
@@ -78,7 +79,7 @@ fn setup_global_keys(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
 }
 
 /// Display the UI which allows the user to exlore and select one of the options.
-pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelection> {
+pub fn show(actions: Vec<FormattedAction>, kind: OutputKind, env: Arc<Environment>) -> Result<UserSelection> {
     // initialize cursive
     let mut siv = create_cursive();
 
@@ -102,6 +103,7 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind) -> Result<UserSelec
 
     let processor = processor::create(table,
                                       kind.clone(),
+                                      env,
                                       process_rx,
                                       process_tx.clone(),
                                       submit_tx,

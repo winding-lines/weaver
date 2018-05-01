@@ -1,16 +1,20 @@
+//! Implement the API to be used on the client. By default it will either use the server
+//! but can also use the local database, if available.
+
 use weaver_db::{actions2, epics, Destination};
 use weaver_db::entities::{FormattedAction, NewAction};
+use weaver_db::config::Environment;
 use weaver_error::{Result};
 use weaver_rpc::client;
 
 
-pub fn history<T: Into<String>>(_epic: Option<T>, destination: &Destination) -> Result<Vec<FormattedAction>> {
+pub fn history(env: &Environment, destination: &Destination) -> Result<Vec<FormattedAction>> {
     match *destination {
         Destination::Local(Ok(ref connection)) =>
             actions2::fetch_all(connection),
         Destination::Local(Err(_)) => Err("bad connection".into()),
         Destination::Remote(ref rpc_addr) =>
-            client::history(_epic, rpc_addr)
+            client::history(env, rpc_addr)
     }
 }
 

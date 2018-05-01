@@ -1,3 +1,6 @@
+//! Server side implementation of the Historian API.
+
+
 use futures::Future;
 use grpcio::{RpcContext, ServerBuilder, UnarySink};
 use proto::actions::{CreatedAction, Epic, FormattedAction as OutputAction, History, NewAction as InputAction, Epics};
@@ -56,7 +59,7 @@ impl Historian for HistorianService {
                     executed: String::from(req.get_executed()),
                     kind: req.get_kind(),
                     command: req.get_command(),
-                    location: Some(String::from(req.get_location())),
+                    location: Some(req.get_location()),
                     epic: Some(req.get_epic()),
                     host: String::from(req.get_host()),
                 };
@@ -75,7 +78,7 @@ impl Historian for HistorianService {
         }
     }
 
-    fn fetch_epics(&self, ctx: RpcContext, req: Epic, sink: UnarySink<Epics>) {
+    fn fetch_epics(&self, ctx: RpcContext, _req: Epic, sink: UnarySink<Epics>) {
         let mut reply = Epics::new();
         match self.0.connection()
             .and_then(|c| epics::fetch_all(&c)) {
