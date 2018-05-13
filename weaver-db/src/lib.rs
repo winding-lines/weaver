@@ -2,6 +2,8 @@ extern crate chrono;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
+extern crate diesel_migrations;
+#[macro_use]
 extern crate log;
 extern crate serde;
 #[macro_use]
@@ -55,7 +57,7 @@ impl RealStore {
         let db_url = if let Some(value) = file_utils::default_database()?.to_str() {
             String::from(value)
         } else {
-            return Err(Error::from_kind(ErrorKind::from("no database url")));
+            return Err("no database url".into());
         };
         debug!("opening database {} ", &db_url);
         let connection = SqliteConnection::establish(&db_url)

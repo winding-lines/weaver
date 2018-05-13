@@ -115,3 +115,50 @@ pub fn insert(connection: &Connection, action: NewAction) -> Result<u64> {
         Ok(1)
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use diesel;
+    use ::entities::NewAction;
+
+    embed_migrations!("../migrations");
+
+
+    fn connection_with_tables() -> diesel::sqlite::SqliteConnection {
+        use diesel::Connection as DieselConnection;
+        use diesel::sqlite::SqliteConnection;
+
+        let connection = SqliteConnection::establish(":memory:")
+            .expect("in memory database");
+        embedded_migrations::run(&connection)
+            .expect("create tables");
+        connection
+    }
+
+    fn new_action<'a>() -> NewAction<'a> {
+        NewAction {
+            executed: String::new(),
+            kind: "",
+            command: "",
+            location: None,
+            epic: None,
+            host: String::new(),
+        }
+    }
+
+    #[test]
+    fn test_insert_and_fetch() {
+
+        let connection = connection_with_tables();
+
+        let res = super::insert(&connection, new_action());
+        assert!(res.is_ok(), format!("insert failed {:?}", res));
+
+        let all = super::fetch_all(&connection);
+        assert!(res.is_ok(), format!("fetch_all failed {:?}", res));
+
+        let actions = all.unwrap();
+        assert_eq!(actions.len(), 1);
+    }
+
+}
