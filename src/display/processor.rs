@@ -1,11 +1,12 @@
 use cursive::{CbFunc as CursiveCbFunc, Cursive};
 use cursive::views::EditView;
+use local_api;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc;
 use std::thread;
 use super::{FormattedAction, table, UserSelection};
 use super::output_selector;
-use weaver_db::config;
+use weaver_db::{RealStore, Destination, config};
 
 
 /// Message types sent to the selection processor
@@ -27,6 +28,9 @@ pub enum Msg {
     // Events from the command edit view
     CommandSubmit(Option<String>),
 
+    // Events from the annotation edit view
+    AnnotationSubmit(Option<String>),
+
     // Global events
     ShowOutputSelector,
     JumpToSelection,
@@ -41,7 +45,10 @@ struct Processor {
     // output_kind needs to be accessed from multiple threads.
     pub output_kind: Arc<Mutex<config::OutputKind>>,
     pub env: Arc<config::Environment>,
+    destination: Destination,
     table: table::Table,
+    // current search/filter string
+    search_string: Option<String>,
     cursive_sink: mpsc::Sender<Box<CursiveCbFunc>>,
     // A transmit channel to the Processors main loop
     self_tx: mpsc::Sender<Msg>,
@@ -79,7 +86,7 @@ impl Processor {
         self._update_ui();
     }
 
-    // Handle a submit from the coammand edit view.
+    // Handle a submit from the command edit view.
     fn submit_command(&mut self, f: Option<String>) {
         let name = f.unwrap_or(String::from(""));
         let sel = self.formatted_action.get_or_insert(FormattedAction {
@@ -95,7 +102,7 @@ impl Processor {
 
     // Filter the displayed commands to match the given string,
     // optionally selects the given row.
-    fn filter(&mut self, f: Option<String>, selected_row: Option<usize>) {
+    fn filter(&mut self, f: Option<&str>, selected_row: Option<usize>) {
         debug!("Received filter message {:?}", f);
         let content = self.table.filter(f);
         let tx = self.self_tx.clone();
@@ -119,15 +126,40 @@ impl Processor {
             .expect("send to update_table");
     }
 
+    fn set_selected_row(&mut self, row: usize) {
+        let jump = move |siv: &mut Cursive| {
+            if let Some(mut tview) = siv.find_id::<table::TView>("actions") {
+                tview.set_selected_row(row);
+            }
+        };
+        self.cursive_sink.send(Box::new(jump)).expect("send jump");
+        let action = self.table.get(row);
+        self.select_action(action);
+    }
+
     fn jump_to_next(&mut self) {
-        if let Some(ref _current) = self.formatted_action {
-            unimplemented!();
+        debug!("jumpToNext, search {:?} current {:?} ", self.search_string, self.formatted_action);
+        let maybe_pos = match (self.search_string.as_ref(), self.formatted_action.as_ref()) {
+            (Some(search), Some(action)) => {
+                self.table.find_next(search, action.id - 1)
+            }
+            _ => None
+        };
+        if let Some(new_pos) = maybe_pos {
+            self.set_selected_row(new_pos);
         }
     }
 
     fn jump_to_prev(&mut self) {
-        if let Some(ref _current) = self.formatted_action {
-            unimplemented!();
+        debug!("jumpToPrev, search {:?} current {:?} ", self.search_string, self.formatted_action);
+        let maybe_pos = match (self.search_string.as_ref(), self.formatted_action.as_ref()) {
+            (Some(search), Some(action)) => {
+                self.table.find_previous(search, action.id - 1)
+            }
+            _ => None
+        };
+        if let Some(new_pos) = maybe_pos {
+            self.set_selected_row(new_pos);
         }
     }
 
@@ -141,6 +173,13 @@ impl Processor {
         };
         self.cursive_sink.send(Box::new(show_kind))
             .expect("cursive send show kind");
+    }
+
+    fn set_annotation(&self, annotation: &str) {
+        if let Some(selection) = self.formatted_action.as_ref() {
+            local_api::set_annotation(&self.destination, selection.id as u64, annotation)
+                .expect("saving annotation");
+        }
     }
 
     fn exit(&mut self) {
@@ -158,19 +197,23 @@ impl Processor {
 pub fn create(table: table::Table,
               kind: config::OutputKind,
               env: Arc<config::Environment>,
+              realstore: Arc<RealStore>,
               rx: mpsc::Receiver<Msg>,
               self_tx: mpsc::Sender<Msg>,
               tx: mpsc::Sender<UserSelection>,
               cursive_sink: mpsc::Sender<Box<CursiveCbFunc>>)
               -> thread::JoinHandle<()> {
     thread::spawn(move || {
+        let destination = realstore.destination();
         let mut processor = Processor {
             table,
             formatted_action: None,
             output_kind: Arc::new(Mutex::new(kind)),
             env,
+            destination,
             cursive_sink,
             self_tx,
+            search_string: None,
         };
 
         // Process messages until done.
@@ -191,6 +234,12 @@ pub fn create(table: table::Table,
                     processor.exit();
                 }
 
+                Ok(Msg::AnnotationSubmit(f)) => {
+                    let input = f.as_ref().map(|s| s.as_str());
+                    let content = input.unwrap_or("");
+                    processor.set_annotation(content);
+                }
+
                 Ok(Msg::CommandSubmit(f)) => {
                     // Handle a string submitted from the command box.
                     processor.submit_command(f);
@@ -199,7 +248,8 @@ pub fn create(table: table::Table,
                 }
 
                 Ok(Msg::Filter(f)) => {
-                    processor.filter(Some(f), None);
+                    processor.filter(Some(f.as_str()), None);
+                    processor.search_string = Some(f);
                 }
                 Ok(Msg::JumpToSelection) => {
                     debug!("Received JumpToSelection");
@@ -235,5 +285,4 @@ pub fn create(table: table::Table,
         }
     })
 }
-
 

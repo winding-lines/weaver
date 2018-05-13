@@ -55,5 +55,11 @@ pub fn epic_names(destination: &Destination) -> Result<Vec<String>> {
             client::fetch_epics, ()
     )
 }
+
+pub fn set_annotation(destination: &Destination, id: u64, content: &str) -> Result<u64> {
+    dispatch!(destination,
+        actions2::set_annotation, (id, content),
+        client::set_annotation, (id, content)
+    )
 }
 

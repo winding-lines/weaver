@@ -116,6 +116,15 @@ pub fn insert(connection: &Connection, action: NewAction) -> Result<u64> {
     })
 }
 
+pub fn set_annotation(connection: &Connection, id: u64, annotation: &str) -> Result<(u64)> {
+    let find_clause = actions2::dsl::actions2.filter(actions2::dsl::id.eq(id as i32));
+    diesel::update(find_clause)
+        .set(actions2::dsl::annotation.eq(annotation))
+        .execute(connection)
+        .chain_err(|| "error updating annotation field")
+        .map(|_| (id))
+}
+
 #[cfg(test)]
 mod tests {
     use diesel;
@@ -161,4 +170,19 @@ mod tests {
         assert_eq!(actions.len(), 1);
     }
 
+    #[test]
+    fn test_set_annotation() {
+        let connection = connection_with_tables();
+
+        let res = super::insert(&connection, new_action());
+        assert!(res.is_ok(), format!("insert failed {:?}", res));
+
+        let update = super::set_annotation(&connection, 1, "ha-not-ate");
+        assert!(update.is_ok(), format!("update failed {:?}", update));
+
+        let all = super::fetch_all(&connection);
+        assert!(res.is_ok(), format!("fetch_all failed {:?}", res));
+
+        assert_eq!(all.unwrap().get(0).unwrap().annotation, Some(String::from("ha-not-ate")));
+    }
 }

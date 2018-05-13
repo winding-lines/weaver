@@ -6,15 +6,16 @@ use display;
 use std::sync::Arc;
 use super::{data, flows, server, shell_prompt, shell_proxy};
 use local_api;
-use weaver_db::{Destination, RealStore};
+use weaver_db::RealStore;
 use weaver_db::config::{file_utils, OutputKind, ServerRun, Environment};
 use weaver_error::*;
 
-fn run_history(destination: &Destination, output_kind: OutputKind, env: Arc<Environment>) -> Result<()> {
+fn run_history(store: Arc<RealStore>, output_kind: OutputKind, env: Arc<Environment>) -> Result<()> {
     use weaver_db::config::Channel::*;
 
+    let destination= store.destination();
     let actions = local_api::history(&env, &destination)?;
-    let user_selection = display::show(actions, output_kind, Arc::clone(&env))?;
+    let user_selection = display::main_screen(actions, output_kind, Arc::clone(&env), store)?;
     if let Some(action) = user_selection.action {
         match user_selection.kind {
             Some(OutputKind { channel: Run, ref content }) => {
@@ -57,7 +58,7 @@ pub fn run() -> Result<()> {
     let epic = store.epic()?;
     let env = Arc::new(Environment::build(epic)?);
     match command {
-        ActionHistory(output_kind) => run_history( &store.destination(), output_kind, env),
+        ActionHistory(output_kind) => run_history( Arc::clone(&store), output_kind, env),
         FlowRecommend => {
             flows::recommend()
         }

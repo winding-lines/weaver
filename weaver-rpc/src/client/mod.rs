@@ -22,7 +22,7 @@ pub fn check(rpc_addr: &str) -> Result<bool> {
     Ok(true)
 }
 
-pub fn history(env: &config::Environment, rpc_addr: &str) -> Result<Vec<FormattedAction>> {
+pub fn history(rpc_addr: &str, env: &config::Environment) -> Result<Vec<FormattedAction>> {
     use proto::actions::Epic;
 
     let client = {
@@ -51,13 +51,13 @@ pub fn history(env: &config::Environment, rpc_addr: &str) -> Result<Vec<Formatte
     Ok(actions)
 }
 
-pub fn add(req: NewAction, rpc_addr: &str) -> Result<u64> {
-    use proto::actions::NewAction as InputAction;
+pub fn add(rpc_addr: &str, req: NewAction) -> Result<u64> {
+    use proto::actions::CreateAction;
 
     let env = Arc::new(EnvBuilder::new().build());
     let ch = ChannelBuilder::new(env).connect(rpc_addr);
     let client = HistorianClient::new(ch);
-    let mut new_action = InputAction::new();
+    let mut new_action = CreateAction::new();
     new_action.set_command(req.command.into());
     new_action.set_kind( req.kind.into());
     new_action.set_location( req.location.unwrap_or("").into());
@@ -84,4 +84,21 @@ pub fn fetch_epics(rpc_addr: &str) -> Result<Vec<String>> {
     client.fetch_epics(&epic)
         .map(|c| c.name.into_vec())
         .chain_err(|| "rpc fetch_epics")
+}
+
+pub fn set_annotation(rpc_addr: &str, id: u64, content: &str) -> Result<u64> {
+    use proto::actions::Annotation;
+
+    let env = Arc::new(EnvBuilder::new().build());
+    let ch = ChannelBuilder::new(env).connect(rpc_addr);
+    let client = HistorianClient::new(ch);
+
+    let mut req = Annotation::new();
+    req.set_id(id);
+    req.set_annotation(String::from(content));
+    client.set_annotation(&req)
+        .map(|a| a.id)
+        .chain_err(|| "set annotation")
+
+
 }

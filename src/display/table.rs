@@ -96,7 +96,6 @@ pub fn redisplay(view: &mut TView, content: Vec<FormattedAction>) {
 /// Hold the data in the system, the view is managed by Cursive.
 pub struct Table {
     content: Vec<FormattedAction>,
-    filter: Option<String>,
     rows: usize,
 }
 
@@ -105,19 +104,61 @@ impl Table {
     pub fn new(content: Vec<FormattedAction>, rows: usize) -> Table {
         Table {
             content,
-            filter: None,
             rows,
         }
     }
 
+    pub fn get(&self, i: usize) -> Option<FormattedAction> {
+        self.content.get(i).map(|e| e.clone())
+    }
+
+    pub fn find_previous(&self, search: &str, current: usize)  -> Option<usize> {
+        let size = self.content.len();
+
+        for i in 1..size {
+            // look through all the array, wrap around at the end
+            let pos = if current >= i {
+                current - i
+            } else {
+                current + size - i
+            };
+
+            if let Some(action) = self.content.get(pos) {
+                if action.name.contains(search) {
+                    return Some(pos);
+                }
+            }
+        }
+        return None;
+    }
+
+    pub fn find_next(&self, search: &str, current: usize)  -> Option<usize> {
+        let size = self.content.len();
+
+        for i in 1..size {
+            // look through all the array, wrap around at the end
+            let pos = if current + i < size  {
+                current + i
+            } else {
+                current + i - size
+            };
+
+            if let Some(action) = self.content.get(pos) {
+                if action.name.contains(search) {
+                    return Some(pos);
+                }
+            }
+        }
+        return None;
+    }
+
     /// Build a vector with the subcomponents that match this filter.
     /// For None returns a new vector.
-    pub fn filter(&mut self, filter: Option<String>) -> Vec<FormattedAction> {
-        self.filter = filter;
+    pub fn filter(&mut self, filter: Option<&str>) -> Vec<FormattedAction> {
         let mut content: Vec<FormattedAction> = Vec::new();
 
 
-        if let Some(ref f) = self.filter {
+        if let Some(f) = filter {
             for entry in self.content.iter() {
                 if entry.name.contains(f)
                     || entry.epic.as_ref().map(|e| e.contains(f)).unwrap_or(false)
@@ -131,16 +172,49 @@ impl Table {
 
         // Make sure content is at the bottom of the screen
         while content.len() < self.rows {
-            content.insert(0, FormattedAction {
-                annotation: None,
-                id: 0,
-                epic: None,
-                kind: String::new(),
-                name: String::new(),
-                location: None,
-            })
+            content.insert(0, FormattedAction::default() )
         };
 
         content
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_prev() {
+        let table = build_table();
+
+        assert_eq!(Some(0), table.find_previous("abc",1));
+        assert_eq!(None, table.find_previous("def", 1));
+        assert_eq!(Some(1), table.find_previous("abc",0));
+    }
+
+    #[test]
+    fn test_next() {
+        let table = build_table();
+
+        assert_eq!(Some(1), table.find_next("abc",0));
+        assert_eq!(None, table.find_next("def", 1));
+        // wrap around
+        assert_eq!(Some(0), table.find_next("abc",1));
+    }
+
+    fn build_table() -> Table {
+        Table::new(vec![
+            FormattedAction {
+                name: "abc".into(),
+                id: 0,
+                ..Default::default()
+            },
+            FormattedAction {
+                name: "abcde".into(),
+                id: 1,
+                ..Default::default()
+            },
+        ], 2)
     }
 }

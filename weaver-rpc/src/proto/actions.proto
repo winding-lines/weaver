@@ -4,8 +4,9 @@ package actions;
 
 service Historian {
     rpc list (Epic) returns (History);
-    rpc add (NewAction) returns (CreatedAction);
+    rpc add (CreateAction) returns (ActionId);
     rpc fetch_epics (Epic) returns (Epics);
+    rpc set_annotation (Annotation) returns (ActionId);
 }
 
 message Epic {
@@ -13,11 +14,11 @@ message Epic {
 }
 
 message History {
-    repeated FormattedAction action = 1;
+    repeated Action action = 1;
 }
 
-message FormattedAction {
-    uint32 id = 1;
+message Action {
+    uint64 id = 1;
     string kind = 2;
     string name = 3;
     string location = 4;
@@ -25,7 +26,7 @@ message FormattedAction {
     string annotation = 6;
 }
 
-message NewAction {
+message CreateAction {
     string command = 1;
     string kind = 2;
     string location = 3;
@@ -34,10 +35,15 @@ message NewAction {
     string executed = 6;
 }
 
-message CreatedAction {
+message ActionId {
     uint64 id = 1;
 }
 
 message Epics {
     repeated string name = 1;
+}
+
+message Annotation {
+    uint64 id = 1;
+    string annotation = 2;
 }

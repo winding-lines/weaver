@@ -4,10 +4,11 @@ use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
 use self::processor::Msg;
-use std::sync::mpsc;
 use std::sync::Arc;
-use weaver_db::entities::FormattedAction;
+use std::sync::mpsc;
 use weaver_db::config::{Environment, OutputKind};
+use weaver_db::entities::FormattedAction;
+use weaver_db::RealStore;
 use weaver_error::*;
 
 mod table;
@@ -60,6 +61,14 @@ fn create_command_edit(tx: mpsc::Sender<Msg>) -> EditView {
         })
 }
 
+fn create_annotation_edit(tx: mpsc::Sender<Msg>) -> EditView {
+    EditView::new()
+        .on_submit(move |_: &mut Cursive, content: &str| {
+        let message = Msg::AnnotationSubmit(Some(String::from(content)));
+        send(&tx, message);
+    })
+}
+
 fn setup_global_keys(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
     let mapping = vec![
         (Event::CtrlChar('g'), Msg::JumpToSelection),
@@ -69,17 +78,18 @@ fn setup_global_keys(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
     for (cursive_ev, processor_msg) in mapping.into_iter() {
         let my_ch = ch.clone();
         siv.add_global_callback(cursive_ev, move |_siv| {
-            my_ch.send(processor_msg.clone()).expect("send JumpToSelection");
+            my_ch.send(processor_msg.clone()).expect("send JumpTo*");
         });
     }
     // Setup the ESC key to open up the Output Kind selector.
     siv.add_global_callback(Event::Key(Key::Esc), move |_s| {
-        ch.send(Msg::ShowOutputSelector).expect("send ShowKind");
+        ch.send(Msg::ShowOutputSelector).expect("send ShowOutputSelector");
     });
 }
 
 /// Display the UI which allows the user to exlore and select one of the options.
-pub fn show(actions: Vec<FormattedAction>, kind: OutputKind, env: Arc<Environment>) -> Result<UserSelection> {
+pub fn main_screen(actions: Vec<FormattedAction>, kind: OutputKind,
+                   env: Arc<Environment>, store: Arc<RealStore>) -> Result<UserSelection> {
     // initialize cursive
     let mut siv = create_cursive();
 
@@ -104,6 +114,7 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind, env: Arc<Environmen
     let processor = processor::create(table,
                                       kind.clone(),
                                       env,
+                                      store,
                                       process_rx,
                                       process_tx.clone(),
                                       submit_tx,
@@ -133,6 +144,15 @@ pub fn show(actions: Vec<FormattedAction>, kind: OutputKind, env: Arc<Environmen
             .with_id("command")
             .min_width((screen.x - 50) as usize));
     layout.add_child(command_pane);
+
+
+    // build the annotation pane
+    let annotation_pane = LinearLayout::horizontal()
+        .child(TextView::new("Annotate:     "))
+        .child(create_annotation_edit(process_tx.clone())
+            .with_id("annotation")
+            .min_width((screen.x - 50 ) as usize));
+    layout.add_child(annotation_pane);
 
     // build the output kind UI
     let mut output_pane = LinearLayout::horizontal();
