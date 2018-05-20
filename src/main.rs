@@ -24,6 +24,7 @@ extern crate walkdir;
 extern crate weaver_db;
 extern crate weaver_error;
 extern crate weaver_rpc;
+extern crate weaver_index;
 
 /// A command line tool to create, discover and recommend flows.
 ///

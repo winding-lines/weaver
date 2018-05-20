@@ -1,0 +1,13 @@
+[package]
+name = "weaver-index"
+version = "0.1.0"
+authors = ["Marius Seritan <git@winding-lines.com>"]
+
+[dependencies]
+error-chain = "0.11"
+weaver-db = {path="../weaver-db"}
+weaver-error = {path="../weaver-error"}
+
+[dependencies.tantivy]
+git = "https://github.com/tantivy-search/tantivy"
+rev = "432d49d8147624"

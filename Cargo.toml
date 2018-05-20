@@ -1,11 +1,11 @@
 [package]
 name = "weaver"
-version = "0.2.1"
+version = "0.3.0"
 description = "Manage actions, flows and milestones"
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [workspace]
-members = ["weaver-error", "weaver-rpc", "weaver-db"]
+members = ["weaver-error", "weaver-rpc", "weaver-db", "weaver-index"]
 
 [dependencies]
 clap = "2.30.0"
@@ -21,8 +21,8 @@ walkdir = "2"
 log = "0.4"
 env_logger = "0.5"
 
-gotham = "0.2.0"
-gotham_derive = "0.2.0"
+gotham = "0.2.1"
+gotham_derive = "0.2.1"
 hyper = "0.11"
 futures = "0.1"
 mime = "0.3"
@@ -30,6 +30,7 @@ daemonize = {git = "https://github.com/winding-lines/daemonize"}
 weaver-rpc = {path = "weaver-rpc"}
 weaver-error = {path = "weaver-error"}
 weaver-db = {path = "weaver-db"}
+weaver-index = {path = "weaver-index"}
 
 
 [dependencies.cursive]
