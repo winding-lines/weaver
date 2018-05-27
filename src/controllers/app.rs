@@ -17,7 +17,7 @@ pub fn run() -> Result<()> {
     let epic = store.epic()?;
     let env = Arc::new(Environment::build(epic)?);
     match command {
-        ActionHistory(output_kind) => history::run( Arc::clone(&store), output_kind, env),
+        ActionHistory(output_kind) => history::run( Arc::clone(&store), &output_kind, &env),
         FlowRecommend => {
             flows::recommend()
         }
@@ -29,7 +29,7 @@ pub fn run() -> Result<()> {
             flows::create(name, global, actions)
         }
         Data(sub) => {
-            data::run(&*store, sub)
+            data::run(&*store, &sub)
         }
         EpicActivate(name) => {
             RealStore::save_epic(name)

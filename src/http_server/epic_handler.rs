@@ -19,7 +19,7 @@ pub fn get_handler(mut state: State) -> (State, Response) {
     let res = {
         let epic = {
             let store = state.borrow_mut::<StoreData>();
-            store.epic.clone().unwrap_or(String::from(""))
+            store.epic.clone().unwrap_or_else(String::new)
         };
         create_response(
             &state,

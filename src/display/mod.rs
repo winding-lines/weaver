@@ -11,7 +11,7 @@ use weaver_db::entities::FormattedAction;
 use weaver_db::RealStore;
 use weaver_error::*;
 
-mod table;
+mod table_view;
 mod processor;
 mod output_selector;
 
@@ -36,9 +36,8 @@ fn create_cursive() -> Cursive {
 }
 
 fn send(tx: &mpsc::Sender<Msg>, msg: Msg) {
-    match tx.send(msg) {
-        Err(e) => error!("failed sending filter message {:?}", e),
-        Ok(_) => ()
+    if let Err(e) = tx.send(msg) {
+        error!("failed sending filter message {:?}", e)
     }
 }
 
@@ -75,7 +74,7 @@ fn setup_global_keys(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
         (Event::CtrlChar('p'), Msg::JumpToPrevMatch),
         (Event::CtrlChar('n'), Msg::JumpToNextMatch),
     ];
-    for (cursive_ev, processor_msg) in mapping.into_iter() {
+    for (cursive_ev, processor_msg) in mapping {
         let my_ch = ch.clone();
         siv.add_global_callback(cursive_ev, move |_siv| {
             my_ch.send(processor_msg.clone()).expect("send JumpTo*");
@@ -88,7 +87,7 @@ fn setup_global_keys(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
 }
 
 /// Display the UI which allows the user to exlore and select one of the options.
-pub fn main_screen(actions: Vec<FormattedAction>, kind: OutputKind,
+pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
                    env: Arc<Environment>, store: Arc<RealStore>) -> Result<UserSelection> {
     // initialize cursive
     let mut siv = create_cursive();
@@ -107,23 +106,26 @@ pub fn main_screen(actions: Vec<FormattedAction>, kind: OutputKind,
 
 
     // Build the main components: table and processor.
-    let mut table = table::Table::new(actions, table_height);
+    let mut table = table_view::Table::new(actions, table_height);
     let initial = table.filter(None);
 
+    let processor_thread = processor::ProcessorThread {
+        table,
+        kind: kind.clone(),
+        env,
+        real_store: store,
+        rx: process_rx,
+        self_tx: process_tx.clone(),
+        tx: submit_tx,
+        cursive_sink: siv.cb_sink().clone(),
+    };
 
-    let processor = processor::create(table,
-                                      kind.clone(),
-                                      env,
-                                      store,
-                                      process_rx,
-                                      process_tx.clone(),
-                                      submit_tx,
-                                      siv.cb_sink().clone());
+    let processor = processor_thread.spawn();
 
 
     // build the table pane
     let mut layout = LinearLayout::vertical();
-    layout.add_child(table::create_view(initial, process_tx.clone())
+    layout.add_child(table_view::create_view(initial, &process_tx)
         .with_id("actions")
         .min_height(table_height)
         .min_width(table_width));

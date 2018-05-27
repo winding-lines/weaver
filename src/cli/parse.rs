@@ -4,8 +4,8 @@ use clap::{App, Arg, ArgGroup, SubCommand, ArgMatches};
 use super::APP_NAME;
 use super::ServerConfig;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
-const DESCRIPTION: &'static str = env!["CARGO_PKG_DESCRIPTION"];
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+const DESCRIPTION: &str = env!["CARGO_PKG_DESCRIPTION"];
 
 /// Commands returned by the parser for execution in the main loop.
 #[derive(Debug)]
@@ -158,14 +158,14 @@ pub fn parse() -> CommandAndConfig {
         ApiConfig::Remote(rpc_address)
     };
     CommandAndConfig {
-        command: parse_command(matches),
+        command: parse_command(&matches),
         server_config: server,
         // TODO: allow the API Config to be changed
         api_config,
     }
 }
 
-fn parse_command(matches: ArgMatches)-> Command {
+fn parse_command(matches: &ArgMatches)-> Command {
     if matches.is_present("version") {
         println!("{}", VERSION);
         return Command::Noop;

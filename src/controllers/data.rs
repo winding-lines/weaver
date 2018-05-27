@@ -6,7 +6,7 @@ use weaver_db::RealStore;
 use weaver_index::Indexer;
 
 /// Execute subcommands for the Data command.
-pub fn run(_store: & RealStore, command: DataSubCommand) -> Result<()> {
+pub fn run(_store: & RealStore, command: &DataSubCommand) -> Result<()> {
     match command {
         DataSubCommand::Sqlite => {
             sqlite()

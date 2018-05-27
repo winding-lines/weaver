@@ -54,8 +54,8 @@ pub struct Server;
 /// Start a server and use a `Router` to dispatch requests
 pub fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> Result<Server> {
     match run {
-        &ServerRun::Foreground => {}
-        &ServerRun::Daemonize => {
+        ServerRun::Foreground => {}
+        ServerRun::Daemonize => {
             let pid_file_ = pid_file()?;
             let server_folder_ = server_folder()?;
             let daemonize = Daemonize::new()
@@ -64,7 +64,7 @@ pub fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> R
                 .working_directory(&server_folder_) // for default behaviour.
                 .redirect_dir(Some(server_folder_))
                 .umask(0o022);    // Set umask, `0o027` by default.
-            let _ = daemonize.start()
+            daemonize.start()
                 .chain_err(|| "start in daemon mode")?;
         }
     }

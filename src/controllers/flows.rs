@@ -45,7 +45,7 @@ pub fn load() -> Result<Vec<Flow>> {
     let mut out = Vec::new();
     load_folder(&flows_folder(true)?, &mut out)?;
     load_folder(&flows_folder(false)?, &mut out)?;
-    return Ok(out);
+    Ok(out)
 }
 
 
@@ -53,7 +53,7 @@ pub fn load() -> Result<Vec<Flow>> {
 /// i.e. their preconditions match.
 pub fn active() -> Result<Vec<String>> {
     let mut out = Vec::new();
-    for flow in load()?.iter() {
+    for flow in load()? {
         if flow.matches() {
             out.push(flow.name.clone());
         }
@@ -63,7 +63,7 @@ pub fn active() -> Result<Vec<String>> {
 
 /// Run the actions in this particular flow.
 fn run_flow(flow: &Flow) -> Result<()> {
-    for action in flow.actions.iter() {
+    for action in &flow.actions {
         println!("  {}", action);
         shell_proxy::run(action).chain_err(|| "running flow action")?;
     }
@@ -73,7 +73,7 @@ fn run_flow(flow: &Flow) -> Result<()> {
 /// Run the actions in the Flow with the given name.
 pub fn run<T>(name: T) -> Result<()>
     where T: AsRef<str> {
-    for flow in load()?.iter() {
+    for flow in &load()? {
         if flow.name.as_str().eq(name.as_ref()) {
             return run_flow(flow);
         }
@@ -87,9 +87,9 @@ pub fn create(name: String, global: bool, actions: Vec<String>) -> Result<()> {
     let mut path = flows_folder(global)?;
     path.push(format!("{}.flow.json", name));
     let flow = Flow {
-        name: name,
+        name,
         preconditions: vec![],
-        actions: actions,
+        actions,
     };
     let data = flow.to_str()?;
     write_content(&path, &data).chain_err(|| "create flow")
@@ -101,7 +101,7 @@ pub fn recommend() -> Result<()> {
         .chain_err(|| "getting active flows")?;
 
     let mut displayed = 0;
-    for name in active.iter() {
+    for name in &active {
         if displayed == 0 {
             println!("recommended flows:")
         }

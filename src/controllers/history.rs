@@ -8,12 +8,12 @@ use weaver_db::RealStore;
 use weaver_error::*;
 
 
-pub fn run(store: Arc<RealStore>, output_kind: OutputKind, env: Arc<Environment>) -> Result<()> {
+pub fn run(store: Arc<RealStore>, output_kind: &OutputKind, env: &Arc<Environment>) -> Result<()> {
     use weaver_db::config::Channel::*;
 
     let destination = store.destination();
     let actions = local_api::history(&env, &destination)?;
-    let user_selection = display::main_screen(actions, output_kind, Arc::clone(&env), store)?;
+    let user_selection = display::main_screen(actions, &output_kind, Arc::clone(&env), store)?;
     if let Some(action) = user_selection.action {
         match user_selection.kind {
             Some(OutputKind { channel: Run, ref content }) => {

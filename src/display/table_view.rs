@@ -41,7 +41,7 @@ impl TableViewItem<BasicColumn> for FormattedAction {
 pub type TView = TableView<FormattedAction, BasicColumn>;
 
 // Create the Cursive table for actions.
-pub fn create_view(initial: Vec<FormattedAction>, processor_tx: mpsc::Sender<Msg>) -> TView {
+pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &mpsc::Sender<Msg>) -> TView {
     let mut view = TView::new()
         .column(BasicColumn::Index, "#", |c| c.width(6))
         .column(BasicColumn::Kind, " ", |c| c.align(HAlign::Left).width(1))
@@ -54,7 +54,7 @@ pub fn create_view(initial: Vec<FormattedAction>, processor_tx: mpsc::Sender<Msg
         let view_tx = processor_tx.clone();
         view.set_on_submit(move |siv: &mut Cursive, _row: usize, index: usize| {
             if let Some(mut t) = siv.find_id::<TView>("actions") {
-                let value = t.borrow_item(index).map(|s| s.clone());
+                let value = t.borrow_item(index).cloned();
                 view_tx.send(Msg::TableSubmit(value)).expect("send submit");
             } else {
                 error!("cannot find table");
@@ -69,7 +69,7 @@ pub fn create_view(initial: Vec<FormattedAction>, processor_tx: mpsc::Sender<Msg
         let view_tx = processor_tx.clone();
         view.set_on_select(move |siv: &mut Cursive, _row: usize, index: usize| {
             if let Some(mut t) = siv.find_id::<TView>("actions") {
-                let value = t.borrow_item(index).map(|s| s.clone());
+                let value = t.borrow_item(index).cloned();
                 view_tx.send(Msg::Selection(value)).expect("send select");
             } else {
                 // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
@@ -109,7 +109,7 @@ impl Table {
     }
 
     pub fn get(&self, i: usize) -> Option<FormattedAction> {
-        self.content.get(i).map(|e| e.clone())
+        self.content.get(i).cloned()
     }
 
     pub fn find_previous(&self, search: &str, current: usize)  -> Option<usize> {
@@ -129,7 +129,7 @@ impl Table {
                 }
             }
         }
-        return None;
+        None
     }
 
     pub fn find_next(&self, search: &str, current: usize)  -> Option<usize> {
@@ -149,7 +149,7 @@ impl Table {
                 }
             }
         }
-        return None;
+        None
     }
 
     /// Build a vector with the subcomponents that match this filter.
@@ -159,7 +159,7 @@ impl Table {
 
 
         if let Some(f) = filter {
-            for entry in self.content.iter() {
+            for entry in &self.content {
                 if entry.name.contains(f)
                     || entry.epic.as_ref().map(|e| e.contains(f)).unwrap_or(false)
                     || f.is_empty() {

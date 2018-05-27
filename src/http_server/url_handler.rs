@@ -62,12 +62,12 @@ pub fn get_handler(mut state: State) -> (State, BrowserAction) {
     let product = last.map(|l| BrowserAction {
         url: l.0,
         transition_type: l.1,
-    }).unwrap_or_else(|| BrowserAction::default());
+    }).unwrap_or_else(BrowserAction::default);
 
     (state, product)
 }
 
-fn process_post(body: Chunk, store: &StoreData) -> Result<String> {
+fn process_post(body: &Chunk, store: &StoreData) -> Result<String> {
     let input = body.to_vec();
     let action: BrowserAction = json::from_slice(&input).expect("input");
     let epic = &store.epic;
@@ -82,7 +82,7 @@ pub fn post_handler(mut state: State) -> Box<HandlerFuture> {
         .then(move |full_body| match full_body {
             Ok(body) => {
                 debug!("received url");
-                match process_post(body, state.borrow::<StoreData>()) {
+                match process_post(&body, state.borrow::<StoreData>()) {
                     Ok(out) => {
                         let res = create_response(
                             &state,

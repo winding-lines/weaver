@@ -41,11 +41,11 @@ fn create_radio_group<T>(container: &mut LinearLayout, values: Vec<T>, initial: 
         container.add_child(run);
     };
 
-    return group;
+    group
 }
 
 /// Display the Outpu selector with the current state selected.
-pub fn show_output_selection(siv: &mut Cursive, kind: OutputKind, ch: mpsc::Sender<Msg>) {
+pub fn show_output_selection(siv: &mut Cursive, kind: &OutputKind, ch: &mpsc::Sender<Msg>) {
     let mut output_pane = LinearLayout::vertical();
 
     output_pane.add_child(TextView::new("Output content:"));

@@ -2,10 +2,10 @@
 
 pub use self::parse::{Command, CommandAndConfig, DataSubCommand, parse, ServerSubCommand, TextIndexSubCommand};
 
-pub const APP_NAME: &'static str = env!["CARGO_PKG_NAME"];
+pub const APP_NAME: &str = env!["CARGO_PKG_NAME"];
 
-pub const HTTP_ADDRESS: &'static str = "127.0.0.1:8464";
-pub const RPC_ADDRESS: &'static str = "127.0.0.1:8465";
+pub const HTTP_ADDRESS: &str = "127.0.0.1:8464";
+pub const RPC_ADDRESS: &str = "127.0.0.1:8465";
 
 pub struct ServerConfig {
     pub http_address: String,
