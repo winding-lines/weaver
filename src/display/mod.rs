@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use weaver_db::config::{Environment, OutputKind};
 use weaver_db::entities::FormattedAction;
-use weaver_db::RealStore;
+use weaver_db::{FilteredVec, RealStore};
 use weaver_error::*;
 
 mod table_view;
@@ -106,7 +106,7 @@ pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
 
 
     // Build the main components: table and processor.
-    let mut table = table_view::Table::new(actions, table_height);
+    let mut table = FilteredVec::new(actions, table_height);
     let initial = table.filter(None);
 
     let processor_thread = processor::ProcessorThread {

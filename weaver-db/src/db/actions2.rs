@@ -51,7 +51,7 @@ pub fn fetch_all(connection: &Connection) -> Result<Vec<FormattedAction>> {
         .load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection)
         .chain_err(|| "joined load of actions2")?;
     let mut out = Vec::new();
-    for (action2, command, location, epic) in joined.into_iter() {
+    for (action2, command, location, epic) in joined {
         let formatted = FormattedAction {
             annotation: action2.annotation,
             id: action2.id.unwrap_or(0) as usize,
@@ -76,7 +76,8 @@ pub fn last_url(connection: &Connection) -> Result<Option<(String, String)>> {
         .load::<(Action2, Command, Option<Location>)>(connection)
         .chain_err(|| "loading last url")?;
     let first = entries.into_iter().next();
-    Ok(first.map(|(_, command, location)| (command.command, location.map(|l| l.location).unwrap_or("".into()))))
+    Ok(first.map(|(_, command, location)|
+        (command.command, location.map(|l| l.location).unwrap_or_else(String::new))))
 }
 
 /// Insert a new action in the database.

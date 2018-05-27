@@ -6,7 +6,7 @@ use std::sync::mpsc;
 use std::thread;
 use super::{FormattedAction, table_view, UserSelection};
 use super::output_selector;
-use weaver_db::{config, Destination, RealStore};
+use weaver_db::{config, Destination, FilteredVec, RealStore};
 
 
 /// Message types sent to the selection processor
@@ -46,7 +46,7 @@ struct Processor {
     pub output_kind: Arc<Mutex<config::OutputKind>>,
     pub env: Arc<config::Environment>,
     destination: Destination,
-    table: table_view::Table,
+    table: FilteredVec,
     // current search/filter string
     search_string: Option<String>,
     cursive_sink: mpsc::Sender<Box<CursiveCbFunc>>,
@@ -194,7 +194,7 @@ impl Processor {
 /// - owns the current selections, receives and processes selection events
 /// - refreshes the UI with the filtered data or selection
 pub struct ProcessorThread {
-    pub table: table_view::Table,
+    pub table: FilteredVec,
     pub kind: config::OutputKind,
     pub env: Arc<config::Environment>,
     pub real_store: Arc<RealStore>,

@@ -26,9 +26,9 @@ impl Display for Content {
         use self::Content::*;
 
         let  as_str = match self {
-            &PathWithCommand => "Command with Path",
-            &Path => "Path",
-            &Command => "Command",
+            PathWithCommand => "Command with Path",
+            Path => "Path",
+            Command => "Command",
         };
         f.write_str(as_str)
     }
@@ -47,9 +47,9 @@ impl Display for Channel {
         use self::Channel::*;
 
         let  as_str = match self {
-            &Print => "Print",
-            &Run => "Run",
-            &Copy => "Copy",
+            Print => "Print",
+            Run => "Run",
+            Copy => "Copy",
         };
         f.write_str(as_str)
     }

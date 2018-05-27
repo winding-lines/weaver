@@ -19,6 +19,7 @@ use diesel::sqlite::SqliteConnection;
 use weaver_error::*;
 
 pub mod entities;
+mod filtered_vec;
 mod db;
 mod backends;
 pub mod config;
@@ -26,6 +27,7 @@ pub mod config;
 pub type Connection = SqliteConnection;
 pub use db::actions2;
 pub use db::epics;
+pub use filtered_vec::FilteredVec;
 
 pub enum ApiConfig {
     Local,
@@ -67,8 +69,8 @@ impl RealStore {
 
     pub fn destination(&self) -> Destination {
         match &self.config {
-            &ApiConfig::Local => Destination::Local(self.connection()),
-            &ApiConfig::Remote(ref a) => Destination::Remote(a.clone()),
+            ApiConfig::Local => Destination::Local(self.connection()),
+            ApiConfig::Remote(ref a) => Destination::Remote(a.clone()),
         }
     }
 

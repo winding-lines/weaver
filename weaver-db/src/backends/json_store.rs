@@ -13,7 +13,7 @@ impl JsonStore {
     /// Initialize the weaver application/global configuration.
     pub fn init() -> Result<JsonStore> {
         let mut store = JsonStore::default();
-        let _ = store.fresh()?;
+        store.fresh()?;
         Ok(store)
     }
 
@@ -53,7 +53,7 @@ impl JsonStore {
         let mut path = file_utils::app_folder()?;
         path.push("weaver.json");
         let content = self.content.to_str()?;
-        let _ = file_utils::write_content(&path, &content)?;
+        file_utils::write_content(&path, &content)?;
         self.modified = Some(path.metadata()
             .chain_err(|| "reading metadata in save")?
             .modified()
