@@ -63,7 +63,7 @@ pub fn fetch_all(connection: &Connection) -> Result<Vec<FormattedAction>> {
         out.push(formatted);
     }
 
-    return Ok(out);
+    Ok(out)
 }
 
 pub fn last_url(connection: &Connection) -> Result<Option<(String, String)>> {

@@ -38,7 +38,7 @@ impl Server {
         // Start a run loop (?) Look for better API if this works.
         let (_tx, rx) = oneshot::channel::<()>();
         self.0.start();
-        let _ = rx.wait().expect("run loop wait");
+        rx.wait().expect("run loop wait");
     }
 
     pub fn shutdown(mut self) -> Result<()> {

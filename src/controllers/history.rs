@@ -18,7 +18,7 @@ pub fn run(store: Arc<RealStore>, output_kind: &OutputKind, env: &Arc<Environmen
         match user_selection.kind {
             Some(OutputKind { channel: Run, ref content }) => {
                 if action.kind == "shell" {
-                    shell_proxy::run(action.to_shell_command(content, &env))
+                    shell_proxy::run(action.into_shell_command(content, &env))
                         .map(|_| ())
                 } else {
                     shell_proxy::run(format!("open {}", action.name))
@@ -28,13 +28,13 @@ pub fn run(store: Arc<RealStore>, output_kind: &OutputKind, env: &Arc<Environmen
             Some(OutputKind { channel: Copy, ref content }) => {
                 eprintln!("Copying to clipboard: {}", action.name);
                 if let Ok(mut ctx) = ClipboardContext::new() {
-                    ctx.set_contents(action.to_shell_command(content, &env)).expect("set clipboard");
+                    ctx.set_contents(action.into_shell_command(content, &env)).expect("set clipboard");
                 }
                 Ok(())
             }
             Some(OutputKind { channel: Print, ref content }) => {
                 if action.kind == "shell" {
-                    println!("{}", action.to_shell_command(content, &env));
+                    println!("{}", action.into_shell_command(content, &env));
                 } else {
                     println!("open {}", action.name);
                 }

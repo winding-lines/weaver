@@ -20,7 +20,7 @@ impl<'a> NewAction<'a> {
         let executed = now();
 
         Ok(NewAction {
-            executed: executed,
+            executed,
             kind: "shell",
             command: &command,
             location,
@@ -33,12 +33,12 @@ impl<'a> NewAction<'a> {
         let host = sys_info::hostname()?;
         let executed = now();
         Ok(NewAction {
-            executed: executed,
+            executed,
             kind: "url",
             command: url,
-            location: Some(location.into()),
+            location: Some(location),
             epic,
-            host: host,
+            host,
         })
     }
 

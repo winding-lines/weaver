@@ -38,7 +38,7 @@ pub enum Precondition {
 impl Matcher for Precondition {
     fn matches(&self) -> bool {
         match self {
-            &Precondition::FileContent(ref fc) => fc.matches()
+            Precondition::FileContent(ref fc) => fc.matches()
         }
     }
 }
@@ -63,12 +63,12 @@ impl Flow {
 
     /// Check if the preconditions of the Flow match.
     pub fn matches(&self) -> bool {
-        for pre in self.preconditions.iter() {
+        for pre in &self.preconditions {
             if !pre.matches() {
                 return false;
             }
         }
-        return true;
+        true
     }
 }
 

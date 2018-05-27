@@ -59,7 +59,7 @@ impl Processor {
         // Build the content to display.
         let content = self.formatted_action.as_ref().map(|f| {
             let data = self.output_kind.lock().unwrap();
-            f.clone().to_shell_command(&(*data).content, &self.env)
+            f.clone().into_shell_command(&(*data).content, &self.env)
         }).unwrap_or_else(String::new);
 
 

@@ -16,7 +16,7 @@ impl Historian for HistorianService {
     fn list(&self, ctx: RpcContext, req: Epic, sink: UnarySink<History>) {
         let mut reply = History::new();
         let name = req.name;
-        let opt_name = if name.is_empty() {
+        let _opt_name = if name.is_empty() {
             None
         } else {
             Some(name)
@@ -26,14 +26,14 @@ impl Historian for HistorianService {
             .and_then(|c| actions2::fetch_all(&c)) {
             Ok(actions) => {
                 let mut output = RepeatedField::new();
-                for action in actions.into_iter() {
+                for action in actions {
                     let mut o = Action::new();
                     o.set_name(action.name);
                     o.set_id(action.id as u64);
                     o.set_kind(action.kind);
-                    o.set_location(action.location.unwrap_or(String::from("")));
-                    o.set_epic(action.epic.unwrap_or(String::from("")));
-                    o.set_annotation(action.annotation.unwrap_or(String::from("")));
+                    o.set_location(action.location.unwrap_or_else(String::new));
+                    o.set_epic(action.epic.unwrap_or_else(String::new));
+                    o.set_annotation(action.annotation.unwrap_or_else(String::new));
                     output.push(o);
                 }
                 reply.set_action(output);
@@ -85,7 +85,7 @@ impl Historian for HistorianService {
             .and_then(|c| epics::fetch_all(&c)) {
             Ok(epics) => {
                 let mut output = RepeatedField::new();
-                for epic in epics.into_iter() {
+                for epic in epics {
                     output.push(epic);
                 }
                 reply.set_name(output);

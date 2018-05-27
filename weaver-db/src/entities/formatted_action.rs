@@ -13,13 +13,13 @@ pub struct FormattedAction {
 
 
 impl FormattedAction {
-    pub fn to_shell_command(self, content: &config::Content, env: &config::Environment) -> String {
+    pub fn into_shell_command(self, content: &config::Content, env: &config::Environment) -> String {
         use config::Content::*;
 
         match *content {
             Path => {
                 self.location.map(|a| format!("cd {}", env.localized_path(&a)))
-                    .unwrap_or(String::from(""))
+                    .unwrap_or_else(String::new)
             }
             PathWithCommand => {
                 if self.location.is_some() {

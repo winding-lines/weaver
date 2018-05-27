@@ -4,7 +4,7 @@ mod environment;
 
 pub use self::environment::Environment;
 
-pub const APP_FOLDER: &'static str = ".weaver";
+pub const APP_FOLDER: &str = ".weaver";
 
 
 #[derive(Debug)]
