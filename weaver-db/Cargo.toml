@@ -12,5 +12,6 @@ log = "*"
 serde = "*"
 serde_derive = "*"
 serde_json = "*"
+regex = "1.0"
 
 weaver-error = {path="../weaver-error"}

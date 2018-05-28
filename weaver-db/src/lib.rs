@@ -5,6 +5,7 @@ extern crate diesel;
 extern crate diesel_migrations;
 #[macro_use]
 extern crate log;
+extern crate regex;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;

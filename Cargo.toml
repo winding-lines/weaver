@@ -27,6 +27,7 @@ hyper = "0.11"
 futures = "0.1"
 mime = "0.3"
 daemonize = {git = "https://github.com/winding-lines/daemonize"}
+
 weaver-rpc = {path = "weaver-rpc"}
 weaver-error = {path = "weaver-error"}
 weaver-db = {path = "weaver-db"}
