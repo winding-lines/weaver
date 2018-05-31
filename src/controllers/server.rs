@@ -9,6 +9,7 @@ use weaver_db::config::{file_utils, ServerRun};
 use weaver_db::RealStore;
 use weaver_error::*;
 use weaver_rpc;
+use weaver_web;
 use cli::ServerConfig;
 
 fn server_folder() -> Result<PathBuf> {
@@ -68,10 +69,18 @@ pub fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> R
                 .chain_err(|| "start in daemon mode")?;
         }
     }
-    let one_store = Arc::clone(&store);
+    let store_for_http = Arc::clone(&store);
     let http_address = config.http_address.clone();
     thread::spawn(move || {
-        let _http = http_server::start(&http_address, one_store);
+        let _http = http_server::start(&http_address, store_for_http);
+    });
+    let store_for_actix = Arc::clone(&store);
+    let actix_address = config.actix_address.clone();
+    thread::spawn(move || {
+        let _actix = weaver_web::start(&actix_address, store_for_actix);
+    });
+    thread::spawn( move || {
+
     });
     let rpc = weaver_rpc::server::Server::new(&config.rpc_address, store)?;
     rpc.start();
@@ -85,6 +94,7 @@ pub fn is_running(config: &ServerConfig) -> bool {
 
 pub fn check(config: &ServerConfig) -> Result<()> {
     println!("http listening {}", is_listening(&config.http_address));
+    println!("actix listening {}", is_listening(&config.actix_address));
     println!("rpc listening {}", is_listening(&config.rpc_address));
     let rpc = weaver_rpc::client::check(&config.rpc_address)?;
     println!("rpc status {}", rpc);

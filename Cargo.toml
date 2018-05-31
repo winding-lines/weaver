@@ -5,7 +5,7 @@ description = "Manage actions, flows and milestones"
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [workspace]
-members = ["weaver-error", "weaver-rpc", "weaver-db", "weaver-index"]
+members = ["weaver-error", "weaver-rpc", "weaver-db", "weaver-index", "weaver-web"]
 
 [dependencies]
 clap = "2.30.0"
@@ -32,6 +32,7 @@ weaver-rpc = {path = "weaver-rpc"}
 weaver-error = {path = "weaver-error"}
 weaver-db = {path = "weaver-db"}
 weaver-index = {path = "weaver-index"}
+weaver-web = {path = "weaver-web"}
 
 
 [dependencies.cursive]

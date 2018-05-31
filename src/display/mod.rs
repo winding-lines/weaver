@@ -106,7 +106,7 @@ pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
 
 
     // Build the main components: table and processor.
-    let mut table = FilteredVec::new(actions, table_height);
+    let table = FilteredVec::new(actions, table_height);
     let initial = table.filter(None);
 
     let processor_thread = processor::ProcessorThread {
