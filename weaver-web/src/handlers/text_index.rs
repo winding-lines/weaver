@@ -16,13 +16,13 @@ fn create(data: (State<AppState>, Json<PageContent>)) -> String {
 }
 
 #[derive(Deserialize)]
-struct Search {
+struct SearchQuery {
     term: String,
 }
 
-fn search(data: (State<AppState>, Query<Search>)) -> String {
-    let indexer = &*(data.0.indexer);
-    indexer.search(&data.1.term)
+fn search((state, query): (State<AppState>, Query<SearchQuery>)) -> String {
+    let indexer = &*state.indexer;
+    indexer.search(&query.term)
         .map(|f|
             f.iter()
                 .map(|d| format!("{} {}\n", d.0, d.1))

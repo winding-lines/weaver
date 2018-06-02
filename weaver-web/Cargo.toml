@@ -13,3 +13,4 @@ serde_json = "1.0"
 weaver-error = {path = "../weaver-error"}
 weaver-db = {path = "../weaver-db"}
 weaver-index = {path = "../weaver-index"}
+tera = "*"
