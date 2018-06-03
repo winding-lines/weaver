@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <title>Weaver Results {{ term }}</title>
+  <style>
+    {{inline_css}}
+    .summary {
+      margin-top: 3px;
+    }
+
+    .result h3 {
+      margin-bottom: 3px;
+    }
+
+    .link {
+      display: block;
+      width: 500px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .result a:link, .result a:visited {
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+<div class="search-form">
+  <form>
+    <input type="text" name="term" value="{{ term }}"/>
+    <input type="submit" name="Search"/>
+  </form>
+  <div class="app-name">Weaver</div>
+</div>
+<div class="summary">
+  Found {{ results.matches | length }} matches for {{ term }}, total documents {{ results.total }}.
+</div>
+  {% for i in results.matches %}
+    <div class="result">
+      <h3><a href={{ i.0 }}>{{ i.1 }}</a></h3>
+      <div class="link"><a href={{ i.0 }}>{{ i.0 }}</a></div>
+    </div>
+  {% endfor %}
+</body>
+</html>

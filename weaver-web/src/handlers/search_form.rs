@@ -5,28 +5,15 @@ use tera;
 use weaver_error::{Result as WResult, ResultExt};
 use weaver_index::Results;
 
+const INLINE_CSS: &str = include_str!("../../templates/inline.css");
+
 pub fn build_tera() -> WResult<tera::Tera> {
     let mut tera = tera::Tera::default();
     tera.add_raw_templates(vec![
 
-        ("search-form", r#"<html><title>Weaver Search</title><body><form>
-      <input type="text" name="term" placeholder="Enter search term..." />
-      <input type="submit" name="Search" />
-    </form></body></html>"#),
+        ("search-form", include_str!("../../templates/search-form.html")),
 
-        ("search-results", r#"<html><title>Weaver Results {{term}}</title><body><div><form>
-      <input type="text" name="term" value="{{term}}" />
-      <input type="submit" name="Search" />
-    </form></div>
-    <div>
-        Found {{results.matches | length}} matches for {{term}}, total documents {{results.total}}.
-    </div>
-    <ul>
-    {% for i in results.matches %}
-        <li><a href={{i.0}}>{{i.0}}</a><br />{{i.1}}</li>
-    {% endfor %}
-    </ul>
-    </body></html>"#)
+        ("search-results", include_str!("../../templates/search-results.html"))
     ]).chain_err(|| "template error")?;
     Ok(tera)
 }
@@ -35,6 +22,7 @@ pub fn build_tera() -> WResult<tera::Tera> {
 fn handle((state, query): (State<AppState>, Query<HashMap<String, String>>)) -> Result<HttpResponse, Error> {
     let template = state.template.as_ref()?;
     let mut ctx = tera::Context::new();
+    ctx.add("inline_css", INLINE_CSS);
     let rendered = if let Some(term) = query.get("term") {
         let indexer = &*state.indexer;
         let results = indexer.search(term).unwrap_or_else(|_| Results::default());

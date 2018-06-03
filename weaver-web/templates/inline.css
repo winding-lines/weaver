@@ -1,0 +1,22 @@
+body, input {
+  font-size: 14px;
+}
+
+body {
+  padding: 20px 40px 0 20px;
+  font-family: 'Arial', 'sans-serif';
+}
+
+.search-form {
+  display: flex;
+  flex-direction: row;
+}
+
+.app-name {
+  margin-left: auto;
+  font-weight: lighter;
+}
+
+a:link, a:visited {
+  color: black;
+}
