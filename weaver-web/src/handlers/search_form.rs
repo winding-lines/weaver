@@ -33,8 +33,7 @@ pub fn build_tera() -> WResult<tera::Tera> {
 
 /// Basic server check.
 fn handle((state, query): (State<AppState>, Query<HashMap<String, String>>)) -> Result<HttpResponse, Error> {
-    let template = state.template.as_ref()
-        .map_err(|_| error::ErrorInternalServerError("Template initialization"))?;
+    let template = state.template.as_ref()?;
     let mut ctx = tera::Context::new();
     let rendered = if let Some(term) = query.get("term") {
         let indexer = &*state.indexer;

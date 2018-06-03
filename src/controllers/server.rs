@@ -1,4 +1,3 @@
-use ::http_server;
 use daemonize::Daemonize;
 use std::fs;
 use std::net::{TcpListener, ToSocketAddrs};
@@ -69,11 +68,6 @@ pub fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> R
                 .chain_err(|| "start in daemon mode")?;
         }
     }
-    let store_for_http = Arc::clone(&store);
-    let http_address = config.http_address.clone();
-    thread::spawn(move || {
-        let _http = http_server::start(&http_address, store_for_http);
-    });
     let store_for_actix = Arc::clone(&store);
     let actix_address = config.actix_address.clone();
     thread::spawn(move || {
@@ -89,11 +83,10 @@ pub fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> R
 }
 
 pub fn is_running(config: &ServerConfig) -> bool {
-    is_listening(&config.http_address)
+    is_listening(&config.actix_address)
 }
 
 pub fn check(config: &ServerConfig) -> Result<()> {
-    println!("http listening {}", is_listening(&config.http_address));
     println!("actix listening {}", is_listening(&config.actix_address));
     println!("rpc listening {}", is_listening(&config.rpc_address));
     let rpc = weaver_rpc::client::check(&config.rpc_address)?;

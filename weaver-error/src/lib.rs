@@ -7,6 +7,8 @@ extern crate diesel;
 extern crate error_chain;
 extern crate sys_info;
 
+use std::convert;
+
 
 // `error_chain!` creates.
 
@@ -19,4 +21,16 @@ error_chain! {
     }
 }
 
+// Allow our errors to be easily returned through the web apis.
+impl convert::Into<actix_web::Error> for Error {
+    fn into(self) -> actix_web::Error {
+        actix_web::error::ErrorInternalServerError(format!("{}", self.description()))
+    }
+}
+
+impl <'a> convert::From<&'a Error> for actix_web::Error {
+    fn from(werror: &Error) -> Self {
+        actix_web::error::ErrorInternalServerError(format!("{}", werror.description()))
+    }
+}
 

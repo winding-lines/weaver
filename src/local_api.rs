@@ -34,14 +34,6 @@ pub fn history(env: &Environment, destination: &Destination) -> Result<Vec<Forma
         client::history, (env))
 }
 
-// Return the last url action from the store.
-pub fn last_url(destination: &Destination) -> Result<Option<(String, String)>> {
-    dispatch!( destination,
-            actions2::last_url, (),
-            client::last_url, ()
-    )
-}
-
 pub fn insert_action(new_action: NewAction, destination: &Destination) -> Result<u64> {
     dispatch!(destination,
             actions2::insert, (new_action),

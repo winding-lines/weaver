@@ -6,9 +6,6 @@ extern crate cursive_table_view;
 extern crate daemonize;
 extern crate env_logger;
 extern crate futures;
-extern crate gotham;
-#[macro_use]
-extern crate gotham_derive;
 extern crate hyper;
 #[macro_use]
 extern crate log;
@@ -40,7 +37,6 @@ extern crate weaver_web;
 mod cli;
 mod display;
 mod controllers;
-mod http_server;
 mod local_api;
 
 fn main() {

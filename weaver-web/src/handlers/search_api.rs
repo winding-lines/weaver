@@ -8,6 +8,7 @@ struct PageContent {
     body: String,
 }
 
+// API used by the Chrome extension to upload content to be indexed.
 fn create(data: (State<AppState>, Json<PageContent>)) -> String {
     let indexer = &*(data.0.indexer);
     indexer.add(&data.1.url, &data.1.title, &data.1.body)
@@ -20,6 +21,7 @@ struct SearchQuery {
     term: String,
 }
 
+// API used to make a query and download the matches.
 fn search((state, query): (State<AppState>, Query<SearchQuery>)) -> String {
     let indexer = &*state.indexer;
     indexer.search(&query.term)
