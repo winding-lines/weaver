@@ -10,6 +10,12 @@ pub struct Indexer {
     index: Index,
 }
 
+#[derive(Serialize, Deserialize, Default)]
+pub struct Results {
+    pub total: u64,
+    pub matches: Vec<(String, String)>,
+}
+
 impl Indexer {
     pub fn build() -> Result<Indexer> {
         let mut index_path = app_folder()?;
@@ -61,7 +67,7 @@ impl Indexer {
             .chain_err(|| "commit index")
     }
 
-    pub fn search(&self, what: &str) -> Result<Vec<(String, String)>> {
+    pub fn search(&self, what: &str) -> Result<Results> {
         self.index.load_searchers()
             .chain_err(|| "load searchers")?;
 
@@ -102,9 +108,9 @@ impl Indexer {
         // ### Collectors
         //
         // We are not interested in all of the documents but
-        // only in the top 10. Keeping track of our top 10 best documents
+        // only in the top 10. Keeping track of our top 40 best documents
         // is the role of the TopCollector.
-        let mut top_collector = TopCollector::with_limit(10);
+        let mut top_collector = TopCollector::with_limit(40);
 
         // We can now perform our query.
         searcher.search(&*query, &mut top_collector)
@@ -131,7 +137,10 @@ impl Indexer {
                 .unwrap_or("no title");
             out.push((String::from(found_id), String::from(found_title)));
         }
-        Ok(out)
+        Ok(Results {
+            total: searcher.num_docs(),
+            matches: out,
+        })
     }
 }
 

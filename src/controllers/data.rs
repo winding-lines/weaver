@@ -1,18 +1,14 @@
-use ::cli::{DataSubCommand, TextIndexSubCommand};
-use weaver_db::config::file_utils;
-use weaver_error::*;
+use ::cli::DataSubCommand;
 use std::process::Command;
+use weaver_db::config::file_utils;
 use weaver_db::RealStore;
-use weaver_index::Indexer;
+use weaver_error::*;
 
 /// Execute subcommands for the Data command.
-pub fn run(_store: & RealStore, command: &DataSubCommand) -> Result<()> {
+pub fn run(_store: &RealStore, command: &DataSubCommand) -> Result<()> {
     match command {
         DataSubCommand::Sqlite => {
             sqlite()
-        },
-        DataSubCommand::TextIndex(TextIndexSubCommand::Create) => {
-            index_create()
         }
     }
 }
@@ -31,13 +27,3 @@ fn sqlite() -> Result<()> {
     }
 }
 
-fn index_create() -> Result<()> {
-    let indexer = Indexer::build()?;
-    let _ = indexer.add("id1", "Title for the t e s t document", "this is just a test document")?;
-    let found = indexer.search("test")?;
-    println!("found {}", found.len());
-    for one in found {
-        println!(" {} -> {}", one.0, one.1);
-    }
-    Ok(())
-}

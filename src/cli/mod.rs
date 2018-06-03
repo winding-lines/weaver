@@ -1,6 +1,6 @@
 /// Provides an interface to the command line options.
 
-pub use self::parse::{Command, CommandAndConfig, DataSubCommand, parse, ServerSubCommand, TextIndexSubCommand};
+pub use self::parse::{Command, CommandAndConfig, DataSubCommand, parse, ServerSubCommand};
 
 pub const APP_NAME: &str = env!["CARGO_PKG_NAME"];
 

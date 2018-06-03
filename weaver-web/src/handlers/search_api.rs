@@ -24,7 +24,7 @@ fn search((state, query): (State<AppState>, Query<SearchQuery>)) -> String {
     let indexer = &*state.indexer;
     indexer.search(&query.term)
         .map(|f|
-            f.iter()
+            f.matches.iter()
                 .map(|d| format!("{} {}\n", d.0, d.1))
                 .fold(String::new(), |mut a, n| {
                     a.push_str(&n);
@@ -34,7 +34,7 @@ fn search((state, query): (State<AppState>, Query<SearchQuery>)) -> String {
 }
 
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
-    app.resource("/text_index", |r| {
+    app.resource("/search", |r| {
         r.method(http::Method::GET).with(search);
         r.method(http::Method::POST).with(create);
     })
