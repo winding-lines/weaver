@@ -6,14 +6,39 @@
   <title>Weaver Search</title>
   <style>
     {{inline_css}}
+    .query-help {
+      font-size: small;
+      border: 1px rgba(0,0,0,0.2) solid;
+      margin-top: 20px;
+      padding: 5px;
+      font-weight: lighter;
+    }
+    .query-help li {
+      list-style-type: lower-greek;
+    }
+
+    .search-block {
+      flex-direction: column;
+    }
   </style>
 </head>
 <body>
 <div class="search-form">
-  <form >
-    <input type="text" name="term" placeholder="Enter search term..."/>
-    <input type="submit" name="Search"/>
-  </form>
+  <div class="search-block">
+    <form >
+      <input type="text" name="term" placeholder="Enter search term..."/>
+      <input type="submit" name="Search"/>
+    </form>
+    <div class="query-help">
+      Operators:
+      <ul>
+        <li> OR: simple words will be used in a OR query.</li>
+        <li> AND: add a + in front of the words for combining them with AND</li>
+        <li> EXCLUDE: add a - in front of a word for excluding from the search</li>
+        <li> phrase: enclose a phrase in double quotes</li>
+      </ul>
+    </div>
+  </div>
   <div class="app-name">Weaver</div>
 </div>
 </body>
