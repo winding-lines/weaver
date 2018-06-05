@@ -40,6 +40,14 @@ table! {
     }
 }
 
+table! {
+    url_restrictions (id) {
+        id -> Nullable<Integer>,
+        kind -> Text,
+        url_expr -> Text,
+    }
+}
+
 joinable!(actions2 -> commands (command_id));
 joinable!(actions2 -> epics (epic_id));
 joinable!(actions2 -> hosts (host_id));
@@ -51,4 +59,5 @@ allow_tables_to_appear_in_same_query!(
     epics,
     hosts,
     locations,
+    url_restrictions,
 );

@@ -9,6 +9,9 @@ pub fn run(_store: &RealStore, command: &DataSubCommand) -> Result<()> {
     match command {
         DataSubCommand::Sqlite => {
             sqlite()
+        },
+        DataSubCommand::Create => {
+           RealStore::create_database()
         }
     }
 }

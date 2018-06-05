@@ -45,6 +45,7 @@ pub struct RealStore {
     config: ApiConfig,
 }
 
+embed_migrations!("../migrations");
 
 impl RealStore {
     pub fn new(config: ApiConfig) -> Result<RealStore> {
@@ -55,9 +56,28 @@ impl RealStore {
         })
     }
 
+    pub fn create_database() -> Result<()> {
+        use diesel::Connection as DieselConnection;
+        let path = file_utils::default_database()?;
+        if path.exists() {
+            return Err("output file already exists".into());
+        }
+        let path_s = path.to_str();
+        if path_s.is_none() {
+            return Err("bad path".into());
+        }
+        let connection = SqliteConnection::establish(path_s.unwrap())
+            .chain_err(|| "opening up the connection")?;
+        embedded_migrations::run(&connection).chain_err(|| "running migration")
+    }
+
     pub fn connection(&self) -> Result<Connection> {
         use diesel::Connection as DieselConnection;
-        let db_url = if let Some(value) = file_utils::default_database()?.to_str() {
+        let path = file_utils::default_database()?;
+        if !path.exists() {
+            return Err("database file does not exists".into());
+        }
+        let db_url = if let Some(value) = path.to_str() {
             String::from(value)
         } else {
             return Err("no database url".into());

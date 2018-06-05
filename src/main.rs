@@ -10,10 +10,8 @@ extern crate hyper;
 #[macro_use]
 extern crate log;
 extern crate mime;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
 extern crate serde_json;
+extern crate serde;
 extern crate termion;
 extern crate walkdir;
 

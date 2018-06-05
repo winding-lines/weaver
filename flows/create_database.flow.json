@@ -9,6 +9,6 @@
   "actions": [
     "diesel setup --database-url $HOME/.weaver/history.sqlite3",
     "diesel migration run --database-url $HOME/.weaver/history.sqlite3",
-    "diesel print-schema --database-url $HOME/.weaver/history.sqlite3 > src/store/backends/schema.rs"
+    "diesel print-schema --database-url $HOME/.weaver/history.sqlite3 > weaver-db/src/backends/schema.rs"
   ]
 }

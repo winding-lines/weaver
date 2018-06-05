@@ -33,6 +33,7 @@ pub struct CommandAndConfig {
 #[derive(Debug)]
 pub enum DataSubCommand {
     Sqlite,
+    Create,
 }
 
 /// Server subcommands
@@ -140,7 +141,9 @@ pub fn parse() -> CommandAndConfig {
         .subcommand(SubCommand::with_name(COMMAND_DATA)
             .about("Manipulate the stored data")
             .subcommand(SubCommand::with_name("sqlite")
-                .about("Start an sqlite3 shell")))
+                .about("Start an sqlite3 shell"))
+            .subcommand(SubCommand::with_name("create")
+                .about("Create the sqlite3 database")))
         .get_matches();
 
     let api_config = if matches.is_present("local") {
@@ -215,6 +218,9 @@ fn parse_command(matches: &ArgMatches)-> Command {
     if let Some(run) = matches.subcommand_matches(COMMAND_DATA) {
         if run.subcommand_matches("sqlite").is_some() {
             return Command::Data(DataSubCommand::Sqlite);
+        }
+        if run.subcommand_matches("create").is_some() {
+            return Command::Data(DataSubCommand::Create);
         }
     }
     Command::FlowRecommend
