@@ -24,13 +24,13 @@ error_chain! {
 // Allow our errors to be easily returned through the web apis.
 impl convert::Into<actix_web::Error> for Error {
     fn into(self) -> actix_web::Error {
-        actix_web::error::ErrorInternalServerError(format!("{}", self.description()))
+        actix_web::error::ErrorInternalServerError(self.description().to_string())
     }
 }
 
 impl <'a> convert::From<&'a Error> for actix_web::Error {
     fn from(werror: &Error) -> Self {
-        actix_web::error::ErrorInternalServerError(format!("{}", werror.description()))
+        actix_web::error::ErrorInternalServerError(werror.description().to_string())
     }
 }
 

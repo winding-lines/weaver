@@ -28,6 +28,7 @@ pub mod config;
 pub type Connection = SqliteConnection;
 pub use db::actions2;
 pub use db::epics;
+pub use db::url_restrictions;
 pub use filtered_vec::FilteredVec;
 
 pub enum ApiConfig {

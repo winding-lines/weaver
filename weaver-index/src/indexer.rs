@@ -67,6 +67,20 @@ impl Indexer {
             .chain_err(|| "commit index")
     }
 
+    pub fn delete(&self, id: &str) -> Result<()> {
+        let mut index_writer = self.index.writer(50_000_000)
+            .chain_err(|| "create index writer")?;
+
+        let schema = self.index.schema();
+        let f_id = schema.get_field("id")
+            .chain_err(|| "get id field")?;
+        let term = Term::from_field_text(f_id, id);
+        index_writer.delete_term(term);
+        index_writer.commit()
+            .chain_err(|| "commit index")?;
+        Ok(())
+    }
+
     pub fn search(&self, what: &str) -> Result<Results> {
         self.index.load_searchers()
             .chain_err(|| "load searchers")?;

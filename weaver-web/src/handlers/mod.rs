@@ -6,6 +6,7 @@ mod search_form;
 mod search_api;
 mod url;
 mod summary;
+mod url_restrictions;
 
 
 /// Configure all the handlers in the app
@@ -14,5 +15,5 @@ pub(crate) fn config(app: App<AppState>) -> App<AppState> {
     let app = search_api::config(app);
     let app = url::config(app);
     let app = summary::config(app);
-    app
+    url_restrictions::config(app)
 }
