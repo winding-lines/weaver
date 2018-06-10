@@ -3,13 +3,14 @@ body, input {
 }
 
 body {
-  padding: 20px 40px 0 20px;
+  padding-top: 5px;
   font-family: 'Arial', 'sans-serif';
 }
 
 .search-form {
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
 }
 
 .app-name {
@@ -19,4 +20,8 @@ body {
 
 a:link, a:visited {
   color: black;
+}
+
+.logo {
+  padding-right: 8px;
 }

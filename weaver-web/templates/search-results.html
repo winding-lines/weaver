@@ -29,20 +29,29 @@
 </head>
 <body>
 <div class="search-form">
-  <form>
-    <input type="text" name="term" value="{{ term }}"/>
-    <input type="submit" name="Search"/>
-  </form>
-  <div class="app-name">Weaver</div>
-</div>
-<div class="summary">
-  Found {{ results.matches | length }} matches for {{ term }}, total documents {{ results.total }}.
-</div>
-  {% for i in results.matches %}
-    <div class="result">
-      <h3><a href={{ i.0 }}>{{ i.1 }}</a></h3>
-      <div class="link"><a href={{ i.0 }}>{{ i.0 }}</a></div>
+  <div class="logo">
+    <a href="/">
+      <svg viewBox="0 0 720 792" width="19">
+        <use href="/assets/inline.svg#analemma-icon"/>
+      </svg>
+    </a>
+  </div>
+  <div class="search-block">
+    <form>
+      <input type="text" name="term" value="{{ term }}"/>
+      <input type="submit" name="Search"/>
+    </form>
+    <div class="summary">
+      Found {{ results.matches | length }} matches for {{ term }}, total documents {{ results.total }}.
     </div>
-  {% endfor %}
+    {% for i in results.matches %}
+      <div class="result">
+        <h3><a href={{ i.0 }}>{{ i.1 }}</a></h3>
+        <div class="link"><a href={{ i.0 }}>{{ i.0 }}</a></div>
+      </div>
+    {% endfor %}
+
+  </div>
+</div>
 </body>
 </html>
