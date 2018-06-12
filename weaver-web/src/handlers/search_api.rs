@@ -27,7 +27,7 @@ fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageS
     }
 
     let indexer = &*(state.indexer);
-    let id = indexer.add(&input.url, &input.title, &input.body)?;
+    let _id = indexer.add(&input.url, &input.title, &input.body)?;
 
     Ok(PageStatus { is_indexed: true })
 }
@@ -35,7 +35,7 @@ fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageS
 fn create(data: (State<AppState>, Json<PageContent>)) -> HttpResponse {
     match _create(data) {
         Ok(ps) => HttpResponse::Ok().json(ps),
-        Err(e) => HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).finis    h()
+        Err(_) => HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).finish()
     }
 }
 

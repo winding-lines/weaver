@@ -1,6 +1,7 @@
 use actix_web::{App, middleware, server};
 use app_state::AppState;
 use handlers;
+use pages;
 use std::sync::Arc;
 use weaver_db::RealStore;
 use weaver_error::*;
@@ -19,10 +20,11 @@ impl Server {
                 App::with_state(AppState {
                     store: store.clone(),
                     indexer: indexer.clone(),
-                    template: handlers::build_tera(),
+                    template: pages::build_tera(),
                 })
                     .middleware(middleware::Logger::default())
                     .configure(handlers::config)
+                    .configure(pages::config)
             }
         ).bind(addr)?;
         s.run();

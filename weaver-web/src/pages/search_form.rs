@@ -1,28 +1,13 @@
 use actix_web::{App, error, Error, HttpResponse, Query, State};
 use app_state::AppState;
 use std::collections::HashMap;
-use tera;
-use weaver_error::{Result as WResult, ResultExt};
+use super::build_context;
 use weaver_index::Results;
 
-const INLINE_CSS: &str = include_str!("../../templates/inline.css");
-
-pub fn build_tera() -> WResult<tera::Tera> {
-    let mut tera = tera::Tera::default();
-    tera.add_raw_templates(vec![
-
-        ("search-form", include_str!("../../templates/search-form.html")),
-
-        ("search-results", include_str!("../../templates/search-results.html"))
-    ]).chain_err(|| "template error")?;
-    Ok(tera)
-}
-
-/// Basic server check.
+/// Render the initial form or the results page, depending on the data passed in.
 fn handle((state, query): (State<AppState>, Query<HashMap<String, String>>)) -> Result<HttpResponse, Error> {
     let template = state.template.as_ref()?;
-    let mut ctx = tera::Context::new();
-    ctx.add("inline_css", INLINE_CSS);
+    let mut ctx = build_context();
     let rendered = if let Some(term) = query.get("term") {
         let indexer = &*state.indexer;
         let results = indexer.search(term).unwrap_or_else(|_| Results::default());
@@ -40,8 +25,6 @@ fn handle((state, query): (State<AppState>, Query<HashMap<String, String>>)) -> 
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
-pub(crate)
-
-fn config(app: App<AppState>) -> App<AppState> {
+pub(crate) fn config(app: App<AppState>) -> App<AppState> {
     app.resource("/", |r| r.with(handle))
 }

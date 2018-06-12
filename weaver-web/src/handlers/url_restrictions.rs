@@ -1,4 +1,4 @@
-use actix_web::{App, http, Json, State, Query};
+use actix_web::{App, http, Json, State};
 use app_state::AppState;
 use weaver_db::url_restrictions;
 use weaver_error::*;

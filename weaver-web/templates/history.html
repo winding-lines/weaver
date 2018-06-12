@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <title>Weaver History</title>
+  <style>
+    {{inline_css}}
+    .summary {
+      margin-top: 3px;
+    }
+
+    .result h4 {
+      margin-bottom: 3px;
+    }
+
+    .link {
+      display: block;
+      width: 500px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .result a:link, .result a:visited {
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+<div class="search-form">
+  <div class="logo">
+    <a href="/">
+      <svg viewBox="0 0 720 792" width="19">
+        <use href="/assets/inline.svg#analemma-icon"/>
+      </svg>
+    </a>
+  </div>
+  <div class="search-block">
+    <form>
+      <input type="text" name="term" value="{{ term }}"/>
+      <input type="submit" name="Search"/>
+    </form>
+    <div class="summary">
+      Found {{ results.matches | length }} matches for {{ term }}, total documents {{ results.total }}.
+    </div>
+    {% for i in results.matches %}
+      <div class="result">
+        <h4><a href={{ i.0 }}>{{ i.1 }}</a></h4>
+        <div class="link"><a href={{ i.0 }}>{{ i.0 }}</a></div>
+      </div>
+    {% endfor %}
+
+  </div>
+</div>
+</body>
+</html>

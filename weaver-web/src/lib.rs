@@ -17,5 +17,6 @@ pub use server::Server;
 mod app_state;
 mod server;
 mod handlers;
+mod pages;
 
 
