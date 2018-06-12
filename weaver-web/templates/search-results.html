@@ -10,7 +10,7 @@
       margin-top: 3px;
     }
 
-    .result h3 {
+    .result h4 {
       margin-bottom: 3px;
     }
 
@@ -46,7 +46,7 @@
     </div>
     {% for i in results.matches %}
       <div class="result">
-        <h3><a href={{ i.0 }}>{{ i.1 }}</a></h3>
+        <h4><a href={{ i.0 }}>{{ i.1 }}</a></h4>
         <div class="link"><a href={{ i.0 }}>{{ i.0 }}</a></div>
       </div>
     {% endfor %}

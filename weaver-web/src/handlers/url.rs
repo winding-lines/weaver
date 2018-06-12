@@ -19,6 +19,7 @@ fn create((state, b_action): (State<AppState>, Json<BrowserAction>)) -> Result<S
     Ok(format!("{}", code))
 }
 
+
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
     app.resource("/url", |r| {
         r.method(http::Method::POST).with(create);
