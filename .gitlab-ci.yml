@@ -8,11 +8,10 @@ stages:
 variables:
   CARGO_HOME: $CI_PROJECT_DIR/cargo
   APT_CACHE_DIR: $CI_PROJECT_DIR/apt
-  DEPENDENCIES: sqlite3 libsqlite3-dev libncurses5-dev libncursesw5-dev
 
 before_script:
   - apt-get update -yq
-  - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y {{ DEPENDENCIES }}
+  - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y sqlite3 libsqlite3-dev libncurses5-dev libncursesw5-dev
 
 test:
   stage: test
