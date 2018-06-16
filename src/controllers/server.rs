@@ -4,7 +4,6 @@ use std::fs;
 use std::net::{TcpListener, ToSocketAddrs};
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::thread;
 use weaver_db::config::{file_utils, ServerRun};
 use weaver_db::RealStore;
 use weaver_error::*;

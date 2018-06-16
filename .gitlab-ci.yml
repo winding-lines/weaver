@@ -23,12 +23,23 @@ test:
 pages:
   stage: doc
   script:
-    - cargo doc --no-deps
+    - cargo doc --all --no-deps
     - mv target/doc public
-    - echo '<meta http-equiv="refresh" content="0; url={{ LIBRARY NAME }}">' > public/index.html
+    - echo '<meta http-equiv="refresh" content="0; url='weaaver'">' > public/index.html
   artifacts:
     paths:
       - public
+  only:
+    - master
+
+release:
+  stage: build
+  script:
+    - cargo build --release
+    - mv target/release/weaver release
+  artifacts:
+    paths:
+      - release
   only:
     - master
 

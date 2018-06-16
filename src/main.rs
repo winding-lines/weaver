@@ -1,3 +1,15 @@
+//! Weaver is a history tracker for you command line and shell commands.
+//! The long term goal is to combine with a recommender module that will use
+//! the past actions to suggest the next one.
+//!
+//! Weaver relies on a couple of workspace crates.
+//!
+//! * [weaver-db](../weaver_db/index.html): holds the local database for actions
+//! * [weaver-error](../weaver_error/index.html): error structs used by all crates
+//! * [weaver-index](../weaver_index/index.html): full text search
+//! * [weaver-rpc](../weaver_rpc/index.html): client implementation of API, used by the cli
+//! * [weaver-web](../weaver_web/index.html): API and base page server
+
 extern crate chrono;
 extern crate clap;
 extern crate clipboard;
@@ -10,27 +22,17 @@ extern crate hyper;
 #[macro_use]
 extern crate log;
 extern crate mime;
-extern crate serde_json;
 extern crate serde;
+extern crate serde_json;
 extern crate termion;
 extern crate walkdir;
-
 // Workspace crates
 extern crate weaver_db;
 extern crate weaver_error;
-extern crate weaver_rpc;
 extern crate weaver_index;
+extern crate weaver_rpc;
 extern crate weaver_web;
 
-/// A command line tool to create, discover and recommend flows.
-///
-/// A flow is a sequence of actions towards a mileston. At a given point
-/// an user may be:
-///
-/// - outside of any flow and just logging actions to help identify future flows
-/// - in a given flow
-/// - look for the next flow.
-///
 
 mod cli;
 mod display;

@@ -1,3 +1,5 @@
+//! Database layer for [Weaver](../weaver/index.html).
+
 extern crate chrono;
 #[macro_use]
 extern crate diesel;

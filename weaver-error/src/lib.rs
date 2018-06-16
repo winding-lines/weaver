@@ -1,3 +1,5 @@
+//! Common error definitions for [Weaver](../weaver/index.html).
+
 // `error_chain!` can recurse deeply
 #![recursion_limit = "1024"]
 

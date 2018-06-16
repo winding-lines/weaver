@@ -1,3 +1,5 @@
+//! Full text search for [Weaver](../weaver/index.html).
+
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;

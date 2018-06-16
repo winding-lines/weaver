@@ -1,3 +1,5 @@
+//! Web and api server for [Weaver](../weaver/index.html).
+
 extern crate actix_web;
 extern crate bytes;
 extern crate futures;

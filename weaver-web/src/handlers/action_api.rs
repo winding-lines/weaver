@@ -33,7 +33,7 @@ pub(crate) fn config(app: App<AppState>) -> App<AppState> {
         r.method(http::Method::GET).with(search);
         r.method(http::Method::POST).with(create);
     });
-    app.resource("/actions/{id}/annotations", |r| {
+    app.resource(&format!("{}/{{id}}{}", net::ACTIONS_BASE, net::ANNOTATIONS), |r| {
         r.method(http::Method::GET).with(set_annotation);
     })
 }
