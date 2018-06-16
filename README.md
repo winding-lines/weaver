@@ -1,7 +1,6 @@
 # Description
 
-Weaver's goal is to allow you to identify repeating flows in your day to day job.
-Weaver is composed of 4 components:
+Weaver is an improved browser and shell history tracker. Weaver is composed of 4 components:
 
 - command line extension
 - chrome extension
@@ -52,12 +51,6 @@ Type `weaver --help` to get more help. Two frequent use cases are:
 
 ### Installation
 
-To install the Chrome Extension:
-1. in Chromebrowse to chrome://extensions
-2. Enable Developer mode
-3. Select 'Load unpacked'
-4. Browse to the chrome-extensions subfolder of the current folder
+Please install the Chrome Extension from the Chrome Store.
+https://chrome.google.com/webstore/detail/weaver/hcijijnmldaljacnomfkjibcnobpbpmk
 
-### Usage
-
-As of version 0.1.1 the Chrome Extension only captures your traffic.

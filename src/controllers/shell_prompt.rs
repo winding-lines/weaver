@@ -30,7 +30,7 @@ pub fn run(store: &RealStore, env: &Environment) -> Result<()> {
     // save any shell history items in the store
     for input in file_utils::read_stdin(1)? {
         let action = NewAction::build_from_shell(&input, env)?;
-        local_api::insert_action(action, &store.destination())?;
+        local_api::insert_action(&action, &store.destination())?;
     }
     Ok(())
 }

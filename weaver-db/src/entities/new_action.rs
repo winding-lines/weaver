@@ -3,41 +3,42 @@ use sys_info;
 use weaver_error::Result;
 use ::config::Environment;
 
-pub struct NewAction<'a> {
+#[derive(Deserialize, Serialize)]
+pub struct NewAction {
     pub executed: String,
-    pub kind: &'a str,
-    pub command: &'a str,
-    pub location: Option<&'a str>,
-    pub epic: Option<&'a str>,
+    pub kind: String,
+    pub command: String,
+    pub location: Option<String>,
+    pub epic: Option<String>,
     pub host: String,
 }
 
-impl<'a> NewAction<'a> {
+impl NewAction {
 
-    pub fn build_from_shell(command: &'a str, env: &'a Environment) -> Result<NewAction<'a>> {
+    pub fn build_from_shell(command: &str, env: &Environment) -> Result<NewAction> {
         let host = sys_info::hostname()?;
         let location = Some(env.cwd());
         let executed = now();
 
         Ok(NewAction {
             executed,
-            kind: "shell",
-            command: &command,
-            location,
-            epic: env.epic(),
+            kind: "shell".into(),
+            command: command.into(),
+            location: location.map(String::from),
+            epic: env.epic().map(String::from),
             host,
         })
     }
 
-    pub fn build_from_url( url: &'a str, location: &'a str, epic: Option<&'a str>) -> Result<NewAction<'a>> {
+    pub fn build_from_url( url: &str, location: &str, epic: Option<&str>) -> Result<NewAction> {
         let host = sys_info::hostname()?;
         let executed = now();
         Ok(NewAction {
             executed,
-            kind: "url",
-            command: url,
-            location: Some(location),
-            epic,
+            kind: "url".into(),
+            command: url.into(),
+            location: Some(location.into()),
+            epic: epic.map(String::from),
             host,
         })
     }

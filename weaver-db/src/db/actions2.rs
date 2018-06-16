@@ -81,16 +81,16 @@ pub fn last_url(connection: &Connection) -> Result<Option<(String, String)>> {
 }
 
 /// Insert a new action in the database.
-pub fn insert(connection: &Connection, action: NewAction) -> Result<u64> {
+pub fn insert(connection: &Connection, action: &NewAction) -> Result<u64> {
     use diesel::Connection as DieselConnection;
 
     connection.transaction::<u64, _, _>(|| {
-        let location_id = if let Some(path) = action.location {
+        let location_id = if let Some(path) = action.location.as_ref() {
             Some(db::locations::fetch_or_create_id(connection, &path)?)
         } else {
             None
         };
-        let epic_id = if let Some(epic) = action.epic {
+        let epic_id = if let Some(epic) = action.epic.as_ref() {
             Some(db::epics::fetch_or_create_id(connection, &epic)?)
         } else {
             None
@@ -99,7 +99,7 @@ pub fn insert(connection: &Connection, action: NewAction) -> Result<u64> {
         let host_id = db::hosts::fetch_or_create_id(connection, &action.host)?;
         let migrated = (
             actions2::dsl::command_id.eq(command_id),
-            actions2::dsl::executed.eq(action.executed),
+            actions2::dsl::executed.eq(&action.executed),
             actions2::dsl::location_id.eq(location_id),
             actions2::dsl::epic_id.eq(epic_id),
             actions2::dsl::sent.eq(false),

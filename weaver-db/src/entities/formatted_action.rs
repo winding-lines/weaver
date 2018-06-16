@@ -1,7 +1,7 @@
 use ::config;
 
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct FormattedAction {
     pub annotation: Option<String>,
     pub id: usize,

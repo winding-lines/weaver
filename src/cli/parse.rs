@@ -149,8 +149,8 @@ pub fn parse() -> CommandAndConfig {
     let api_config = if matches.is_present("local") {
         ApiConfig::Local
     } else {
-        let rpc_address = server.rpc_address.clone();
-        ApiConfig::Remote(rpc_address)
+        let address = server.actix_address.clone();
+        ApiConfig::Remote(address)
     };
     CommandAndConfig {
         command: parse_command(&matches),

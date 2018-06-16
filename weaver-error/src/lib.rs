@@ -5,6 +5,7 @@ extern crate actix_web;
 extern crate diesel;
 #[macro_use]
 extern crate error_chain;
+extern crate reqwest;
 extern crate sys_info;
 
 use std::convert;
@@ -18,6 +19,7 @@ error_chain! {
         Diesel(::diesel::result::Error);
         SysInfo(::sys_info::Error);
         Io(::std::io::Error);
+        Reqwest(::reqwest::Error);
     }
 }
 

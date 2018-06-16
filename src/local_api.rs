@@ -31,27 +31,27 @@ macro_rules! dispatch {
 pub fn history(env: &Environment, destination: &Destination) -> Result<Vec<FormattedAction>> {
     dispatch!(destination,
         actions2::fetch_all, (),
-        client::history, (env))
+        client::rest::history, ())
 }
 
-pub fn insert_action(new_action: NewAction, destination: &Destination) -> Result<u64> {
+pub fn insert_action(new_action: &NewAction, destination: &Destination) -> Result<u64> {
     dispatch!(destination,
             actions2::insert, (new_action),
-            client::add, (new_action)
+            client::rest::add, (new_action)
     )
 }
 
 pub fn epic_names(destination: &Destination) -> Result<Vec<String>> {
     dispatch!(destination,
             epics::fetch_all, (),
-            client::fetch_epics, ()
+            client::rest::fetch_epics, ()
     )
 }
 
 pub fn set_annotation(destination: &Destination, id: u64, content: &str) -> Result<u64> {
     dispatch!(destination,
         actions2::set_annotation, (id, content),
-        client::set_annotation, (id, content)
+        client::rest::set_annotation, (id, content)
     )
 }
 

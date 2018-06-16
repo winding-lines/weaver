@@ -15,7 +15,7 @@ fn create((state, b_action): (State<AppState>, Json<BrowserAction>)) -> Result<S
     let store = &*state.store;
     let epic = store.epic()?;
     let action = NewAction::build_from_url(&b_action.url, b_action.transition_type.as_str(), epic.as_ref().map(String::as_str))?;
-    let code = actions2::insert(&store.connection()?, action)?;
+    let code = actions2::insert(&store.connection()?, &action)?;
     Ok(format!("{}", code))
 }
 
