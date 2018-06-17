@@ -3,10 +3,6 @@ use weaver_db::entities::{FormattedAction, NewAction};
 use weaver_error::Result;
 use weaver_db::config::net::{self, ACTIONS_BASE, ANNOTATIONS};
 
-pub fn check(rpc_addr: &str) -> Result<bool> {
-    unimplemented!()
-}
-
 pub fn history(rpc_addr: &str) -> Result<Vec<FormattedAction>> {
     reqwest::get(&format!("http://{}{}", rpc_addr, ACTIONS_BASE))?
         .json::<Vec<FormattedAction>>()

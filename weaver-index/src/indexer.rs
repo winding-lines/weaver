@@ -1,3 +1,5 @@
+//! Provide an interface to the Tantivy index.
+//!
 use std::fs;
 use tantivy::collector::TopCollector;
 use tantivy::Index;
@@ -155,6 +157,14 @@ impl Indexer {
             total: searcher.num_docs(),
             matches: out,
         })
+    }
+
+    /// Build a textual representation of the summary to be displayed in the web interface.
+    pub fn summary(&self) -> Option<String> {
+
+        self.search("weaver")
+            .map(|r| format!("Indexed docs: {}", r.total))
+            .ok()
     }
 }
 

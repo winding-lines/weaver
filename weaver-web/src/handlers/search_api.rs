@@ -14,22 +14,24 @@ struct PageContent {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct PageStatus {
-    is_indexed: bool
+    is_indexed: bool,
+    summary: Option<String>,
 }
 
 // API used by the Chrome extension to upload content to be indexed.
 fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageStatus> {
     let store = &*state.store;
+
     let connection = store.connection()?;
     let url_restrictions = url_restrictions::fetch_all(&connection)?;
     if !url_restrictions.should_index(&input.url) {
-        return Ok(PageStatus { is_indexed: false });
+        return Ok(PageStatus { is_indexed: false, summary: state.indexer.summary() });
     }
 
     let indexer = &*(state.indexer);
     let _id = indexer.add(&input.url, &input.title, &input.body)?;
 
-    Ok(PageStatus { is_indexed: true })
+    Ok(PageStatus { is_indexed: true, summary: state.indexer.summary() })
 }
 
 fn create(data: (State<AppState>, Json<PageContent>)) -> HttpResponse {
