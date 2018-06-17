@@ -17,7 +17,40 @@ simply the name of the task that you workting towards completing.
 
 # Components
 
-## Command line extension
+## Local component
+
+Since this project is under heavy development you need to build it from sources.
+Follow the following steps to install the local server/cli component.
+
+- Install rust from [https://rustup.rs/](https://rustup.rs/)
+- Checkout weaver from git@gitlab.com:lab-flow/weaver.git
+- Build with `cargo build --release`
+- Install in your `$PATH`
+- Run with `weaver server start`
+
+Every time your reboot you will need to restart the server.
+
+
+## Chrome integration
+
+### Extension
+
+Please install the Chrome Extension from the Chrome Store.
+https://chrome.google.com/webstore/detail/weaver/hcijijnmldaljacnomfkjibcnobpbpmk
+
+### Search engine
+
+Add a custom search engine here:
+
+chrome://settings/searchEngines
+
+My parameters are:
+
+  - Search engine: weaver
+  - Keyword: wr
+  - URL: http://localhost:8466/?term=%s 
+
+## Command line integration
 
 The command line extension has two goals:
 
@@ -46,11 +79,4 @@ Type `weaver --help` to get more help. Two frequent use cases are:
 - changing the epic, this is done with the `weaver epic` command line. The active epic is displayed
   in the shell command, if you have installed as above.
 - re-running a command, this is done with the `weaver actions` command
-
-## Chrome extension
-
-### Installation
-
-Please install the Chrome Extension from the Chrome Store.
-https://chrome.google.com/webstore/detail/weaver/hcijijnmldaljacnomfkjibcnobpbpmk
 
