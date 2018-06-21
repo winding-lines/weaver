@@ -67,7 +67,7 @@ pub fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> R
         }
     }
     let actix_address = config.actix_address.clone();
-    let _actix = weaver_web::Server::start(&actix_address, store);
+    let _actix = weaver_web::Server::start(&actix_address, store)?;
 
     Ok(Server)
 }
