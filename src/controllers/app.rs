@@ -58,7 +58,9 @@ pub fn run() -> Result<()> {
                     let my_store = Arc::clone(&store);
                     let _ = server::start(&ServerRun::Daemonize, &server_config, my_store)?;
                 }
+                // Run the shell prompt, we do not want too many errors here.
                 shell_prompt::run(&store, &env)
+                    .or_else(|_| Ok(()))
             }
         }
     }

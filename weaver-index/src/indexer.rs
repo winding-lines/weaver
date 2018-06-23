@@ -34,12 +34,12 @@ impl Indexer {
             schema_builder.add_text_field("body", TEXT);
 
             let schema = schema_builder.build();
-            let _ = Index::create(index_path.clone(), schema)
+            let _ = Index::create_in_dir(index_path.clone(), schema)
                 .chain_err(|| "create index")?;
         }
 
 
-        let index = Index::open(index_path)
+        let index = Index::open_in_dir(index_path)
             .chain_err(|| "open index")?;
 
         Ok(Indexer {

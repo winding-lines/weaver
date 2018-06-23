@@ -1,4 +1,5 @@
-use actix_web::{App, middleware, server};
+use actix_web::{App, server};
+use actix_web::middleware::Logger;
 use app_state::AppState;
 use handlers;
 use pages;
@@ -22,9 +23,10 @@ impl Server {
                     indexer: indexer.clone(),
                     template: pages::build_tera(),
                 })
-                    .middleware(middleware::Logger::default())
+                    .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     .configure(handlers::config)
                     .configure(pages::config)
+
             }
         ).bind(addr)?;
         s.run();

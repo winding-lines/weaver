@@ -52,6 +52,8 @@ fn main() {
     if env::var("WEAVER").is_ok() {
         builder.parse(&env::var("WEAVER").unwrap());
     }
+    builder.filter_module("actix_web", log::LevelFilter::Info);
+    builder.filter_module("tantivy", log::LevelFilter::Info);
     builder.init();
 
     // Run the main loop, be concise with error reporting since we may run in PS1.

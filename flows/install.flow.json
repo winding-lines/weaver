@@ -3,8 +3,7 @@
   "preconditions": [],
   "actions": [
     "cargo build",
-    "kill  -KILL `cat ~/.weaver/server/server.pid`",
-    "sleep 3",
+    "kill  `cat ~/.weaver/server/server.pid`",
     "weaver server check",
     "cp target/debug/weaver ~/.cargo/bin",
     "weaver server start",
