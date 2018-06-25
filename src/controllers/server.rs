@@ -9,6 +9,7 @@ use weaver_db::config::{file_utils, ServerRun};
 use weaver_db::RealStore;
 use weaver_error::*;
 use weaver_web;
+use weaver_index;
 
 fn server_folder() -> Result<PathBuf> {
     file_utils::app_folder().and_then(|mut path| {
@@ -84,6 +85,7 @@ pub fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> R
             println!("Started in daemon mode");
         }
     }
+    weaver_index::init()?;
     let actix_address = config.actix_address.clone();
     let _actix = weaver_web::Server::start(&actix_address, store)?;
 

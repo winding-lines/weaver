@@ -19,6 +19,8 @@ pub struct Results {
 }
 
 impl Indexer {
+
+    // Build the application wide indexer.
     pub fn build() -> Result<Indexer> {
         let mut index_path = app_folder()?;
         index_path.push("text-index");

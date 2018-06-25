@@ -51,7 +51,7 @@ pub fn default_database() -> Result<PathBuf> {
         path.push("history.sqlite3");
         Ok(path)
     } else {
-        Err(Error::from_kind(ErrorKind::from("cannot get home folder")))
+        Err("cannot get home folder".into())
     }
 }
 

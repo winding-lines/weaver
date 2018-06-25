@@ -34,6 +34,8 @@ pub struct CommandAndConfig {
 pub enum DataSubCommand {
     Sqlite,
     Create,
+    Encrypt(String),
+    Decrypt(String),
 }
 
 /// Server subcommands
@@ -143,7 +145,15 @@ pub fn parse() -> CommandAndConfig {
             .subcommand(SubCommand::with_name("sqlite")
                 .about("Start an sqlite3 shell"))
             .subcommand(SubCommand::with_name("create")
-                .about("Create the sqlite3 database")))
+                .about("Create the sqlite3 database"))
+            .subcommand(SubCommand::with_name("encrypt")
+                .arg(Arg::with_name("NAME")
+                    .index(1))
+                .about("Encrypt a file"))
+            .subcommand(SubCommand::with_name("decrypt")
+                .arg(Arg::with_name("NAME")
+                    .index(1))
+                .about("Decrypt the handle")))
         .get_matches();
 
     let api_config = if matches.is_present("local") {
@@ -221,6 +231,14 @@ fn parse_command(matches: &ArgMatches)-> Command {
         }
         if run.subcommand_matches("create").is_some() {
             return Command::Data(DataSubCommand::Create);
+        }
+        if let Some(encrypt) = run.subcommand_matches("encrypt") {
+            let name = encrypt.value_of("NAME").unwrap();
+            return Command::Data(DataSubCommand::Encrypt(name.to_string()));
+        }
+        if let Some(decrypt) = run.subcommand_matches("decrypt") {
+            let name = decrypt.value_of("NAME").unwrap();
+            return Command::Data(DataSubCommand::Decrypt(name.to_string()));
         }
     }
     Command::FlowRecommend

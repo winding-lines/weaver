@@ -28,7 +28,7 @@ macro_rules! dispatch {
     })
 }
 
-pub fn history(env: &Environment, destination: &Destination) -> Result<Vec<FormattedAction>> {
+pub fn history(_env: &Environment, destination: &Destination) -> Result<Vec<FormattedAction>> {
     dispatch!(destination,
         actions2::fetch_all, (),
         client::rest::history, ())

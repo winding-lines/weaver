@@ -78,7 +78,7 @@ pub fn run<T>(name: T) -> Result<()>
             return run_flow(flow);
         }
     }
-    Err(Error::from_kind(ErrorKind::from("flow not found")))
+    Err("flow not found".into())
 }
 
 /// Create a flow with the given name, in the global location or not,
