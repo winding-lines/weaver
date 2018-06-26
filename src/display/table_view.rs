@@ -1,8 +1,8 @@
+use chan;
 use cursive::align::HAlign;
 use cursive::Cursive;
 use cursive_table_view::{TableView, TableViewItem};
 use std::cmp::Ordering;
-use std::sync::mpsc;
 use super::processor::Msg;
 use weaver_db::entities::FormattedAction;
 
@@ -41,7 +41,7 @@ impl TableViewItem<BasicColumn> for FormattedAction {
 pub type TView = TableView<FormattedAction, BasicColumn>;
 
 // Create the Cursive table for actions.
-pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &mpsc::Sender<Msg>) -> TView {
+pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &chan::Sender<Msg>) -> TView {
     let mut view = TView::new()
         .column(BasicColumn::Index, "#", |c| c.width(6))
         .column(BasicColumn::Kind, " ", |c| c.align(HAlign::Left).width(1))
@@ -55,7 +55,7 @@ pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &mpsc::Sender<Ms
         view.set_on_submit(move |siv: &mut Cursive, _row: usize, index: usize| {
             if let Some(mut t) = siv.find_id::<TView>("actions") {
                 let value = t.borrow_item(index).cloned();
-                view_tx.send(Msg::TableSubmit(value)).expect("send submit");
+                view_tx.send(Msg::TableSubmit(value));
             } else {
                 error!("cannot find table");
             }
@@ -70,7 +70,7 @@ pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &mpsc::Sender<Ms
         view.set_on_select(move |siv: &mut Cursive, _row: usize, index: usize| {
             if let Some(mut t) = siv.find_id::<TView>("actions") {
                 let value = t.borrow_item(index).cloned();
-                view_tx.send(Msg::Selection(value)).expect("send select");
+                view_tx.send(Msg::Selection(value));
             } else {
                 // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
                 error!("cannot find table");

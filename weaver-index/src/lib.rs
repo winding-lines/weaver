@@ -4,6 +4,7 @@
 extern crate rust_sodium;
 extern crate metrohash;
 extern crate keyring;
+extern crate rpassword;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;

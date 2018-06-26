@@ -59,6 +59,14 @@ impl RealStore {
         })
     }
 
+    pub fn create_database_if_missing() -> Result<()> {
+        let path = file_utils::default_database()?;
+        if path.exists() {
+            return Ok(());
+        };
+        Self::create_database()
+    }
+
     pub fn create_database() -> Result<()> {
         use diesel::Connection as DieselConnection;
         let path = file_utils::default_database()?;

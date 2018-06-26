@@ -2,6 +2,7 @@
 
 use bincode::{deserialize, serialize};
 use keyring;
+use rpassword;
 use metrohash::MetroHash128;
 use rust_sodium::crypto::{pwhash, secretbox};
 use std::fs::{read, remove_file, write};
@@ -28,20 +29,7 @@ impl Repo {
         let config = Config::read_or_build()?;
         let salt = config.salt()?;
 
-        let ring = keyring::Keyring::new("weaver", "weaver-user");
-        let password = match ring.get_password() {
-            Err(e) => {
-                //return Err(format!("error getting repo password {:?}", e).into()),
-                Repo::create_new_password(&ring)?
-            },
-            Ok(pwd) => {
-                if pwd.len() == 0 {
-                    Repo::create_new_password(&ring)?
-                } else {
-                    pwd
-                }
-            }
-        };
+        let password = Repo::get_password()?;
         let mut key = secretbox::Key([0; secretbox::KEYBYTES]);
         {
             let secretbox::Key(ref mut kb) = key;
@@ -55,12 +43,34 @@ impl Repo {
         })
     }
 
-    // TODO: have a command line option to set this.
-    fn create_new_password(ring: & keyring::Keyring ) -> Result<String> {
-        let new_pwd = String::from("123456");
+    // Read the password from the keyring.
+    fn get_password() -> Result<String> {
+        let ring = keyring::Keyring::new("weaver", "weaver-user");
+        match ring.get_password() {
+            Err(e) => {
+                let msg = format!("please run `weaver data create` in order to setup the repo\n{}", e);
+                return Err(msg.into());
+            },
+            Ok(pwd) => {
+                if pwd.len() == 0 {
+                    return Err("please run `weaver data create` in order to setup the repo".into());
+                } else {
+                    Ok(pwd)
+                }
+            }
+        }
+    }
+
+    pub fn setup_if_needed() -> Result<()> {
+        if Repo::get_password().is_ok() {
+            return Ok(());
+        }
+        let ring = keyring::Keyring::new("weaver", "weaver-user");
+        let new_pwd = rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
         ring.set_password(&new_pwd)
             .chain_err(|| "save password in keyring")?;
-        Ok(new_pwd)
+        println!("Password saved in the keyring.");
+        Ok(())
     }
 
 

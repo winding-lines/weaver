@@ -24,6 +24,10 @@ Follow the following steps to install the local server/cli component.
 
 - Install rust from [https://rustup.rs/](https://rustup.rs/)
 - Checkout weaver from git@gitlab.com:lab-flow/weaver.git
+- Install required libraries, on Linux
+    
+    `sudo apt-get install libncurses-dev libsqlite3-dev lisqlite3 libncursesw5-dev`
+    
 - Build with `cargo build --release`
 - Install in your `$PATH`
 - Run with `weaver server start`

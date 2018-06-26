@@ -1,10 +1,10 @@
+use chan;
 use cursive::Cursive;
 use cursive::event::{Event, Key};
 use cursive::view::Margins;
 use cursive::views::{Dialog, LinearLayout, OnEventView, RadioGroup, TextView};
 use std::cmp::PartialEq;
 use std::fmt::Display;
-use std::sync::mpsc;
 use super::processor::Msg;
 use weaver_db::config::{Channel, Content, OutputKind};
 
@@ -45,7 +45,7 @@ fn create_radio_group<T>(container: &mut LinearLayout, values: Vec<T>, initial: 
 }
 
 /// Display the Outpu selector with the current state selected.
-pub fn show_output_selection(siv: &mut Cursive, kind: &OutputKind, ch: &mpsc::Sender<Msg>) {
+pub fn show_output_selection(siv: &mut Cursive, kind: &OutputKind, ch: &chan::Sender<Msg>) {
     let mut output_pane = LinearLayout::vertical();
 
     output_pane.add_child(TextView::new("Output content:"));
@@ -74,7 +74,7 @@ pub fn show_output_selection(siv: &mut Cursive, kind: &OutputKind, ch: &mpsc::Se
                 content: (&*my_content.selection()).clone(),
             };
 
-            channel.send(Msg::SelectKind(kind)).expect("Send SelectKind message");
+            channel.send(Msg::SelectKind(kind));
             s.pop_layer();
         }
     };

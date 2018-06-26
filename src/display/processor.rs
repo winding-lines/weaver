@@ -2,7 +2,7 @@ use cursive::{CbFunc as CursiveCbFunc, Cursive};
 use cursive::views::EditView;
 use local_api;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc;
+use chan;
 use std::thread;
 use super::{FormattedAction, table_view, UserSelection};
 use super::output_selector;
@@ -49,9 +49,9 @@ struct Processor {
     table: FilteredVec,
     // current search/filter string
     search_string: Option<String>,
-    cursive_sink: mpsc::Sender<Box<CursiveCbFunc>>,
+    cursive_sink: chan::Sender<Box<CursiveCbFunc>>,
     // A transmit channel to the Processors main loop
-    self_tx: mpsc::Sender<Msg>,
+    self_tx: chan::Sender<Msg>,
 }
 
 impl Processor {
@@ -69,8 +69,7 @@ impl Processor {
                 view.set_content(content);
             };
         };
-        self.cursive_sink.send(Box::new(update_command))
-            .expect("send to command");
+        self.cursive_sink.send(Box::new(update_command));
     }
 
     fn select_action(&mut self, selection: Option<FormattedAction>) {
@@ -118,12 +117,11 @@ impl Processor {
 
                     // Update the rest of the system with the selection.
                     // Since there are state changes need to defer to the processor.
-                    tx.send(Msg::Selection(selected)).expect("send selection");
+                    tx.send(Msg::Selection(selected));
                 }
             };
         };
-        self.cursive_sink.send(Box::new(update_table))
-            .expect("send to update_table");
+        self.cursive_sink.send(Box::new(update_table));
     }
 
     fn set_selected_row(&mut self, row: usize) {
@@ -132,7 +130,7 @@ impl Processor {
                 tview.set_selected_row(row);
             }
         };
-        self.cursive_sink.send(Box::new(jump)).expect("send jump");
+        self.cursive_sink.send(Box::new(jump));
         let action = self.table.get(row);
         self.select_action(action);
     }
@@ -171,8 +169,7 @@ impl Processor {
             let k = my_kind.lock().unwrap();
             output_selector::show_output_selection(siv, &*k, &my_tx);
         };
-        self.cursive_sink.send(Box::new(show_kind))
-            .expect("cursive send show kind");
+        self.cursive_sink.send(Box::new(show_kind));
     }
 
     fn set_annotation(&self, annotation: &str) {
@@ -185,7 +182,7 @@ impl Processor {
     fn exit(&mut self) {
         self.cursive_sink.send(Box::new(|siv: &mut Cursive| {
             siv.quit();
-        })).expect("cursive send");
+        }));
     }
 }
 
@@ -198,10 +195,10 @@ pub struct ProcessorThread {
     pub kind: config::OutputKind,
     pub env: Arc<config::Environment>,
     pub real_store: Arc<RealStore>,
-    pub rx: mpsc::Receiver<Msg>,
-    pub self_tx: mpsc::Sender<Msg>,
-    pub tx: mpsc::Sender<UserSelection>,
-    pub cursive_sink: mpsc::Sender<Box<CursiveCbFunc>>,
+    pub rx: chan::Receiver<Msg>,
+    pub self_tx: chan::Sender<Msg>,
+    pub tx: chan::Sender<UserSelection>,
+    pub cursive_sink: chan::Sender<Box<CursiveCbFunc>>,
 }
 
 
@@ -224,68 +221,65 @@ impl ProcessorThread {
             // Process messages until done.
             loop {
                 match self.rx.recv() {
-                    Ok(Msg::Selection(selection)) => {
+                    Some(Msg::Selection(selection)) => {
                         debug!("Received selection message {:?}", selection);
                         processor.select_action(selection);
                     }
 
-                    Ok(Msg::TableSubmit(f)) => {
+                    Some(Msg::TableSubmit(f)) => {
                         debug!("Exiting in TableSubmit, selection {:?}", f);
                         processor.select_action(f);
                     }
 
-                    Ok(Msg::FilterSubmit) => {
+                    Some(Msg::FilterSubmit) => {
                         debug!("Exiting in FilterSubmit, selection {:?}", processor.formatted_action);
                         processor.exit();
                     }
 
-                    Ok(Msg::AnnotationSubmit(f)) => {
+                    Some(Msg::AnnotationSubmit(f)) => {
                         let input = f.as_ref().map(|s| s.as_str());
                         let content = input.unwrap_or("");
                         processor.set_annotation(content);
                     }
 
-                    Ok(Msg::CommandSubmit(f)) => {
+                    Some(Msg::CommandSubmit(f)) => {
                         // Handle a string submitted from the command box.
                         processor.submit_command(f);
                         debug!("Exiting in EditSubmit, selection {:?}", processor.formatted_action);
                         processor.exit();
                     }
 
-                    Ok(Msg::Filter(f)) => {
+                    Some(Msg::Filter(f)) => {
                         processor.filter(Some(f.as_str()), None);
                         processor.search_string = Some(f);
                     }
-                    Ok(Msg::JumpToSelection) => {
+                    Some(Msg::JumpToSelection) => {
                         debug!("Received JumpToSelection");
                         let current_id = processor.formatted_action.as_ref().map(|a| a.id - 1);
                         processor.filter(None, current_id);
                     }
-                    Ok(Msg::JumpToNextMatch) => {
+                    Some(Msg::JumpToNextMatch) => {
                         processor.jump_to_next();
                     }
-                    Ok(Msg::JumpToPrevMatch) => {
+                    Some(Msg::JumpToPrevMatch) => {
                         processor.jump_to_prev();
                     }
-                    Ok(Msg::ShowOutputSelector) => {
+                    Some(Msg::ShowOutputSelector) => {
                         processor.show_output_selector();
                     }
-                    Ok(Msg::SelectKind(k)) => {
+                    Some(Msg::SelectKind(k)) => {
                         processor.select_kind(k);
                     }
-                    Ok(Msg::ExtractState) => {
+                    Some(Msg::ExtractState) => {
                         debug!("Received end msg");
                         let mine = processor.output_kind.lock().unwrap();
                         self.tx.send(UserSelection {
                             action: processor.formatted_action,
                             kind: Some((*mine).clone()),
-                        }).expect("send user selection");
+                        });
                         return;
                     }
-                    Err(e) => {
-                        error!("Error {:?} in selection thread", e);
-                        return;
-                    }
+                    None => debug!("received None message")
                 }
             }
         })

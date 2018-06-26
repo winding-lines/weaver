@@ -1,3 +1,4 @@
+use chan;
 use cursive::Cursive;
 use cursive::event::{Event, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
@@ -5,10 +6,9 @@ use cursive::traits::*;
 use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
 use self::processor::Msg;
 use std::sync::Arc;
-use std::sync::mpsc;
+use weaver_db::{FilteredVec, RealStore};
 use weaver_db::config::{Environment, OutputKind};
 use weaver_db::entities::FormattedAction;
-use weaver_db::{FilteredVec, RealStore};
 use weaver_error::*;
 
 mod table_view;
@@ -35,13 +35,11 @@ fn create_cursive() -> Cursive {
     siv
 }
 
-fn send(tx: &mpsc::Sender<Msg>, msg: Msg) {
-    if let Err(e) = tx.send(msg) {
-        error!("failed sending filter message {:?}", e)
-    }
+fn send(tx: &chan::Sender<Msg>, msg: Msg) {
+    tx.send(msg);
 }
 
-fn create_filter_edit(tx: mpsc::Sender<Msg>) -> EditView {
+fn create_filter_edit(tx: chan::Sender<Msg>) -> EditView {
     let tx2 = tx.clone();
     EditView::new()
         .on_edit(move |_: &mut Cursive, text: &str, _position: usize| {
@@ -52,7 +50,7 @@ fn create_filter_edit(tx: mpsc::Sender<Msg>) -> EditView {
         })
 }
 
-fn create_command_edit(tx: mpsc::Sender<Msg>) -> EditView {
+fn create_command_edit(tx: chan::Sender<Msg>) -> EditView {
     EditView::new()
         .on_submit(move |_: &mut Cursive, content: &str| {
             let message = Msg::CommandSubmit(Some(String::from(content)));
@@ -60,15 +58,15 @@ fn create_command_edit(tx: mpsc::Sender<Msg>) -> EditView {
         })
 }
 
-fn create_annotation_edit(tx: mpsc::Sender<Msg>) -> EditView {
+fn create_annotation_edit(tx: chan::Sender<Msg>) -> EditView {
     EditView::new()
         .on_submit(move |_: &mut Cursive, content: &str| {
-        let message = Msg::AnnotationSubmit(Some(String::from(content)));
-        send(&tx, message);
-    })
+            let message = Msg::AnnotationSubmit(Some(String::from(content)));
+            send(&tx, message);
+        })
 }
 
-fn setup_global_keys(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
+fn setup_global_keys(siv: &mut Cursive, ch: chan::Sender<Msg>) {
     let mapping = vec![
         (Event::CtrlChar('g'), Msg::JumpToSelection),
         (Event::CtrlChar('p'), Msg::JumpToPrevMatch),
@@ -77,12 +75,12 @@ fn setup_global_keys(siv: &mut Cursive, ch: mpsc::Sender<Msg>) {
     for (cursive_ev, processor_msg) in mapping {
         let my_ch = ch.clone();
         siv.add_global_callback(cursive_ev, move |_siv| {
-            my_ch.send(processor_msg.clone()).expect("send JumpTo*");
+            my_ch.send(processor_msg.clone());
         });
     }
     // Setup the ESC key to open up the Output Kind selector.
     siv.add_global_callback(Event::Key(Key::Esc), move |_s| {
-        ch.send(Msg::ShowOutputSelector).expect("send ShowOutputSelector");
+        ch.send(Msg::ShowOutputSelector);
     });
 }
 
@@ -99,10 +97,10 @@ pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
     let table_width = (screen.x - 7) as usize;
 
     // communication channels between views and data processor.
-    let (process_tx, process_rx) = mpsc::channel::<processor::Msg>();
+    let (process_tx, process_rx) = chan::sync(0);
 
     // communication channel between processor and main function
-    let (submit_tx, submit_rx) = mpsc::channel::<UserSelection>();
+    let (submit_tx, submit_rx) = chan::sync(0);
 
 
     // Build the main components: table and processor.
@@ -153,7 +151,7 @@ pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
         .child(TextView::new("Annotate:     "))
         .child(create_annotation_edit(process_tx.clone())
             .with_id("annotation")
-            .min_width((screen.x - 50 ) as usize));
+            .min_width((screen.x - 50) as usize));
     layout.add_child(annotation_pane);
 
     // build the output kind UI
@@ -171,7 +169,7 @@ pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
         layout.min_size((screen.x, screen.y)));
 
     // Do the initial display;
-    process_tx.send(Msg::Filter(String::from(""))).expect("initial 'filter'");
+    process_tx.send(Msg::Filter(String::from("")));
 
     siv.focus_id("filter").expect("set focus on filter");
 

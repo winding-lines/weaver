@@ -10,6 +10,7 @@
 //! * [weaver-rpc](../weaver_rpc/index.html): client implementation of API, used by the cli
 //! * [weaver-web](../weaver_web/index.html): API and base page server
 
+extern crate chan;
 extern crate chrono;
 extern crate clap;
 extern crate clipboard;

@@ -14,7 +14,9 @@ pub fn run(_store: &RealStore, command: &DataSubCommand) -> Result<()> {
             sqlite()
         },
         DataSubCommand::Create => {
-           RealStore::create_database()
+            RealStore::create_database_if_missing()?;
+            Repo::setup_if_needed()?;
+            Ok(())
         },
         DataSubCommand::Encrypt(filename) => {
             let repo = Repo::build()?;

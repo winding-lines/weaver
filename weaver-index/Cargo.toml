@@ -11,6 +11,7 @@ bincode = "1.0"
 rust_sodium = "~0.9.0"
 keyring = "0.6.0"
 metrohash = "1.0"
+rpassword = "2.0"
 
 weaver-db = {path="../weaver-db"}
 weaver-error = {path="../weaver-error"}
@@ -18,5 +19,5 @@ weaver-error = {path="../weaver-error"}
 
 [dependencies.tantivy]
 git = "https://github.com/tantivy-search/tantivy"
-rev = "badfce3a2"
+rev = "23024524b19b"
 features = ["mmap"]
