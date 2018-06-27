@@ -3,7 +3,8 @@
 use actix_web::{App, http, HttpResponse, Json, Query, State};
 use app_state::AppState;
 use weaver_db::url_restrictions;
-use weaver_error::Result as Wesult;
+use weaver_error::{Result as Wesult, ResultExt};
+use bincode;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct PageContent {
@@ -18,9 +19,9 @@ struct PageStatus {
     summary: Option<String>,
 }
 
-// API used by the Chrome extension to upload content to be indexed.
 fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageStatus> {
     let store = &*state.store;
+    let repo = &*state.repo;
 
     let connection = store.connection()?;
     let url_restrictions = url_restrictions::fetch_all(&connection)?;
@@ -30,10 +31,14 @@ fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageS
 
     let indexer = &*(state.indexer);
     let _id = indexer.add(&input.url, &input.title, &input.body)?;
+    let serialized = bincode::serialize(&*input)
+        .chain_err(|| "serializing for the repo")?;
+    repo.add(&serialized)?;
 
     Ok(PageStatus { is_indexed: true, summary: state.indexer.summary() })
 }
 
+// API used by the Chrome extension to upload content to be indexed.
 fn create(data: (State<AppState>, Json<PageContent>)) -> HttpResponse {
     match _create(data) {
         Ok(ps) => HttpResponse::Ok().json(ps),

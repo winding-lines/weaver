@@ -7,6 +7,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate bincode;
 extern crate tera;
 
 extern crate weaver_db;

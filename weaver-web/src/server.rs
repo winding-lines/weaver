@@ -6,7 +6,7 @@ use pages;
 use std::sync::Arc;
 use weaver_db::RealStore;
 use weaver_error::*;
-use weaver_index::Indexer;
+use weaver_index::{Indexer, Repo};
 
 
 pub struct Server {}
@@ -15,12 +15,14 @@ pub struct Server {}
 impl Server {
     pub fn start(addr: &str, store: Arc<RealStore>) -> Result<Server> {
         let indexer = Arc::new(Indexer::build()?);
+        let repo = Arc::new(Repo::build()?);
 
         let s = server::new(move ||
             {
                 App::with_state(AppState {
                     store: store.clone(),
                     indexer: indexer.clone(),
+                    repo: repo.clone(),
                     template: pages::build_tera(),
                 })
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
