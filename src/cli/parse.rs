@@ -144,7 +144,7 @@ pub fn parse() -> CommandAndConfig {
             .about("Manipulate the stored data")
             .subcommand(SubCommand::with_name("sqlite")
                 .about("Start an sqlite3 shell"))
-            .subcommand(SubCommand::with_name("create")
+            .subcommand(SubCommand::with_name("setup")
                 .about("Create the sqlite3 database"))
             .subcommand(SubCommand::with_name("encrypt")
                 .arg(Arg::with_name("NAME")
@@ -229,7 +229,7 @@ fn parse_command(matches: &ArgMatches)-> Command {
         if run.subcommand_matches("sqlite").is_some() {
             return Command::Data(DataSubCommand::Sqlite);
         }
-        if run.subcommand_matches("create").is_some() {
+        if run.subcommand_matches("setup").is_some() {
             return Command::Data(DataSubCommand::Create);
         }
         if let Some(encrypt) = run.subcommand_matches("encrypt") {

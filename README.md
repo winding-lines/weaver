@@ -30,7 +30,8 @@ Follow the following steps to install the local server/cli component.
     
 - Build with `cargo build --release`
 - Install in your `$PATH`
-- Run with `weaver server start`
+- Create all the data stores `weaver data setup`
+- Start the server with `weaver server start`
 
 Every time your reboot you will need to restart the server.
 
