@@ -34,6 +34,6 @@ pub(crate) fn config(app: App<AppState>) -> App<AppState> {
         r.method(http::Method::POST).with(create);
     });
     app.resource(&format!("{}/{{id}}{}", net::ACTIONS_BASE, net::ANNOTATIONS), |r| {
-        r.method(http::Method::GET).with(set_annotation);
+        r.method(http::Method::POST).with(set_annotation);
     })
 }

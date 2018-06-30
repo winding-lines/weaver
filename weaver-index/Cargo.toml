@@ -19,5 +19,5 @@ weaver-error = {path="../weaver-error"}
 
 [dependencies.tantivy]
 git = "https://github.com/tantivy-search/tantivy"
-rev = "23024524b19b"
+rev = "5bc9683801e3a3a7e298b65f196f2ffe10c8b1ed"
 features = ["mmap"]

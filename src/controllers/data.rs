@@ -2,22 +2,24 @@ use ::cli::DataSubCommand;
 use std::fs::read;
 use std::path::PathBuf;
 use std::process::Command;
+use weaver_db::{RealStore,ApiConfig,setup};
 use weaver_db::config::file_utils;
-use weaver_db::RealStore;
-use weaver_index::Repo;
 use weaver_error::*;
+use weaver_index::Repo;
 
 /// Execute subcommands for the Data command.
 pub fn run(_store: &RealStore, command: &DataSubCommand) -> Result<()> {
     match command {
         DataSubCommand::Sqlite => {
             sqlite()
-        },
+        }
         DataSubCommand::Create => {
             RealStore::create_database_if_missing()?;
             Repo::setup_if_needed()?;
+            let store = RealStore::new(ApiConfig::Local)?;
+            setup::populate_data(&store.connection()?)?;
             Ok(())
-        },
+        }
         DataSubCommand::Encrypt(filename) => {
             let repo = Repo::build()?;
             let path = PathBuf::from(filename);

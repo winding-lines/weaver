@@ -2,7 +2,7 @@
 
 use actix_web::{App, http, HttpResponse, Json, Query, State};
 use app_state::AppState;
-use weaver_db::url_restrictions;
+use weaver_db::url_policies;
 use weaver_error::{Result as Wesult, ResultExt};
 use bincode;
 
@@ -24,7 +24,7 @@ fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageS
     let repo = &*state.repo;
 
     let connection = store.connection()?;
-    let url_restrictions = url_restrictions::fetch_all(&connection)?;
+    let url_restrictions = url_policies::fetch_all(&connection)?;
     if !url_restrictions.should_index(&input.url) {
         return Ok(PageStatus { is_indexed: false, summary: state.indexer.summary() });
     }

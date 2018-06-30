@@ -26,11 +26,12 @@ mod filtered_vec;
 mod db;
 mod backends;
 pub mod config;
+pub mod setup;
 
 pub type Connection = SqliteConnection;
 pub use db::actions2;
 pub use db::epics;
-pub use db::url_restrictions;
+pub use db::url_policies;
 pub use filtered_vec::FilteredVec;
 
 pub enum ApiConfig {
