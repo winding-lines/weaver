@@ -10,9 +10,7 @@ serde = "*"
 serde_derive = "*"
 serde_json = "*"
 weaver-error = {path = "../weaver-error"}
-weaver-db = {path = "../weaver-db"}
+lib-api = {path = "../lib-api"}
 log = "*"
 
-[build-dependencies]
-protoc-grpcio = "0.1"
 

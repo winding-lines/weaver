@@ -2,9 +2,9 @@
 
 use actix_web::{App, http, HttpResponse, Json, Path, Query, State};
 use app_state::AppState;
+use lib_api::config::net;
+use lib_api::entities::NewAction;
 use weaver_db::actions2;
-use weaver_db::config::net;
-use weaver_db::entities::NewAction;
 use weaver_error::Result as Wesult;
 
 

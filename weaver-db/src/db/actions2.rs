@@ -1,7 +1,7 @@
 use ::backends::schema::*;
 use ::Connection;
 use ::db;
-use ::entities::{FormattedAction, NewAction};
+use lib_api::entities::{FormattedAction, NewAction};
 use diesel;
 use diesel::prelude::*;
 use weaver_error::*;
@@ -129,7 +129,7 @@ pub fn set_annotation(connection: &Connection, id: u64, annotation: &str) -> Res
 #[cfg(test)]
 mod tests {
     use diesel;
-    use ::entities::NewAction;
+    use ::lib_api::entities::NewAction;
 
     embed_migrations!("../migrations");
 
@@ -145,11 +145,11 @@ mod tests {
         connection
     }
 
-    fn new_action<'a>() -> NewAction<'a> {
+    fn new_action() -> NewAction {
         NewAction {
             executed: String::new(),
-            kind: "",
-            command: "",
+            kind: String::new(),
+            command: String::new(),
             location: None,
             epic: None,
             host: String::new(),
@@ -161,7 +161,7 @@ mod tests {
 
         let connection = connection_with_tables();
 
-        let res = super::insert(&connection, new_action());
+        let res = super::insert(&connection, &new_action());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
 
         let all = super::fetch_all(&connection);
@@ -175,7 +175,7 @@ mod tests {
     fn test_set_annotation() {
         let connection = connection_with_tables();
 
-        let res = super::insert(&connection, new_action());
+        let res = super::insert(&connection, &new_action());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
 
         let update = super::set_annotation(&connection, 1, "ha-not-ate");

@@ -48,12 +48,12 @@ impl Repo {
         let ring = keyring::Keyring::new("weaver", "weaver-user");
         match ring.get_password() {
             Err(e) => {
-                let msg = format!("please run `weaver data create` in order to setup the repo\n{}", e);
-                return Err(msg.into());
+                let msg = format!("please run `weaver-data create` in order to setup the repo\n{}", e);
+                Err(msg.into())
             },
             Ok(pwd) => {
-                if pwd.len() == 0 {
-                    return Err("please run `weaver data create` in order to setup the repo".into());
+                if pwd.is_empty() {
+                    Err("please run `weaver-data create` in order to setup the repo".into())
                 } else {
                     Ok(pwd)
                 }
@@ -141,6 +141,23 @@ impl Repo {
         };
 
         Ok(decrypted)
+    }
+
+    // Display information about the repo, returns any errors.
+    pub fn check() -> Result<()> {
+        let folder = Config::repo_folder()?;
+        if !folder.exists() {
+            return Err("Repo folder does not exist".into());
+        }
+        let config = Config::read()?;
+        if config.is_none() {
+            return Err("index config is missing".into());
+        }
+        let _salt = config.unwrap().salt()?;
+
+        let password = Repo::get_password()?;
+        println!("Repo ok.");
+        Ok(())
     }
 }
 

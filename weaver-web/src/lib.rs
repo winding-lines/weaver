@@ -11,6 +11,7 @@ extern crate bincode;
 extern crate tera;
 
 extern crate weaver_db;
+extern crate lib_api;
 extern crate weaver_error;
 extern crate weaver_index;
 

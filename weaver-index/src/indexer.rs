@@ -1,11 +1,12 @@
 //! Provide an interface to the Tantivy index.
 //!
+use lib_api::config::file_utils::app_folder;
 use std::fs;
+use std::path::PathBuf;
 use tantivy::collector::TopCollector;
 use tantivy::Index;
 use tantivy::query::QueryParser;
 use tantivy::schema::*;
-use weaver_db::config::file_utils::app_folder;
 use weaver_error::*;
 
 pub struct Indexer {
@@ -18,12 +19,16 @@ pub struct Results {
     pub matches: Vec<(String, String)>,
 }
 
-impl Indexer {
+fn index_path() -> Result<PathBuf> {
+    let mut path = app_folder()?;
+    path.push("text-index");
+    Ok(path)
+}
 
+impl Indexer {
     // Build the application wide indexer.
     pub fn build() -> Result<Indexer> {
-        let mut index_path = app_folder()?;
-        index_path.push("text-index");
+        let index_path = index_path()?;
 
         if !index_path.exists() {
             fs::create_dir(&index_path).chain_err(|| "create index folder")?;
@@ -161,9 +166,19 @@ impl Indexer {
         })
     }
 
+    // Display information about the repo, returns any errors.
+    pub fn check() -> Result<()> {
+        let index_path = index_path()?;
+
+        if !index_path.exists() {
+            return Err("Index path does not exist".into());
+        }
+        println!("Indexer ok.");
+        Ok(())
+    }
+
     /// Build a textual representation of the summary to be displayed in the web interface.
     pub fn summary(&self) -> Option<String> {
-
         self.search("weaver")
             .map(|r| format!("Indexed docs: {}", r.total))
             .ok()

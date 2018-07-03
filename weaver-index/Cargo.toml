@@ -15,6 +15,7 @@ rpassword = "2.0"
 
 weaver-db = {path="../weaver-db"}
 weaver-error = {path="../weaver-error"}
+lib-api = {path="../lib-api"}
 
 
 [dependencies.tantivy]

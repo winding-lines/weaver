@@ -11,21 +11,21 @@ variables:
 
 before_script:
   - apt-get update -yq
-  - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y sqlite3 libsqlite3-dev libncurses5-dev libncursesw5-dev cmake
+  - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y sqlite3 libsqlite3-dev libncurses5-dev libncursesw5-dev
 
 test:
   stage: test
   script:
     - rustc --version
     - cargo --version
-    - cargo test --verbose
+    - cargo test --all --verbose
 
 pages:
   stage: doc
   script:
     - cargo doc --all --no-deps
     - mv target/doc public
-    - echo '<meta http-equiv="refresh" content="0; url='weaaver'">' > public/index.html
+    - echo '<meta http-equiv="refresh" content="0; url='weaver'">' > public/index.html
   artifacts:
     paths:
       - public
@@ -35,8 +35,8 @@ pages:
 release:
   stage: build
   script:
-    - cargo build --release
-    - mv target/release/weaver release
+    - cargo build --all --release
+    - mv target/release/{weaver, weaver-data, weaver-server} release
   artifacts:
     paths:
       - release

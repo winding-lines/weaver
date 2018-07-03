@@ -2,11 +2,14 @@
   "name": "install",
   "preconditions": [],
   "actions": [
-    "cargo build",
+    "cargo build --all",
     "kill  `cat ~/.weaver/server/server.pid`",
-    "weaver server check",
     "cp target/debug/weaver ~/.cargo/bin",
-    "weaver server start",
-    "weaver server check"
+    "cp target/debug/weaver-server ~/.cargo/bin",
+    "cp target/debug/weaver-data ~/.cargo/bin",
+    "weaver-server check",
+    "weaver-server start",
+    "sleep 1",
+    "weaver-server check"
   ]
 }
