@@ -10,6 +10,7 @@ use std::hash::Hasher;
 use std::path::PathBuf;
 use super::config::Config;
 use weaver_error::*;
+use lib_api::config::db::PasswordSource;
 
 pub struct Repo {
     key: secretbox::Key,
@@ -24,12 +25,12 @@ struct DiskEntry {
 
 impl Repo {
     // Build the repo with information from its config and the keyring
-    pub fn build() -> Result<Repo> {
+    pub fn build(password_source: &PasswordSource) -> Result<Repo> {
         let base_folder = Config::repo_folder()?;
         let config = Config::read_or_build()?;
         let salt = config.salt()?;
 
-        let password = Repo::get_password()?;
+        let password = Repo::get_password(password_source)?;
         let mut key = secretbox::Key([0; secretbox::KEYBYTES]);
         {
             let secretbox::Key(ref mut kb) = key;
@@ -44,32 +45,42 @@ impl Repo {
     }
 
     // Read the password from the keyring.
-    fn get_password() -> Result<String> {
-        let ring = keyring::Keyring::new("weaver", "weaver-user");
-        match ring.get_password() {
-            Err(e) => {
-                let msg = format!("please run `weaver-data create` in order to setup the repo\n{}", e);
-                Err(msg.into())
-            },
-            Ok(pwd) => {
-                if pwd.is_empty() {
-                    Err("please run `weaver-data create` in order to setup the repo".into())
-                } else {
-                    Ok(pwd)
+    fn get_password(source: &PasswordSource) -> Result<String> {
+        match source {
+            PasswordSource::Keyring => {
+                let ring = keyring::Keyring::new("weaver", "weaver-user");
+                match ring.get_password() {
+                    Err(e) => {
+                        let msg = format!("please run `weaver-data create` in order to setup the repo\n{}", e);
+                        Err(msg.into())
+                    },
+                    Ok(pwd) => {
+                        if pwd.is_empty() {
+                            Err("please run `weaver-data create` in order to setup the repo".into())
+                        } else {
+                            Ok(pwd)
+                        }
+                    }
                 }
+            }
+            PasswordSource::Prompt => {
+                let new_pwd = rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
+                Ok(new_pwd)
             }
         }
     }
 
-    pub fn setup_if_needed() -> Result<()> {
-        if Repo::get_password().is_ok() {
+    pub fn setup_if_needed(source: &PasswordSource) -> Result<()> {
+        if Repo::get_password(source).is_ok() {
             return Ok(());
         }
-        let ring = keyring::Keyring::new("weaver", "weaver-user");
-        let new_pwd = rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
-        ring.set_password(&new_pwd)
-            .chain_err(|| "save password in keyring")?;
-        println!("Password saved in the keyring.");
+        if source == &PasswordSource::Keyring {
+            let ring = keyring::Keyring::new("weaver", "weaver-user");
+            let new_pwd = rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
+            ring.set_password(&new_pwd)
+                .chain_err(|| "save password in keyring")?;
+            println!("Password saved in the keyring.");
+        }
         Ok(())
     }
 
@@ -81,7 +92,6 @@ impl Repo {
         // Generate nonce and encrypt
         let nonce = secretbox::gen_nonce();
         let ciphertext = secretbox::seal(content, &nonce, &self.key);
-
 
         // Build the output path name
         let mut hasher = MetroHash128::default();
@@ -115,7 +125,7 @@ impl Repo {
         }
     }
 
-    // Read and decrypt the given handle
+    /// Read and decrypt the given handle
     pub fn read(&self, id: &str) -> Result<Vec<u8>> {
 
         // Read the file
@@ -144,7 +154,7 @@ impl Repo {
     }
 
     // Display information about the repo, returns any errors.
-    pub fn check() -> Result<()> {
+    pub fn check(password_source: &PasswordSource) -> Result<()> {
         let folder = Config::repo_folder()?;
         if !folder.exists() {
             return Err("Repo folder does not exist".into());
@@ -155,7 +165,7 @@ impl Repo {
         }
         let _salt = config.unwrap().salt()?;
 
-        let password = Repo::get_password()?;
+        let _password = Repo::get_password(password_source)?;
         println!("Repo ok.");
         Ok(())
     }

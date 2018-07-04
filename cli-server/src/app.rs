@@ -5,6 +5,7 @@ use chrono::prelude::*;
 use cli::ServerRun;
 use daemonize::Daemonize;
 use lib_api::config::{file_utils, ServerConfig};
+use lib_api::config::db::PasswordSource;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -17,15 +18,14 @@ use weaver_web;
 pub fn run() -> Result<()> {
     use self::ServerSubCommand::*;
 
-    let CommandAndConfig { command, server_config } = parse();
-    let store = Arc::new(RealStore::new()?);
+    let CommandAndConfig { command, server_config, password_source } = parse();
     debug!("Executing cli command {:?}", command);
     match command {
         Noop => {
             Ok(())
         }
         ServerSubCommand::Start(ref mode) => {
-            start(mode, &server_config, store).map(|_| ())
+            start(mode, &server_config, &password_source).map(|_| ())
         }
         ServerSubCommand::Check => {
             server_config.check()
@@ -71,7 +71,12 @@ fn rename_files(server_folder: &Path, extension: &str, timestamp: &str) -> Resul
 
 
 /// Start a server and use a `Router` to dispatch requests
-fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> Result<Server> {
+fn start(run: &ServerRun, config: &ServerConfig, password_source: &PasswordSource) -> Result<Server> {
+    // Initialize the stores before any (optional) forking.
+    let store = Arc::new(RealStore::new()?);
+    weaver_index::init()?;
+    let repo = Arc::new(weaver_index::Repo::build(password_source)?);
+
     match run {
         ServerRun::Foreground => {}
         ServerRun::Daemonize => {
@@ -91,9 +96,8 @@ fn start(run: &ServerRun, config: &ServerConfig, store: Arc<RealStore>) -> Resul
             println!("Started in daemon mode");
         }
     }
-    weaver_index::init()?;
     let actix_address = config.actix_address.clone();
-    let _actix = weaver_web::Server::start(&actix_address, store)?;
+    let _actix = weaver_web::Server::start(&actix_address, store, repo)?;
 
     Ok(Server)
 }

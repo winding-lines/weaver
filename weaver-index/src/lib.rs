@@ -22,10 +22,11 @@ mod repo;
 mod config;
 pub use repo::Repo;
 
-pub fn init() -> Result<Repo> {
+/// Initialize libraries required by the stores.
+pub fn init() -> Result<()> {
     if rust_sodium::init().is_err() {
         return Err("crypto init".into())
     };
-    Repo::build()
+    Ok(())
 }
 

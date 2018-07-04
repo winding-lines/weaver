@@ -26,24 +26,11 @@ fn index_path() -> Result<PathBuf> {
 }
 
 impl Indexer {
-    // Build the application wide indexer.
+
+    /// Build the application wide indexer. If the index is not setup properly this will
+    /// fail and the user should call the setup function.
     pub fn build() -> Result<Indexer> {
         let index_path = index_path()?;
-
-        if !index_path.exists() {
-            fs::create_dir(&index_path).chain_err(|| "create index folder")?;
-            let mut schema_builder = SchemaBuilder::default();
-
-            schema_builder.add_text_field("id", STRING | STORED);
-
-            schema_builder.add_text_field("title", TEXT | STORED);
-
-            schema_builder.add_text_field("body", TEXT);
-
-            let schema = schema_builder.build();
-            let _ = Index::create_in_dir(index_path.clone(), schema)
-                .chain_err(|| "create index")?;
-        }
 
 
         let index = Index::open_in_dir(index_path)
@@ -166,14 +153,38 @@ impl Indexer {
         })
     }
 
-    // Display information about the repo, returns any errors.
+    /// Setup the index
+    pub fn setup_if_needed() -> Result<()> {
+
+        let index_path = index_path()?;
+        if !index_path.exists() {
+            fs::create_dir(&index_path).chain_err(|| "create index folder")?;
+            let mut schema_builder = SchemaBuilder::default();
+
+            schema_builder.add_text_field("id", STRING | STORED);
+
+            schema_builder.add_text_field("title", TEXT | STORED);
+
+            schema_builder.add_text_field("body", TEXT);
+
+            let schema = schema_builder.build();
+            let _ = Index::create_in_dir(index_path.clone(), schema)
+                .chain_err(|| "create index")?;
+        }
+
+        Ok(())
+
+    }
+
+    /// Display information about the repo, returns any errors.
     pub fn check() -> Result<()> {
         let index_path = index_path()?;
 
         if !index_path.exists() {
             return Err("Index path does not exist".into());
         }
-        println!("Indexer ok.");
+        let indexer = Self::build()?;
+        println!("Indexer ok {:?}.", indexer.summary());
         Ok(())
     }
 

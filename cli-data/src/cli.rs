@@ -1,4 +1,6 @@
 use clap::{App, Arg, SubCommand};
+use lib_api::config::db;
+use lib_api::config::file_utils::set_app_location;
 
 pub const APP_NAME: &str = env!["CARGO_PKG_NAME"];
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -10,19 +12,35 @@ pub enum DataSubCommand {
     Noop,
     Sqlite,
     Create,
+    /// Encrypt the file with the given name and save in the repo.
     Encrypt(String),
     Decrypt(String),
-    Check
+    Check,
+}
+
+pub struct ConfigAndCommand {
+    pub password_source: Option<db::PasswordSource>,
+    pub command: DataSubCommand,
 }
 
 /// Parse a Command from the command line options.
-pub fn parse() -> DataSubCommand {
+pub fn parse() -> ConfigAndCommand {
     let matches = App::new(APP_NAME)
         .version(VERSION)
         .about(DESCRIPTION)
         .arg(Arg::with_name("version")
             .short("V")
             .help("Display the version"))
+        .arg(Arg::with_name("location")
+            .short("C")
+            .long("location")
+            .takes_value(true)
+            .value_name("FOLDER")
+            .help("Select a different location for the store"))
+        .arg(Arg::with_name("password")
+            .short("P")
+            .long("password")
+            .help("Prompt for password - instead of the default of taking from keyring"))
         .subcommand(SubCommand::with_name("sqlite")
             .about("Start an sqlite3 shell"))
         .subcommand(SubCommand::with_name("setup")
@@ -39,26 +57,38 @@ pub fn parse() -> DataSubCommand {
             .about("Validate the state of the various repos"))
         .get_matches();
 
+    if let Some(location) = matches.value_of("location") {
+        set_app_location(location);
+    }
     if matches.is_present("version") {
         println!("{}", VERSION);
-        return DataSubCommand::Noop;
+        return ConfigAndCommand {
+            password_source: None,
+            command: DataSubCommand::Noop,
+        };
     }
-    if matches.subcommand_matches("sqlite").is_some() {
-        return DataSubCommand::Sqlite;
-    }
-    if matches.subcommand_matches("setup").is_some() {
-        return DataSubCommand::Create;
-    }
-    if matches.subcommand_matches("check").is_some() {
-        return DataSubCommand::Check;
-    }
-    if let Some(encrypt) = matches.subcommand_matches("encrypt") {
+    let password_source = if matches.is_present("password") {
+        db::PasswordSource::Prompt
+    } else {
+        db::PasswordSource::Keyring
+    };
+    let command = if matches.subcommand_matches("sqlite").is_some() {
+        DataSubCommand::Sqlite
+    } else if matches.subcommand_matches("setup").is_some() {
+        DataSubCommand::Create
+    } else if matches.subcommand_matches("check").is_some() {
+        DataSubCommand::Check
+    } else if let Some(encrypt) = matches.subcommand_matches("encrypt") {
         let name = encrypt.value_of("NAME").unwrap();
-        return DataSubCommand::Encrypt(name.to_string());
-    }
-    if let Some(decrypt) = matches.subcommand_matches("decrypt") {
+        DataSubCommand::Encrypt(name.to_string())
+    } else if let Some(decrypt) = matches.subcommand_matches("decrypt") {
         let name = decrypt.value_of("NAME").unwrap();
-        return DataSubCommand::Decrypt(name.to_string());
+        DataSubCommand::Decrypt(name.to_string())
+    } else {
+        unreachable!()
+    };
+    ConfigAndCommand {
+        password_source: Some(password_source),
+        command
     }
-    unreachable!()
 }

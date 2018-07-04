@@ -13,9 +13,8 @@ pub struct Server {}
 
 
 impl Server {
-    pub fn start(addr: &str, store: Arc<RealStore>) -> Result<Server> {
+    pub fn start(addr: &str, store: Arc<RealStore>, repo: Arc<Repo>) -> Result<Server> {
         let indexer = Arc::new(Indexer::build()?);
-        let repo = Arc::new(Repo::build()?);
 
         let s = server::new(move ||
             {

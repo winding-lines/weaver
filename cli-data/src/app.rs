@@ -1,19 +1,25 @@
-use ::cli::{DataSubCommand, parse};
+use ::cli::{DataSubCommand, parse, ConfigAndCommand};
 use lib_api::config::file_utils;
+use lib_api::config::db::PasswordSource;
 use std::fs::read;
 use std::path::PathBuf;
 use std::process::Command;
 use weaver_db::{RealStore, setup};
 use weaver_error::*;
-use weaver_index::{Indexer, Repo};
+use weaver_index::{self, Indexer, Repo};
 
 
 /// Main dispatch function;
 pub fn run() -> Result<()> {
     use self::DataSubCommand::*;
 
-    let command = parse();
+    let ConfigAndCommand{password_source, command } = parse();
     debug!("Executing cli command {:?}", command);
+    let password_source = password_source.unwrap_or(PasswordSource::Keyring);
+
+    // Initialize the crypto environment.
+    weaver_index::init()?;
+
     match command {
         Noop => {
             Ok(())
@@ -23,13 +29,14 @@ pub fn run() -> Result<()> {
         }
         Create => {
             RealStore::create_database_if_missing()?;
-            Repo::setup_if_needed()?;
+            Repo::setup_if_needed(&password_source)?;
             let store = RealStore::new()?;
             setup::populate_data(&store.connection()?)?;
+            Indexer::setup_if_needed()?;
             Ok(())
         }
         Encrypt(filename) => {
-            let repo = Repo::build()?;
+            let repo = Repo::build(&password_source)?;
             let path = PathBuf::from(filename);
             let content = read(&path)?;
             let handle = repo.add(&content)?;
@@ -37,17 +44,32 @@ pub fn run() -> Result<()> {
             Ok(())
         }
         Decrypt(handle) => {
-            let repo = Repo::build()?;
+            let repo = Repo::build(&password_source)?;
 
             let decoded = repo.read(&handle)?;
             println!("{}", String::from_utf8(decoded).unwrap());
             Ok(())
         }
         Check => {
-            RealStore::check()?;
-            Repo::check()?;
-            Indexer::check()?;
-            Ok(())
+            let mut failures = 0;
+            if let Err(e) = RealStore::check() {
+               println!("Failure in the sqlite store: {:?}", e);
+                failures += 1;
+            }
+            if let Err(e) = Repo::check(&password_source) {
+                println!("Failure in the text repo: {:?}", e);
+                failures += 1;
+            }
+            if let Err(e) = Indexer::check() {
+                println!("Failure in the indexer {:?}", e);
+                failures += 1;
+
+            }
+            if failures > 0 {
+                Err(format!("{} stores failed", failures).into())
+            } else {
+                Ok(())
+            }
         }
     }
 }

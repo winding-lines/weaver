@@ -1,9 +1,10 @@
 use std::borrow::Cow;
-use std::path::Path;
 use std::env;
+use std::path::Path;
 use weaver_error::{Result, ResultExt};
 
-/// Store information needed to move between different environments.
+/// Store information needed to move between different shell environments.
+/// This will be useful when you use the same server between a desktop and a laptop.
 pub struct Environment {
     cwd: String,
     epic: Option<String>,

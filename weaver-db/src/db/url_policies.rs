@@ -36,10 +36,10 @@ impl FromStr for UrlPolicy {
 
 impl ToString for UrlPolicy {
     fn to_string(&self) -> String {
-        match self {
-            &UrlPolicy::NoLog => NO_LOG.into(),
-            &UrlPolicy::NoIndex => NO_INDEX.into(),
-            &UrlPolicy::DoIndex => DO_INDEX.into(),
+        match *self {
+            UrlPolicy::NoLog => NO_LOG.into(),
+            UrlPolicy::NoIndex => NO_INDEX.into(),
+            UrlPolicy::DoIndex => DO_INDEX.into(),
         }
     }
 }
@@ -48,10 +48,10 @@ impl UrlPolicy {
     // Return the DB representation for the enum.
     #[inline]
     fn to_db(&self) -> &'static str {
-        match self {
-            &UrlPolicy::NoLog => NO_LOG,
-            &UrlPolicy::NoIndex => NO_INDEX,
-            &UrlPolicy::DoIndex => DO_INDEX,
+        match *self {
+            UrlPolicy::NoLog => NO_LOG,
+            UrlPolicy::NoIndex => NO_INDEX,
+            UrlPolicy::DoIndex => DO_INDEX,
         }
     }
 }

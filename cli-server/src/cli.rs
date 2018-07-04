@@ -1,7 +1,9 @@
 //! Parse the command line options.
 //!
-use ::lib_api::config::ServerConfig;
+use ::lib_api::config::{db, ServerConfig};
 use clap::{App, Arg, ArgMatches, SubCommand};
+use lib_api::config::db::PasswordSource;
+use lib_api::config::file_utils::set_app_location;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DESCRIPTION: &str = env!["CARGO_PKG_DESCRIPTION"];
@@ -9,6 +11,7 @@ const DESCRIPTION: &str = env!["CARGO_PKG_DESCRIPTION"];
 pub const APP_NAME: &str = env!["CARGO_PKG_NAME"];
 
 
+/// How to start the server.
 #[derive(Debug)]
 pub enum ServerRun {
     Foreground,
@@ -26,21 +29,34 @@ pub enum ServerSubCommand {
 pub struct CommandAndConfig {
     pub command: ServerSubCommand,
     pub server_config: ServerConfig,
+    pub password_source: PasswordSource,
 }
 
 
 /// Parse a Command from the command line options.
 pub fn parse() -> CommandAndConfig {
-
-    // For now the server config is hardcoded.
-    let server = ServerConfig::current();
-
     let matches = App::new(APP_NAME)
         .version(VERSION)
         .about(DESCRIPTION)
         .arg(Arg::with_name("version")
             .short("V")
             .help("Display the version"))
+        .arg(Arg::with_name("location")
+            .short("C")
+            .long("location")
+            .takes_value(true)
+            .value_name("FOLDER")
+            .help("Select a different location for the store"))
+        .arg(Arg::with_name("password")
+            .short("P")
+            .long("password")
+            .help("Prompt for password - instead of the default of taking from keyring"))
+        .arg(Arg::with_name("port")
+            .short("p")
+            .long("port")
+            .takes_value(true)
+            .value_name("PORT")
+            .help("Select a port for the server to run on"))
         .subcommand(SubCommand::with_name("check")
             .about("Check to see that the server exists"))
         .subcommand(SubCommand::with_name("start")
@@ -52,13 +68,28 @@ pub fn parse() -> CommandAndConfig {
         )
         .get_matches();
 
+    let server_config = match matches.value_of("port") {
+        Some(port) => ServerConfig {
+            actix_address: format!("127.0.0.1:{}", port),
+        },
+        None => ServerConfig::current()
+    };
+    let password_source = if matches.is_present("password") {
+        db::PasswordSource::Prompt
+    } else {
+        db::PasswordSource::Keyring
+    };
     CommandAndConfig {
         command: parse_command(&matches),
-        server_config: server,
+        server_config,
+        password_source,
     }
 }
 
 fn parse_command(matches: &ArgMatches) -> ServerSubCommand {
+    if let Some(location) = matches.value_of("location") {
+        set_app_location(location);
+    }
     if matches.is_present("version") {
         println!("{}", VERSION);
         return ServerSubCommand::Noop;
@@ -67,12 +98,12 @@ fn parse_command(matches: &ArgMatches) -> ServerSubCommand {
         return ServerSubCommand::Check;
     }
     if let Some(start) = matches.subcommand_matches("start") {
-        let mode = if start.is_present("foreground") {
+        let server_run = if start.is_present("foreground") {
             ServerRun::Foreground
         } else {
             ServerRun::Daemonize
         };
-        return ServerSubCommand::Start(mode);
+        return ServerSubCommand::Start(server_run);
     }
     unreachable!()
 }

@@ -12,20 +12,11 @@ pub fn save_epic(name: String) -> Result<()> {
     store.save()
 }
 
+
+/// Return the active epic.
 pub fn epic() -> Result<Option<String>> {
     let store = json_store::JsonStore::init()?;
     // let _ = self.json_store.fresh()?;
     Ok(store.content.active_epic.clone())
 }
 
-/// Return the active epic in a format that can be displayed, i.e. empty string for None.
-pub fn epic_display() -> String {
-    let store = match json_store::JsonStore::init() {
-        Ok(s) => s,
-        Err(_) => return String::new()
-    };
-    match store.content.active_epic {
-        Some(ref s) => s.clone(),
-        None => String::from(""),
-    }
-}

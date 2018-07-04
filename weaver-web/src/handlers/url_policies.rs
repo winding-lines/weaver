@@ -1,3 +1,4 @@
+#![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 use actix_web::{App, http, HttpResponse, Json, State};
 use app_state::AppState;
 use weaver_db::url_policies;
