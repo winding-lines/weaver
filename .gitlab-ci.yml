@@ -36,6 +36,7 @@ release:
   stage: build
   script:
     - cargo build --all --release
+    - mkdir release
     - mv target/release/{weaver, weaver-data, weaver-server} release
   artifacts:
     paths:
