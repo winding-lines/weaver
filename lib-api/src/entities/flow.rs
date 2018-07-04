@@ -3,7 +3,7 @@
 use serde_json as json;
 use std::fs::File;
 use std::io::prelude::*;
-use weaver_error::*;
+use lib_error::*;
 
 /// To be implemented by Preconditions.
 trait Matcher {

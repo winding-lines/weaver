@@ -9,7 +9,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate sys_info;
-extern crate weaver_error;
+extern crate lib_error;
 
 pub use self::filtered_vec::FilteredVec;
 

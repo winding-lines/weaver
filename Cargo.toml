@@ -1,20 +1,20 @@
 [package]
-name = "weaver"
-version = "0.3.3"
+name = "weaver-project"
+version = "0.3.4"
 description = "Personal productivity tool allowing you to log and search through your command line and web history."
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [workspace]
 members = [
-  "weaver-error",
-  "weaver-rpc",
-  "weaver-db",
-  "weaver-index",
-  "weaver-web",
-  "cli-data",
-  "cli-server",
-  "cli-shell",
-  "lib-api"
+  "lib-api",
+  "lib-db",
+  "lib-error",
+  "lib-index",
+  "lib-rpc",
+  "lib-server",
+  "weaver",
+  "weaver-data",
+  "weaver-server",
 ]
 
 [dependencies]

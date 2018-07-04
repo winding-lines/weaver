@@ -1,0 +1,16 @@
+[package]
+name = "lib-rpc"
+version = "0.1.0"
+description = "Implement rpc between weaver client and server"
+authors = ["Marius Seritan <git@winding-lines.com>"]
+
+[dependencies]
+reqwest = "0.8"
+serde = "*"
+serde_derive = "*"
+serde_json = "*"
+lib-error = {path = "../lib-error"}
+lib-api = {path = "../lib-api"}
+log = "*"
+
+

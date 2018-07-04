@@ -1,5 +1,5 @@
 use std::net::{TcpListener, ToSocketAddrs};
-use weaver_error::*;
+use lib_error::*;
 
 pub const ACTIX_ADDRESS: &str = "127.0.0.1:8466";
 

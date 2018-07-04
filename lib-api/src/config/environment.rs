@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::env;
 use std::path::Path;
-use weaver_error::{Result, ResultExt};
+use lib_error::{Result, ResultExt};
 
 /// Store information needed to move between different shell environments.
 /// This will be useful when you use the same server between a desktop and a laptop.

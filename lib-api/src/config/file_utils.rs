@@ -3,7 +3,7 @@ use std::fs;
 use std::fs::File;
 use std::io::{Read, stdin, Write};
 use std::path::{Path, PathBuf};
-use weaver_error::*;
+use lib_error::*;
 
 /// Load the content of the given file.
 pub fn read_content(path: &Path) -> Result<String> {

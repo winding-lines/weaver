@@ -2,7 +2,7 @@
 
 use chrono::prelude::*;
 use sys_info;
-use weaver_error::Result;
+use lib_error::Result;
 use ::config::Environment;
 
 #[derive(Deserialize, Serialize)]

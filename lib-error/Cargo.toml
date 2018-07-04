@@ -1,0 +1,11 @@
+[package]
+name = "lib-error"
+version = "0.1.0"
+authors = ["Marius Seritan <git@winding-lines.com>"]
+
+[dependencies]
+error-chain = "0.11"
+diesel = "*"
+sys-info = "*"
+actix-web = "0.6"
+reqwest = "0.8"
