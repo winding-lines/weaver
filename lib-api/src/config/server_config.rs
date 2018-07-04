@@ -1,3 +1,5 @@
+/// Ports and other information about the server.
+
 use std::net::{TcpListener, ToSocketAddrs};
 use lib_error::*;
 

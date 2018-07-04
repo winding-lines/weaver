@@ -1,4 +1,5 @@
 //! Populate the database with initial data.
+
 use ::Connection;
 use ::db::url_policies;
 use lib_error::*;

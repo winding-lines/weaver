@@ -12,8 +12,8 @@
 //!
 //! Weaver provides library through of workspace crates.
 //!
-//! * [lib-db](../weaver_db/index.html): holds the local database for actions
-//! * [lib-error](../weaver_error/index.html): error structs used by all crates
-//! * [lib-index](../weaver_index/index.html): full text search
-//! * [lib-rpc](../weaver_rpc/index.html): client implementation of API, used by the cli
-//! * [lib-server](../weaver_server/index.html): API and base page server
+//! * [lib-db](../lib_db/index.html): holds the local database for actions
+//! * [lib-error](../lib_error/index.html): error structs used by all crates
+//! * [lib-index](../lib_index/index.html): full text search
+//! * [lib-rpc](../lib_rpc/index.html): client implementation of API, used by the cli
+//! * [lib-server](../lib_server/index.html): API and base page server

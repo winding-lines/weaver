@@ -1,5 +1,5 @@
-//! Provide a filtered view on top of a vector of FormattedActions.
-//! Will generalize as needed.
+/// Provide a filtered view on top of a vector of FormattedActions.
+/// Will generalize as needed.
 use entities::FormattedAction;
 use regex::Regex;
 

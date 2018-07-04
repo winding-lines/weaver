@@ -1,3 +1,5 @@
+//! Actual database read and write functions.
+
 pub mod commands;
 pub mod epics;
 pub mod locations;

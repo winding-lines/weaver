@@ -1,4 +1,6 @@
-//! Database layer for [Weaver](../weaver/index.html).
+//! Database layer for [Weaver Project](../weaver_project/index.html).
+//!
+//!
 
 extern crate chrono;
 #[macro_use]

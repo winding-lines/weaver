@@ -1,4 +1,4 @@
-//! Document repo providing full text search for [Weaver](../weaver/index.html) and
+//! Document repo providing full text search for [Weaver Project](../weaver_project/index.html) and
 //! storing documents for further data mining.
 
 extern crate rust_sodium;
