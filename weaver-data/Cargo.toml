@@ -5,7 +5,7 @@ version = "0.3.4"
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [[bin]]
-name = "lib-data"
+name = "weaver-data"
 path = "src/main.rs"
 
 
