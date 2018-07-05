@@ -1,8 +1,8 @@
 use ::cli::{ConfigAndCommand, DataSubCommand, parse};
 use bincode;
-use lib_api::config::db::PasswordSource;
-use lib_api::config::file_utils;
-use lib_api::entities::PageContent;
+use lib_goo::config::db::PasswordSource;
+use lib_goo::config::file_utils;
+use lib_goo::entities::PageContent;
 use lib_db::{RealStore, setup};
 use lib_error::*;
 use lib_index::{self, Indexer, Repo};

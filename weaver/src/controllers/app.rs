@@ -1,7 +1,7 @@
 use ::cli::Command::*;
 use ::cli::CommandAndConfig;
 use ::cli::parse;
-use lib_api::config::{Destination, Environment, file_utils};
+use lib_goo::config::{Destination, Environment, file_utils};
 use local_api;
 use local_store::epics;
 use std::sync::Arc;

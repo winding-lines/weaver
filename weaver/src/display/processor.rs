@@ -6,8 +6,8 @@ use chan;
 use std::thread;
 use super::{FormattedAction, table_view, UserSelection};
 use super::output_selector;
-use lib_api::{config, FilteredVec};
-use lib_api::config::Destination;
+use lib_goo::{config, FilteredVec};
+use lib_goo::config::Destination;
 
 
 /// Message types sent to the selection processor

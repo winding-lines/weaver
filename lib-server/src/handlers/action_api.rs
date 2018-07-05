@@ -2,8 +2,8 @@
 
 use actix_web::{App, http, HttpResponse, Json, Path, Query, State};
 use app_state::AppState;
-use lib_api::config::net;
-use lib_api::entities::NewAction;
+use lib_goo::config::net;
+use lib_goo::entities::NewAction;
 use lib_db::actions2;
 use lib_error::Result as Wesult;
 

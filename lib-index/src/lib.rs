@@ -10,7 +10,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate bincode;
 extern crate tantivy;
-extern crate lib_api;
+extern crate lib_goo;
 extern crate lib_error;
 
 pub use indexer::Indexer;

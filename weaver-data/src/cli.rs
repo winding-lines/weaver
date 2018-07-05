@@ -1,6 +1,6 @@
 use clap::{App, Arg, SubCommand};
-use lib_api::config::db;
-use lib_api::config::file_utils::set_app_location;
+use lib_goo::config::db;
+use lib_goo::config::file_utils::set_app_location;
 
 pub const APP_NAME: &str = env!["CARGO_PKG_NAME"];
 const VERSION: &str = env!("CARGO_PKG_VERSION");

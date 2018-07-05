@@ -1,9 +1,9 @@
 use local_api;
 use std::env;
 use std::io::{self, Write};
-use lib_api::config::{Environment, file_utils};
-use lib_api::entities::NewAction;
-use lib_api::config::Destination;
+use lib_goo::config::{Environment, file_utils};
+use lib_goo::entities::NewAction;
+use lib_goo::config::Destination;
 use lib_error::*;
 
 /// Check to see if the environment is setup properly.

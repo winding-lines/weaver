@@ -1,7 +1,7 @@
 //! Provide an interface to the Tantivy index.
 //!
-use lib_api::config::file_utils::app_folder;
-use lib_api::entities::PageContent;
+use lib_goo::config::file_utils::app_folder;
+use lib_goo::entities::PageContent;
 use std::fs;
 use std::path::PathBuf;
 use tantivy::collector::TopCollector;

@@ -2,7 +2,7 @@
 
 use bincode::{deserialize, serialize};
 use keyring;
-use lib_api::config::db::PasswordSource;
+use lib_goo::config::db::PasswordSource;
 use lib_error::*;
 use metrohash::MetroHash128;
 use rpassword;

@@ -1,9 +1,9 @@
 //! Parse the command line options.
 //!
-use ::lib_api::config::{db, ServerConfig};
+use ::lib_goo::config::{db, ServerConfig};
 use clap::{App, Arg, ArgMatches, SubCommand};
-use lib_api::config::db::PasswordSource;
-use lib_api::config::file_utils::set_app_location;
+use lib_goo::config::db::PasswordSource;
+use lib_goo::config::file_utils::set_app_location;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DESCRIPTION: &str = env!["CARGO_PKG_DESCRIPTION"];

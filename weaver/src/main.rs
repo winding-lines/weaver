@@ -33,7 +33,7 @@ extern crate walkdir;
 // Workspace crates
 extern crate lib_error;
 extern crate lib_rpc;
-extern crate lib_api;
+extern crate lib_goo;
 
 
 mod cli;

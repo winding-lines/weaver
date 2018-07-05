@@ -23,4 +23,4 @@ env_logger = "0.5"
 lib-index = {path="../lib-index"}
 lib-db = {path="../lib-db"}
 lib-error = {path="../lib-error"}
-lib-api = {path="../lib-api"}
+lib-goo = {path="../lib-goo"}

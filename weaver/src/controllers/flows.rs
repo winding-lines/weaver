@@ -3,8 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use super::shell_proxy;
 use walkdir::WalkDir;
-use lib_api::config::file_utils::{app_folder, read_content, write_content};
-use lib_api::entities::flow::Flow;
+use lib_goo::config::file_utils::{app_folder, read_content, write_content};
+use lib_goo::entities::flow::Flow;
 use lib_error::*;
 
 /// Return the global or local folder for flows.

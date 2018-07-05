@@ -6,7 +6,7 @@ use cursive::views::{Dialog, LinearLayout, OnEventView, RadioGroup, TextView};
 use std::cmp::PartialEq;
 use std::fmt::Display;
 use super::processor::Msg;
-use lib_api::config::{Channel, Content, OutputKind};
+use lib_goo::config::{Channel, Content, OutputKind};
 
 fn all_channel() -> Vec<Channel> {
     vec![

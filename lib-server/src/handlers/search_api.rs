@@ -2,7 +2,7 @@
 
 use actix_web::{App, http, HttpResponse, Json, Query, State};
 use app_state::AppState;
-use lib_api::entities::PageContent;
+use lib_goo::entities::PageContent;
 use lib_db::url_policies;
 use lib_error::{Result as Wesult, ResultExt};
 use bincode;

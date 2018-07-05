@@ -1,7 +1,7 @@
 use ::backends::schema::*;
 use ::Connection;
 use ::db;
-use lib_api::entities::{FormattedAction, NewAction};
+use lib_goo::entities::{FormattedAction, NewAction};
 use diesel;
 use diesel::prelude::*;
 use lib_error::*;
@@ -129,7 +129,7 @@ pub fn set_annotation(connection: &Connection, id: u64, annotation: &str) -> Res
 #[cfg(test)]
 mod tests {
     use diesel;
-    use ::lib_api::entities::NewAction;
+    use ::lib_goo::entities::NewAction;
 
     embed_migrations!("../migrations");
 

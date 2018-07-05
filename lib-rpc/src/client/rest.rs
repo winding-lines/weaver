@@ -1,5 +1,5 @@
-use lib_api::config::net::{self, ACTIONS_BASE, ANNOTATIONS, EPICS};
-use lib_api::entities::{Epic, FormattedAction, NewAction};
+use lib_goo::config::net::{self, ACTIONS_BASE, ANNOTATIONS, EPICS};
+use lib_goo::entities::{Epic, FormattedAction, NewAction};
 use reqwest;
 use lib_error::Result;
 

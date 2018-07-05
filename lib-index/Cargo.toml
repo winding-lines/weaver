@@ -15,7 +15,7 @@ rpassword = "2.0"
 
 lib-db = {path="../lib-db"}
 lib-error = {path="../lib-error"}
-lib-api = {path="../lib-api"}
+lib-goo = {path="../lib-goo"}
 
 
 [dependencies.tantivy]

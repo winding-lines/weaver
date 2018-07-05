@@ -14,11 +14,11 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
-extern crate lib_api;
+extern crate lib_goo;
 extern crate lib_error;
 
 
-use ::lib_api::config::file_utils;
+use ::lib_goo::config::file_utils;
 use diesel::sqlite::SqliteConnection;
 use lib_error::*;
 

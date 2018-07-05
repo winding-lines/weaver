@@ -11,7 +11,7 @@ extern crate bincode;
 extern crate tera;
 
 extern crate lib_db;
-extern crate lib_api;
+extern crate lib_goo;
 extern crate lib_error;
 extern crate lib_index;
 

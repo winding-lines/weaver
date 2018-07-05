@@ -24,7 +24,7 @@ log = "0.4"
 env_logger = "0.5"
 
 
-lib-api = {path = "../lib-api"}
+lib-goo = {path = "../lib-goo"}
 lib-rpc = {path = "../lib-rpc"}
 lib-error = {path = "../lib-error"}
 

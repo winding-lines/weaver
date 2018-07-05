@@ -1,4 +1,4 @@
-use ::lib_api::config::{OutputKind, ServerConfig};
+use ::lib_goo::config::{OutputKind, ServerConfig};
 use clap::{App, Arg, ArgGroup, ArgMatches, SubCommand};
 use super::APP_NAME;
 
@@ -113,7 +113,7 @@ fn parse_command(matches: &ArgMatches) -> Command {
         return Command::Noop;
     }
     if let Some(actions) = matches.subcommand_matches(COMMAND_ACTIONS) {
-        use lib_api::config::{Content, Channel};
+        use lib_goo::config::{Content, Channel};
 
         let content = match actions.value_of("output-content") {
             Some("path") => Content::Path,

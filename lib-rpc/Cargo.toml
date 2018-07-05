@@ -10,7 +10,7 @@ serde = "*"
 serde_derive = "*"
 serde_json = "*"
 lib-error = {path = "../lib-error"}
-lib-api = {path = "../lib-api"}
+lib-goo = {path = "../lib-goo"}
 log = "*"
 
 

@@ -1,8 +1,8 @@
 //! Implement the API to be used on the client. By default it will either use the server
 //! but can also use the local database, if available.
 
-use lib_api::config::{Destination, Environment};
-use lib_api::entities::{Epic, FormattedAction, NewAction};
+use lib_goo::config::{Destination, Environment};
+use lib_goo::entities::{Epic, FormattedAction, NewAction};
 use lib_error::Result;
 use lib_rpc::client;
 

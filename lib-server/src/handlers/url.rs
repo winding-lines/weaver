@@ -1,7 +1,7 @@
 use actix_web::{App, http, Json, State};
 use app_state::AppState;
 use lib_db::actions2;
-use lib_api::entities::NewAction;
+use lib_goo::entities::NewAction;
 use lib_error::*;
 
 #[derive(Serialize, Deserialize, Default)]

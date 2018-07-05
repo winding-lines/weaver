@@ -3,7 +3,7 @@
 use bincode;
 use std::fs::{read, write, create_dir};
 use std::path::{Path, PathBuf};
-use lib_api::config::file_utils::app_folder;
+use lib_goo::config::file_utils::app_folder;
 use rust_sodium::crypto::pwhash::{gen_salt,Salt};
 use lib_error::*;
 

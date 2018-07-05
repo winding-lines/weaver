@@ -18,7 +18,7 @@ extern crate bincode;
 extern crate chrono;
 extern crate clap;
 extern crate env_logger;
-extern crate lib_api;
+extern crate lib_goo;
 extern crate lib_db;
 extern crate lib_error;
 extern crate lib_index;

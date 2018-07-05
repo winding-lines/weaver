@@ -3,12 +3,12 @@ use display;
 use local_api;
 use std::sync::Arc;
 use super::shell_proxy;
-use lib_api::config::{Environment, OutputKind, Destination};
+use lib_goo::config::{Environment, OutputKind, Destination};
 use lib_error::*;
 
 
 pub fn run(destination: &Destination, output_kind: &OutputKind, env: &Arc<Environment>) -> Result<()> {
-    use lib_api::config::Channel::*;
+    use lib_goo::config::Channel::*;
 
     let actions = local_api::history(&env, &destination)?;
     let user_selection = display::main_screen(actions, &output_kind, Arc::clone(&env), destination)?;

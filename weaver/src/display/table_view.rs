@@ -4,7 +4,7 @@ use cursive::Cursive;
 use cursive_table_view::{TableView, TableViewItem};
 use std::cmp::Ordering;
 use super::processor::Msg;
-use lib_api::entities::FormattedAction;
+use lib_goo::entities::FormattedAction;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum BasicColumn {
