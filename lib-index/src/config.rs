@@ -2,7 +2,7 @@
 // Obviously the password (or equivalent) should not be part of this struct.
 use bincode;
 use std::fs::{read, write, create_dir};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use lib_api::config::file_utils::app_folder;
 use rust_sodium::crypto::pwhash::{gen_salt,Salt};
 use lib_error::*;
@@ -56,6 +56,13 @@ impl Config {
         let mut path = Self::repo_folder()?;
         path.push("repo.def");
         Ok(path)
+    }
+
+    pub fn is_config(path: &Path) -> bool {
+        if let Some(file_name) = path.file_name() {
+            return file_name == "repo.def";
+        }
+        return false;
     }
 
     // Write the configuration of this Repo. Overwriting the hash would make this store

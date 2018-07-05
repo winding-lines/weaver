@@ -1,6 +1,7 @@
 //! Provide an interface to the Tantivy index.
 //!
 use lib_api::config::file_utils::app_folder;
+use lib_api::entities::PageContent;
 use std::fs;
 use std::path::PathBuf;
 use tantivy::collector::TopCollector;
@@ -32,7 +33,6 @@ impl Indexer {
     pub fn build() -> Result<Indexer> {
         let index_path = index_path()?;
 
-
         let index = Index::open_in_dir(index_path)
             .chain_err(|| "open index")?;
 
@@ -41,7 +41,7 @@ impl Indexer {
         })
     }
 
-    pub fn add(&self, id: &str, title: &str, body: &str) -> Result<(u64)> {
+    pub fn add(&self, page_content: &PageContent) -> Result<(u64)> {
         let mut index_writer = self.index.writer(50_000_000)
             .chain_err(|| "create index writer")?;
 
@@ -52,12 +52,12 @@ impl Indexer {
             .chain_err(|| "get title field")?;
         let f_body = schema.get_field("body")
             .chain_err(|| "get body field")?;
-        let term = Term::from_field_text(f_id, id);
+        let term = Term::from_field_text(f_id, &page_content.url);
         index_writer.delete_term(term);
         let mut doc = Document::default();
-        doc.add_text(f_id, id);
-        doc.add_text(f_title, title);
-        doc.add_text(f_body, body);
+        doc.add_text(f_id, &page_content.url);
+        doc.add_text(f_title, &page_content.title);
+        doc.add_text(f_body, &page_content.body);
         index_writer.add_document(doc);
         index_writer.commit()
             .chain_err(|| "commit index")
@@ -151,6 +151,15 @@ impl Indexer {
             total: searcher.num_docs(),
             matches: out,
         })
+    }
+
+    /// Delete all the files int the repo.
+    pub fn delete_all() -> Result<()> {
+        let index_path = index_path()?;
+        if index_path.exists() {
+            fs::remove_dir_all(&index_path)?;
+        }
+        Ok(())
     }
 
     /// Setup the index

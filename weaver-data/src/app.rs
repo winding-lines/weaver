@@ -1,19 +1,21 @@
-use ::cli::{DataSubCommand, parse, ConfigAndCommand};
-use lib_api::config::file_utils;
+use ::cli::{ConfigAndCommand, DataSubCommand, parse};
+use bincode;
 use lib_api::config::db::PasswordSource;
-use std::fs::read;
-use std::path::PathBuf;
-use std::process::Command;
+use lib_api::config::file_utils;
+use lib_api::entities::PageContent;
 use lib_db::{RealStore, setup};
 use lib_error::*;
 use lib_index::{self, Indexer, Repo};
+use std::fs::read;
+use std::path::PathBuf;
+use std::process::Command;
 
 
 /// Main dispatch function;
 pub fn run() -> Result<()> {
     use self::DataSubCommand::*;
 
-    let ConfigAndCommand{password_source, command } = parse();
+    let ConfigAndCommand { password_source, command } = parse();
     debug!("Executing cli command {:?}", command);
     let password_source = password_source.unwrap_or(PasswordSource::Keyring);
 
@@ -21,11 +23,25 @@ pub fn run() -> Result<()> {
     lib_index::init()?;
 
     match command {
-        Noop => {
-            Ok(())
-        }
-        Sqlite => {
-            execute_sqlite()
+        Check => {
+            let mut failures = 0;
+            if let Err(e) = RealStore::check() {
+                println!("Failure in the sqlite store: {:?}", e);
+                failures += 1;
+            }
+            if let Err(e) = Repo::check(&password_source) {
+                println!("Failure in the text repo: {:?}", e);
+                failures += 1;
+            }
+            if let Err(e) = Indexer::check() {
+                println!("Failure in the indexer {:?}", e);
+                failures += 1;
+            }
+            if failures > 0 {
+                Err(format!("{} stores failed", failures).into())
+            } else {
+                Ok(())
+            }
         }
         Create => {
             RealStore::create_database_if_missing()?;
@@ -37,9 +53,15 @@ pub fn run() -> Result<()> {
         }
         Encrypt(filename) => {
             let repo = Repo::build(&password_source)?;
+
+            // open source file
             let path = PathBuf::from(filename);
             let content = read(&path)?;
+
+            // encrypt
             let handle = repo.add(&content)?;
+
+            // print the handle
             println!("{}", handle);
             Ok(())
         }
@@ -50,26 +72,27 @@ pub fn run() -> Result<()> {
             println!("{}", String::from_utf8(decoded).unwrap());
             Ok(())
         }
-        Check => {
-            let mut failures = 0;
-            if let Err(e) = RealStore::check() {
-               println!("Failure in the sqlite store: {:?}", e);
-                failures += 1;
-            }
-            if let Err(e) = Repo::check(&password_source) {
-                println!("Failure in the text repo: {:?}", e);
-                failures += 1;
-            }
-            if let Err(e) = Indexer::check() {
-                println!("Failure in the indexer {:?}", e);
-                failures += 1;
+        Noop => {
+            Ok(())
+        }
+        RebuildIndex => {
+            lib_index::init()?;
+            let repo = Repo::build(&password_source)?;
+            Indexer::delete_all()?;
+            Indexer::setup_if_needed()?;
+            let indexer = Indexer::build()?;
+            for entry in repo.list()? {
+                let decrypted = entry?;
+                let page_content = bincode::deserialize::<PageContent>(decrypted.as_slice())
+                    .chain_err(|| "cannot bindecode")?;
+                let handle = indexer.add(&page_content)?;
+                println!("Indexed {} as {}", &page_content.url, handle);
 
             }
-            if failures > 0 {
-                Err(format!("{} stores failed", failures).into())
-            } else {
-                Ok(())
-            }
+            Ok(())
+        }
+        Sqlite => {
+            execute_sqlite()
         }
     }
 }

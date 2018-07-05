@@ -28,12 +28,14 @@ Follow the following steps to install the local server/cli component.
     
     `sudo apt-get install libncurses-dev libsqlite3-dev lisqlite3 libncursesw5-dev`
     
-- Build with `cargo build --release`
+- Build with `cargo build -all --release`
 - Install in your `$PATH`
-- Create all the data stores `weaver data setup`
-- Start the server with `weaver server start`
+- Create all the data stores `weaver-data setup`
+- Start the server with `weaver-server start`
 
-Every time your reboot you will need to restart the server.
+Every time your reboot your computer you will need to restart the server.
+
+See the documentation for weaver-data and weaver-server on how to setup a staging environment for development.
 
 
 ## Chrome integration

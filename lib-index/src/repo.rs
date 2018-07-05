@@ -2,26 +2,41 @@
 
 use bincode::{deserialize, serialize};
 use keyring;
-use rpassword;
-use metrohash::MetroHash128;
-use rust_sodium::crypto::{pwhash, secretbox};
-use std::fs::{read, remove_file, write};
-use std::hash::Hasher;
-use std::path::PathBuf;
-use super::config::Config;
-use lib_error::*;
 use lib_api::config::db::PasswordSource;
+use lib_error::*;
+use metrohash::MetroHash128;
+use rpassword;
+use rust_sodium::crypto::{pwhash, secretbox};
+use std::fs::{read, read_dir, ReadDir, remove_file, write};
+use std::hash::Hasher;
+use std::path::{Path, PathBuf};
+use super::config::Config;
 
+/// Struct to hold information about the repo.
 pub struct Repo {
+    /// The key used to decrypt the file.
     key: secretbox::Key,
+    /// The base folder where all the encrypted files are saved.
     base_folder: PathBuf,
 }
 
+/// An encrypted file saved to disk.
 #[derive(Serialize, Deserialize)]
 struct DiskEntry {
+    /// We generate a nonce for each file and save it with the encrypted file.
     nonce: Vec<u8>,
+    /// The actual encrypted content.
     content: Vec<u8>,
 }
+
+/// Used to list the files in the repo.
+pub struct RepoDir<'a> {
+    read_dir: ReadDir,
+    repo: &'a Repo,
+}
+
+/// The entry returned by the RepoDir iterator.
+pub struct RepoEntry(Vec<u8>);
 
 impl Repo {
     // Build the repo with information from its config and the keyring
@@ -53,7 +68,7 @@ impl Repo {
                     Err(e) => {
                         let msg = format!("please run `weaver-data create` in order to setup the repo\n{}", e);
                         Err(msg.into())
-                    },
+                    }
                     Ok(pwd) => {
                         if pwd.is_empty() {
                             Err("please run `weaver-data create` in order to setup the repo".into())
@@ -125,20 +140,35 @@ impl Repo {
         }
     }
 
-    /// Read and decrypt the given handle
+    pub fn list(&self) -> Result<RepoDir> {
+        let read_dir = read_dir(&self.base_folder)?;
+
+
+        Ok(RepoDir {
+            read_dir,
+            repo: &self,
+        })
+    }
+
+    /// Read and decrypt the given handle.
     pub fn read(&self, id: &str) -> Result<Vec<u8>> {
 
         // Read the file
         let mut out = self.base_folder.clone();
         out.push(id);
-        if !out.exists() {
+        self.read_file(&out)
+    }
+
+    /// Read and decrypt the given file.
+    pub fn read_file(&self, path: &Path) -> Result<Vec<u8>> {
+        if !path.exists() {
             return Err("File does not exist".into());
         }
-        let disk = read(&out).chain_err(|| "file read")?;
+        let disk = read(path).chain_err(|| "file read")?;
 
         // Deserialize
         let entry = deserialize::<DiskEntry>(&disk)
-            .chain_err(|| "deserialize disk entry")?;
+            .chain_err(|| format!("deserialize disk entry {:?}", path))?;
 
         // Build crypto entities and decrypt.
         let nonce = match secretbox::Nonce::from_slice(&entry.nonce[..]) {
@@ -170,4 +200,35 @@ impl Repo {
         Ok(())
     }
 }
+
+/// Iterate over all the encrypted files in the repo.
+impl<'a> Iterator for RepoDir<'a> {
+    type Item = Result<RepoEntry>;
+
+    fn next(&mut self) -> Option<Result<RepoEntry>> {
+
+        // Loop until we find an encrypted file or done.
+        loop {
+            match self.read_dir.next() {
+                None => return None,
+                Some(Err(e)) => return Some(Err(e.into())),
+                Some(Ok(entry)) => {
+                    if let Ok(metadata) = entry.metadata() {
+                        let path = entry.path();
+                        if metadata.is_file() && !Config::is_config(&path) {
+                            return Some(self.repo.read_file(&path).map(RepoEntry));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl RepoEntry {
+    pub fn as_slice(&self) -> &[u8] {
+        &self.0
+    }
+}
+
 

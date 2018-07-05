@@ -9,13 +9,19 @@ const DESCRIPTION: &str = env!["CARGO_PKG_DESCRIPTION"];
 /// Commands returned by the parser for execution in the main loop.
 #[derive(Debug)]
 pub enum DataSubCommand {
-    Noop,
-    Sqlite,
+    /// Create the various stores
     Create,
+    /// Check the various stores.
+    Check,
+    /// Decrypt the store document with the given hash (= filename under the repo folder)
+    Decrypt(String),
     /// Encrypt the file with the given name and save in the repo.
     Encrypt(String),
-    Decrypt(String),
-    Check,
+    Noop,
+    /// Delete the text index and rebuilds it by replaying the document in the store.
+    RebuildIndex,
+    /// Run the sqlite shell on the weaver db
+    Sqlite,
 }
 
 pub struct ConfigAndCommand {
@@ -55,6 +61,8 @@ pub fn parse() -> ConfigAndCommand {
             .about("Decrypt the handle"))
         .subcommand(SubCommand::with_name("check")
             .about("Validate the state of the various repos"))
+        .subcommand(SubCommand::with_name("rebuild-index")
+            .about("Rebuild the text search index from the files in the encrypted repo"))
         .get_matches();
 
     if let Some(location) = matches.value_of("location") {
@@ -84,6 +92,8 @@ pub fn parse() -> ConfigAndCommand {
     } else if let Some(decrypt) = matches.subcommand_matches("decrypt") {
         let name = decrypt.value_of("NAME").unwrap();
         DataSubCommand::Decrypt(name.to_string())
+    } else if matches.subcommand_matches("rebuild-index").is_some() {
+        DataSubCommand::RebuildIndex
     } else {
         unreachable!()
     };

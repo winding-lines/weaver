@@ -2,16 +2,11 @@
 
 use actix_web::{App, http, HttpResponse, Json, Query, State};
 use app_state::AppState;
+use lib_api::entities::PageContent;
 use lib_db::url_policies;
 use lib_error::{Result as Wesult, ResultExt};
 use bincode;
 
-#[derive(Debug, Serialize, Deserialize)]
-struct PageContent {
-    url: String,
-    title: String,
-    body: String,
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct PageStatus {
@@ -30,7 +25,7 @@ fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageS
     }
 
     let indexer = &*(state.indexer);
-    let _id = indexer.add(&input.url, &input.title, &input.body)?;
+    let _id = indexer.add(&input)?;
     let serialized = bincode::serialize(&*input)
         .chain_err(|| "serializing for the repo")?;
     repo.add(&serialized)?;

@@ -14,17 +14,18 @@
 //!
 //! The [weaver-server](../weaver_server/index.html) needs to be setup accordingly.
 //!
+extern crate bincode;
 extern crate chrono;
 extern crate clap;
 extern crate env_logger;
-#[macro_use]
-extern crate log;
-extern crate serde;
-extern crate serde_json;
 extern crate lib_api;
 extern crate lib_db;
 extern crate lib_error;
 extern crate lib_index;
+#[macro_use]
+extern crate log;
+extern crate serde;
+extern crate serde_json;
 
 
 mod cli;
