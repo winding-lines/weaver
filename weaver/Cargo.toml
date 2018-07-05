@@ -31,11 +31,13 @@ lib-error = {path = "../lib-error"}
 
 [dependencies.cursive]
 git = "https://github.com/gyscos/Cursive"
-rev = "a4111acccea"
+# rev = "a4111acccea"
+rev = "4c70b7966397464cd0a6e93723b4edbfb"
 # version = "0.9"
 
 [dependencies.cursive_table_view]
 git = "https://github.com/winding-lines/cursive_table_view"
-rev = "9be01c5"
+# rev = "9be01c5"
+rev = "1cca660435b832383a49545853ecaeda5bea549b"
 # default-features = false
 # features = ["blt-backend"]

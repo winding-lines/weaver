@@ -24,11 +24,11 @@ fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageS
         return Ok(PageStatus { is_indexed: false, summary: state.indexer.summary() });
     }
 
-    let indexer = &*(state.indexer);
-    let _id = indexer.add(&input)?;
     let serialized = bincode::serialize(&*input)
         .chain_err(|| "serializing for the repo")?;
     repo.add(&serialized)?;
+    let indexer = &*(state.indexer);
+    let _id = indexer.add(&input)?;
 
     Ok(PageStatus { is_indexed: true, summary: state.indexer.summary() })
 }
