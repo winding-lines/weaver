@@ -1,3 +1,5 @@
+//! Define the html pages used by the app and the related assets.
+//!
 use actix_web::App;
 use app_state::AppState;
 use tera;
@@ -5,6 +7,7 @@ use lib_error::{Result as Wesult, ResultExt};
 
 mod history;
 mod search_form;
+mod static_assets;
 
 const INLINE_CSS: &str = include_str!("../../templates/inline.css");
 
@@ -33,5 +36,6 @@ pub fn build_context() -> tera::Context {
 /// Configure all the pages in the app
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
     let app = search_form::config(app);
+    let app = static_assets::config(app);
     history::config(app)
 }

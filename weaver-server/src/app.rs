@@ -73,7 +73,7 @@ fn rename_files(server_folder: &Path, extension: &str, timestamp: &str) -> Resul
 /// Start a server and use a `Router` to dispatch requests
 fn start(run: &ServerRun, config: &ServerConfig, password_source: &PasswordSource) -> Result<Server> {
     // Initialize the stores before any (optional) forking.
-    let store = Arc::new(RealStore::new()?);
+    let store = Arc::new(RealStore::build()?);
     lib_index::init()?;
     let repo = Arc::new(lib_index::Repo::build(password_source)?);
 

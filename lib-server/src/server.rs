@@ -9,6 +9,7 @@ use lib_error::*;
 use lib_index::{Indexer, Repo};
 
 
+/// Placeholder struct for further expansion.
 pub struct Server {}
 
 
@@ -25,7 +26,9 @@ impl Server {
                     template: pages::build_tera(),
                 })
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
+                    // Add the API entry points.
                     .configure(handlers::config)
+                    // Add the html pages
                     .configure(pages::config)
 
             }

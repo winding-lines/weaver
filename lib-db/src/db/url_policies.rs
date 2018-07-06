@@ -58,7 +58,7 @@ impl UrlPolicy {
 
 // Structure used to manipulate in memory all the restrictions and also to communicate
 // them with the client.
-#[derive(Default, Serialize)]
+#[derive(Default, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Restrictions {
     pub do_not_log: Vec<String>,

@@ -3,7 +3,7 @@ use bincode;
 use lib_goo::config::db::PasswordSource;
 use lib_goo::config::file_utils;
 use lib_goo::entities::PageContent;
-use lib_db::{RealStore, setup};
+use lib_db::{self, RealStore, setup};
 use lib_error::*;
 use lib_index::{self, Indexer, Repo};
 use std::fs::read;
@@ -46,9 +46,34 @@ pub fn run() -> Result<()> {
         Create => {
             RealStore::create_database_if_missing()?;
             Repo::setup_if_needed(&password_source)?;
-            let store = RealStore::new()?;
+            let store = RealStore::build()?;
             setup::populate_data(&store.connection()?)?;
             Indexer::setup_if_needed()?;
+            Ok(())
+        }
+        Decrypt(handle) => {
+            let repo = Repo::build(&password_source)?;
+
+            let decoded = repo.read(&handle)?;
+            println!("{}", String::from_utf8(decoded).unwrap());
+            Ok(())
+        }
+        DumpUrlPolicies => {
+
+            let store = RealStore::build()?;
+            let policies = lib_db::url_policies::fetch_all(&store.connection()?)?;
+            println!("\nLog all url accesses, with the following exceptions:");
+            for p in policies.do_not_log {
+                println!( "  {}", p);
+            }
+            println!("\nFull text index only the following urls:");
+            for p in policies.do_index {
+                println!( "  {}", p);
+            }
+            println!("\nException from the full text index list:");
+            for p in policies.do_not_index {
+                println!( "  {}", p);
+            }
             Ok(())
         }
         Encrypt(filename) => {
@@ -64,15 +89,7 @@ pub fn run() -> Result<()> {
             // print the handle
             println!("{}", handle);
             Ok(())
-        }
-        Decrypt(handle) => {
-            let repo = Repo::build(&password_source)?;
-
-            let decoded = repo.read(&handle)?;
-            println!("{}", String::from_utf8(decoded).unwrap());
-            Ok(())
-        }
-        Noop => {
+        }        Noop => {
             Ok(())
         }
         RebuildIndex => {

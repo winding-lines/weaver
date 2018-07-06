@@ -1,3 +1,5 @@
+/// Return summary information about the stores in text format. The intent is to plug this information
+/// directly in the UI.
 use actix_web::{App, http, State};
 use app_state::AppState;
 

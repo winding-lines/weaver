@@ -1,8 +1,10 @@
+/// Log access to a given url.
+
 use actix_web::{App, http, Json, State};
 use app_state::AppState;
 use lib_db::actions2;
-use lib_goo::entities::NewAction;
 use lib_error::*;
+use lib_goo::entities::NewAction;
 
 #[derive(Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]

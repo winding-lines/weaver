@@ -1,4 +1,7 @@
-//! Leaf library, contains the entities used to communicate between the extensions and the backend.
+//! Leaf library, contains:
+//!
+//! - the entities used to communicate between the extensions and the backend.
+//! - configuration information
 //!
 extern crate chrono;
 #[macro_use]

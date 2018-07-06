@@ -15,6 +15,8 @@ pub enum DataSubCommand {
     Check,
     /// Decrypt the store document with the given hash (= filename under the repo folder)
     Decrypt(String),
+    /// Dump the content of the url policies (restrictions) table.
+    DumpUrlPolicies,
     /// Encrypt the file with the given name and save in the repo.
     Encrypt(String),
     Noop,
@@ -29,7 +31,7 @@ pub struct ConfigAndCommand {
     pub command: DataSubCommand,
 }
 
-/// Parse a Command from the command line options.
+/// Parse a Command and Configuration properties from the command line options.
 pub fn parse() -> ConfigAndCommand {
     let matches = App::new(APP_NAME)
         .version(VERSION)
@@ -63,6 +65,8 @@ pub fn parse() -> ConfigAndCommand {
             .about("Validate the state of the various repos"))
         .subcommand(SubCommand::with_name("rebuild-index")
             .about("Rebuild the text search index from the files in the encrypted repo"))
+        .subcommand(SubCommand::with_name("dump-url-policies")
+            .about("Show the current url policies"))
         .get_matches();
 
     if let Some(location) = matches.value_of("location") {
@@ -94,6 +98,8 @@ pub fn parse() -> ConfigAndCommand {
         DataSubCommand::Decrypt(name.to_string())
     } else if matches.subcommand_matches("rebuild-index").is_some() {
         DataSubCommand::RebuildIndex
+    } else if matches.subcommand_matches("dump-url-policies").is_some() {
+        DataSubCommand::DumpUrlPolicies
     } else {
         unreachable!()
     };

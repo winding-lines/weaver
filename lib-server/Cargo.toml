@@ -6,6 +6,7 @@ authors = ["Marius Seritan <git@winding-lines.com>"]
 [dependencies]
 actix-web = "0.6"
 bytes = "0.4"
+log = "0.4"
 futures = "0.1"
 serde = "1.0"
 bincode = "1.0"

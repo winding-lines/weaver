@@ -7,6 +7,8 @@ extern crate chrono;
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
+extern crate lib_error;
+extern crate lib_goo;
 #[macro_use]
 extern crate log;
 extern crate regex;
@@ -14,11 +16,12 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
-extern crate lib_goo;
-extern crate lib_error;
 
 
 use ::lib_goo::config::file_utils;
+pub use db::actions2;
+pub use db::epics;
+pub use db::url_policies;
 use diesel::sqlite::SqliteConnection;
 use lib_error::*;
 
@@ -27,20 +30,15 @@ mod backends;
 pub mod setup;
 
 pub type Connection = SqliteConnection;
-pub use db::actions2;
-pub use db::epics;
-pub use db::url_policies;
 
 
-pub struct RealStore {
-}
+pub struct RealStore {}
 
 embed_migrations!("../migrations");
 
 impl RealStore {
-    pub fn new() -> Result<RealStore> {
-        Ok(RealStore {
-        })
+    pub fn build() -> Result<RealStore> {
+        Ok(RealStore {})
     }
 
     pub fn create_database_if_missing() -> Result<()> {
@@ -91,9 +89,7 @@ impl RealStore {
         }
         println!("Store ok.");
         Ok(())
-
     }
-
 }
 
 
