@@ -42,7 +42,8 @@ impl Indexer {
     }
 
     pub fn add(&self, page_content: &PageContent) -> Result<(u64)> {
-        let mut index_writer = self.index.writer(50_000_000)
+        let mut index_writer = self.index
+            .writer_with_num_threads(1, 10_000_000)
             .chain_err(|| "create index writer")?;
 
         let schema = self.index.schema();
