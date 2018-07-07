@@ -82,6 +82,9 @@ impl Repo {
                 let new_pwd = rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
                 Ok(new_pwd)
             }
+            PasswordSource::PassIn(value) => {
+                Ok(value.clone())
+            }
         }
     }
 
@@ -140,6 +143,7 @@ impl Repo {
         }
     }
 
+    /// List all the encrypted files.
     pub fn list(&self) -> Result<RepoDir> {
         let read_dir = read_dir(&self.base_folder)?;
 
