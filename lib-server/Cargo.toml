@@ -16,4 +16,4 @@ lib-error = {path = "../lib-error"}
 lib-db = {path = "../lib-db"}
 lib-goo = {path = "../lib-goo"}
 lib-index = {path = "../lib-index"}
-tera = "*"
+tera = "0.11"

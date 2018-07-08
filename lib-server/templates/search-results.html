@@ -1,11 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-
-  <title>Weaver Results {{ term }}</title>
+{% extends "base.html" %}
+{% block title %}Weaver Results {{ term }}{% endblock title %}
+{% block head %}
   <style>
-    {{inline_css}}
     .summary {
       margin-top: 3px;
     }
@@ -26,16 +22,9 @@
       text-decoration: none;
     }
   </style>
-</head>
-<body>
-<div class="search-form">
-  <div class="logo">
-    <a href="/">
-      <svg viewBox="0 0 720 792" width="19">
-        <use href="/assets/inline.svg#analemma-icon"/>
-      </svg>
-    </a>
-  </div>
+{%  endblock head %}
+{% block content %}
+
   <div class="search-block">
     <form>
       <input type="text" name="term" value="{{ term }}"/>
@@ -52,6 +41,4 @@
     {% endfor %}
 
   </div>
-</div>
-</body>
-</html>
+{% endblock content %}

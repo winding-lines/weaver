@@ -7,6 +7,32 @@ body {
   font-family: 'Arial', 'sans-serif';
 }
 
+.body {
+  display: flex;
+  margin: 5px 0 0 0;
+}
+
+.sidebar {
+  width: 30px;
+}
+
+nav {
+  display: flex;
+  border-bottom: solid 1px rgba(0,0,0, 0.1);
+}
+
+nav ul {
+  display: flex;
+  margin: 2px;
+  padding: 0 0 0 2px;
+}
+
+nav ul li {
+  width: 100px;
+  list-style: none;
+}
+
+
 .search-form {
   display: flex;
   flex-direction: row;

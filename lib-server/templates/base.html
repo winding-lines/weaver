@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <title>{% block title %}{% endblock title %}</title>
+  <style>
+    {{inline_css}}
+    </style>
+    {% block head %} {% endblock head %}
+</head>
+<body>
+<nav>
+  <div class="logo">
+    <a href="/history">
+      <svg viewBox="0 0 720 792" width="19">
+        <use href="/assets/inline.svg#analemma-icon"/>
+      </svg>
+    </a>
+  </div>
+  <ul>
+    <li><a href="/">Search</a></li>
+    <li><a href="/history">History</a></li>
+  </ul>
+</nav>
+<div class="body">
+  <div class="sidebar">
+
+  </div>
+  <div class="main">
+    {% block content %}{% endblock content %}
+
+  </div>
+
+
+</div>
+
+
+</body>
+</html>

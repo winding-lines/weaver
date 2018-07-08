@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-
-  <title>Weaver History</title>
+{% extends "base.html" %}
+{% block title %}Weaver History{% endblock title %}
+{% block head %}
   <style>
-    {{inline_css}}
-
     tr.action td:nth-child(2) b {
       display: block;
       width: 300px;
@@ -21,16 +16,9 @@
 
     }
   </style>
-</head>
-<body>
-<div class="search-form">
-  <div class="logo">
-    <a href="/">
-      <svg viewBox="0 0 720 792" width="19">
-        <use href="/assets/inline.svg#analemma-icon"/>
-      </svg>
-    </a>
-  </div>
+{% endblock head %}
+
+{% block content %}
   <div class="search-block">
     <div class="results">
       <table>
@@ -53,6 +41,4 @@
     </div>
 
   </div>
-</div>
-</body>
-</html>
+{% endblock content %}

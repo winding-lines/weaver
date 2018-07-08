@@ -17,6 +17,7 @@ pub fn build_tera() -> Wesult<tera::Tera> {
 
     // Programmatically add all the templates.
     tera.add_raw_templates(vec![
+        ("base.html", include_str!("../../templates/base.html")),
         ("search-form", include_str!("../../templates/search-form.html")),
         ("search-results", include_str!("../../templates/search-results.html")),
         ("history", include_str!("../../templates/history.html"))
