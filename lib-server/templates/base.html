@@ -6,23 +6,29 @@
   <title>{% block title %}{% endblock title %}</title>
   <style>
     {{inline_css}}
-    </style>
-    {% block head %} {% endblock head %}
+  </style>
+  {% block head %} {% endblock head %}
 </head>
 <body>
 <nav>
   <div class="logo">
-    <a href="/history">
+    <a href="/">
       <svg viewBox="0 0 720 792" width="19">
         <use href="/assets/inline.svg#analemma-icon"/>
       </svg>
     </a>
   </div>
-  <ul>
+  <ul id="menu">
     <li><a href="/">Search</a></li>
     <li><a href="/history">History</a></li>
   </ul>
 </nav>
+<script>
+  // activate the right navigation tab
+  const pathname = document.location.pathname;
+  const selector = `nav li a[href='${[pathname]}']`;
+  document.querySelector(selector).parentNode.classList.add("active");
+</script>
 <div class="body">
   <div class="sidebar">
 
@@ -31,8 +37,6 @@
     {% block content %}{% endblock content %}
 
   </div>
-
-
 </div>
 
 
