@@ -21,6 +21,9 @@
   <ul id="menu">
     <li><a href="/">Search</a></li>
     <li><a href="/history">History</a></li>
+    {% for e in analyses %}
+      <li><a href="/analyses/{{ e.file }}">{{ e.name }}</a></li>
+    {% endfor %}
   </ul>
 </nav>
 <script>

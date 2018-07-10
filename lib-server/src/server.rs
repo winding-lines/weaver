@@ -7,6 +7,7 @@ use std::sync::Arc;
 use lib_db::RealStore;
 use lib_error::*;
 use lib_index::{Indexer, Repo};
+use analyses::load_analyses;
 
 
 /// Placeholder struct for further expansion.
@@ -24,6 +25,7 @@ impl Server {
                     indexer: indexer.clone(),
                     repo: repo.clone(),
                     template: pages::build_tera(),
+                    analyses: load_analyses().ok()
                 })
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     // Add the API entry points.

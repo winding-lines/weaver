@@ -15,7 +15,7 @@ struct Actions {
 /// Render the history page.
 fn handle((state, _query): (State<AppState>, Query<HashMap<String, String>>)) -> Result<HttpResponse, Error> {
     let template = state.template.as_ref()?;
-    let mut ctx = build_context();
+    let mut ctx = build_context(&state.analyses);
     ctx.add("term", &" ".to_owned());
 
     let store = &*state.store;

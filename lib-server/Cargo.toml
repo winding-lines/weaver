@@ -6,6 +6,7 @@ authors = ["Marius Seritan <git@winding-lines.com>"]
 [dependencies]
 actix-web = "0.6"
 bytes = "0.4"
+inflections = "1.1"
 log = "0.4"
 futures = "0.1"
 serde = "1.0"
@@ -17,3 +18,4 @@ lib-db = {path = "../lib-db"}
 lib-goo = {path = "../lib-goo"}
 lib-index = {path = "../lib-index"}
 tera = "0.11"
+walkdir = "2"

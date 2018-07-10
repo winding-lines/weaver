@@ -1,11 +1,13 @@
 # Description
 
-Weaver is an improved browser and shell history tracker. Weaver is composed of 4 components:
+Weaver is a personal productivy platform. Weaver is composed of 4 components:
 
 - command line extension
 - chrome extension
 - backend server
 - store
+
+See the associated weaver-recommend project for generating pre-build analyses.
 
 # Concepts
 

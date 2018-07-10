@@ -54,6 +54,7 @@ pub fn parse() -> CommandAndConfig {
         .arg(Arg::with_name("port")
             .short("p")
             .long("port")
+            .global(true)
             .takes_value(true)
             .value_name("PORT")
             .help("Select a port for the server to run on"))

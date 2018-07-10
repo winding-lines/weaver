@@ -4,10 +4,12 @@ use actix_web::App;
 use app_state::AppState;
 use tera;
 use lib_error::{Result as Wesult, ResultExt};
+use ::analyses::*;
 
 mod history;
 mod search_form;
 mod static_assets;
+mod canned;
 
 const INLINE_CSS: &str = include_str!("../../templates/inline.css");
 
@@ -27,15 +29,20 @@ pub fn build_tera() -> Wesult<tera::Tera> {
 }
 
 /// Initialize a Tera context with the expected globals.
-pub fn build_context() -> tera::Context {
+pub fn build_context(canned: &Option<Vec<Analysis>>) -> tera::Context {
+
 
     let mut ctx = tera::Context::new();
+    if let Some(canned) = canned {
+        ctx.add("analyses", canned);
+    }
     ctx.add("inline_css", INLINE_CSS);
     ctx
 }
 
 /// Configure all the pages in the app
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
+    let app = canned::config(app);
     let app = search_form::config(app);
     let app = static_assets::config(app);
     history::config(app)

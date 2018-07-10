@@ -3,6 +3,7 @@ use tera;
 use lib_db::RealStore;
 use lib_index::{Indexer, Repo};
 use lib_error::Result;
+use analyses::Analysis;
 
 /// Store per request state.
 pub(crate) struct AppState {
@@ -10,6 +11,7 @@ pub(crate) struct AppState {
     pub indexer: Arc<Indexer>,
     pub repo: Arc<Repo>,
     pub template: Result<tera::Tera>,
+    pub analyses: Option<Vec<Analysis>>,
 }
 
 

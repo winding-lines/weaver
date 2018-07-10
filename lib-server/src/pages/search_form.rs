@@ -7,7 +7,7 @@ use lib_index::Results;
 /// Render the initial form or the results page, depending on the data passed in.
 fn handle((state, query): (State<AppState>, Query<HashMap<String, String>>)) -> Result<HttpResponse, Error> {
     let template = state.template.as_ref()?;
-    let mut ctx = build_context();
+    let mut ctx = build_context(&state.analyses);
     let rendered = if let Some(term) = query.get("term") {
         let indexer = &*state.indexer;
         let results = indexer.search(term).unwrap_or_else(|_| Results::default());
