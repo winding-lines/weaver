@@ -4,7 +4,7 @@ use local_api;
 use std::sync::{Arc, Mutex};
 use chan;
 use std::thread;
-use super::{FormattedAction, table_view, UserSelection};
+use super::{FormattedAction, history_view, UserSelection};
 use super::output_selector;
 use lib_goo::{config, FilteredVec};
 use lib_goo::config::Destination;
@@ -107,7 +107,7 @@ impl Processor {
         let content = self.table.filter(f);
         let tx = self.self_tx.clone();
         let update_table = move |siv: &mut Cursive| {
-            if let Some(mut tview) = siv.find_id::<table_view::TView>("actions") {
+            if let Some(mut tview) = siv.find_id::<history_view::TView>("actions") {
                 tview.clear();
                 let select = content.len();
                 tview.set_items(content);
@@ -127,7 +127,7 @@ impl Processor {
 
     fn set_selected_row(&mut self, row: usize) {
         let jump = move |siv: &mut Cursive| {
-            if let Some(mut tview) = siv.find_id::<table_view::TView>("actions") {
+            if let Some(mut tview) = siv.find_id::<history_view::TView>("actions") {
                 tview.set_selected_row(row);
             }
         };

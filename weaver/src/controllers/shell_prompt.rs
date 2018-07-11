@@ -1,10 +1,10 @@
+use lib_error::*;
+use lib_goo::config::Destination;
+use lib_goo::config::{file_utils, Environment};
+use lib_goo::entities::NewAction;
 use local_api;
 use std::env;
 use std::io::{self, Write};
-use lib_goo::config::{Environment, file_utils};
-use lib_goo::entities::NewAction;
-use lib_goo::config::Destination;
-use lib_error::*;
 
 /// Check to see if the environment is setup properly.
 pub fn check() -> Result<()> {
@@ -21,15 +21,16 @@ pub fn check() -> Result<()> {
 
 /// Internal function to process shell prompt
 fn _run(destination: &Destination, env: &Environment) -> Result<()> {
-
-
     // output the current epic so that it can end up in the prompt
     print!("{}", env.epic().unwrap_or("<not-set>"));
 
     // save any shell history items in the store
     for input in file_utils::read_stdin(1)? {
-        let action = NewAction::build_from_shell(&input, env)?;
-        local_api::insert_action(&action, destination)?;
+        let reject = input.len() > 10 && &input[0..10] == "weaver_cmd";
+        if !reject {
+            let action = NewAction::build_from_shell(&input, env)?;
+            local_api::insert_action(&action, destination)?;
+        }
     }
     Ok(())
 }

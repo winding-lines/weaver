@@ -1,0 +1,44 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "cargo check-all",
+            "command": "cargo",
+            "args": [
+                "check",
+                "--all"
+            ],
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "cargo build-all",
+            "command": "cargo",
+            "args": [
+                "build",
+                "--all"
+            ],
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "cargo test-weaver",
+            "command": "cargo",
+            "args": [
+                "test",
+                "-p",
+                "weaver"
+            ],
+            "problemMatcher": [
+                "$rustc"
+            ]
+        }
+    ]
+}

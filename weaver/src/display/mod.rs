@@ -1,20 +1,23 @@
+use self::processor::Msg;
 use chan;
-use cursive::Cursive;
 use cursive::event::{Event, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
-use lib_goo::FilteredVec;
+use cursive::Cursive;
+use lib_error::*;
 use lib_goo::config::{Destination, Environment, OutputKind};
 use lib_goo::entities::FormattedAction;
-use self::processor::Msg;
+use lib_goo::FilteredVec;
 use std::sync::Arc;
-use lib_error::*;
 
-mod table_view;
-mod processor;
+mod history_view;
 mod output_selector;
+mod processor;
+mod recommend_view;
+mod recommender;
 
+const MARGIN_X: usize = 7;
 
 pub struct UserSelection {
     pub action: Option<FormattedAction>,
@@ -51,19 +54,17 @@ fn create_filter_edit(tx: chan::Sender<Msg>) -> EditView {
 }
 
 fn create_command_edit(tx: chan::Sender<Msg>) -> EditView {
-    EditView::new()
-        .on_submit(move |_: &mut Cursive, content: &str| {
-            let message = Msg::CommandSubmit(Some(String::from(content)));
-            send(&tx, message);
-        })
+    EditView::new().on_submit(move |_: &mut Cursive, content: &str| {
+        let message = Msg::CommandSubmit(Some(String::from(content)));
+        send(&tx, message);
+    })
 }
 
 fn create_annotation_edit(tx: chan::Sender<Msg>) -> EditView {
-    EditView::new()
-        .on_submit(move |_: &mut Cursive, content: &str| {
-            let message = Msg::AnnotationSubmit(Some(String::from(content)));
-            send(&tx, message);
-        })
+    EditView::new().on_submit(move |_: &mut Cursive, content: &str| {
+        let message = Msg::AnnotationSubmit(Some(String::from(content)));
+        send(&tx, message);
+    })
 }
 
 fn setup_global_keys(siv: &mut Cursive, ch: chan::Sender<Msg>) {
@@ -85,16 +86,26 @@ fn setup_global_keys(siv: &mut Cursive, ch: chan::Sender<Msg>) {
 }
 
 /// Display the UI which allows the user to exlore and select one of the options.
-pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
-                   env: Arc<Environment>, destination: &Destination) -> Result<UserSelection> {
+pub fn main_screen(
+    actions: Vec<FormattedAction>,
+    kind: &OutputKind,
+    env: Arc<Environment>,
+    destination: &Destination,
+) -> Result<UserSelection> {
     // initialize cursive
     let mut siv = create_cursive();
 
     // Fill the screen
     let screen = siv.screen_size();
-    // need to leave some space at the bottom, the current constant found by experimentation.
-    let table_height = (screen.y - 9) as usize;
-    let table_width = (screen.x - 7) as usize;
+    let content_height = (screen.y - 9) as usize;
+
+    // Recommendation table
+    let recommend_height = content_height;
+    let recommend_width = 30;
+
+    // History table, the current margin constants found by experimentation.
+    let history_height = content_height;
+    let history_width = (screen.x - recommend_width - MARGIN_X) as usize;
 
     // communication channels between views and data processor.
     let (process_tx, process_rx) = chan::sync(0);
@@ -102,9 +113,8 @@ pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
     // communication channel between processor and main function
     let (submit_tx, submit_rx) = chan::sync(0);
 
-
     // Build the main components: table and processor.
-    let table = FilteredVec::new(actions, table_height);
+    let table = FilteredVec::new(actions, history_height);
     let initial = table.filter(None);
 
     let processor_thread = processor::ProcessorThread {
@@ -120,53 +130,69 @@ pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
 
     let processor = processor_thread.spawn();
 
-
+    let recommended = recommender::recommend(&initial);
     // build the table pane
+    let mut content = LinearLayout::horizontal();
+    content.add_child(
+        history_view::create_view(initial, &process_tx)
+            .with_id("actions")
+            .min_height(history_height)
+            .fixed_width(history_width),
+    );
+    content.add_child(BoxView::with_fixed_size((4, 0), DummyView));
+    // build the recommendation pane
+    content.add_child(
+        recommend_view::create_view(recommended, &process_tx)
+            .with_id("recommend")
+            .min_height(recommend_height)
+            .fixed_width(recommend_width),
+    );
+
+    // Assemble the table pane with the bottom fields
     let mut layout = LinearLayout::vertical();
-    layout.add_child(table_view::create_view(initial, &process_tx)
-        .with_id("actions")
-        .min_height(table_height)
-        .min_width(table_width));
+    layout.add_child(content);
     layout.add_child(BoxView::with_fixed_size((0, 2), DummyView));
 
     // build the filter pane
     let filter_pane = LinearLayout::horizontal()
         .child(TextView::new("Filter:       "))
-        .child(create_filter_edit(process_tx.clone())
-            .with_id("filter")
-            .min_width(20));
+        .child(
+            create_filter_edit(process_tx.clone())
+                .with_id("filter")
+                .min_width(20),
+        );
     layout.add_child(filter_pane);
 
     // build the command pane
     let command_pane = LinearLayout::horizontal()
         .child(TextView::new("Selection:    "))
-        .child(create_command_edit(process_tx.clone())
-            .with_id("command")
-            .min_width((screen.x - 50) as usize));
+        .child(
+            create_command_edit(process_tx.clone())
+                .with_id("command")
+                .min_width((screen.x - 50) as usize),
+        );
     layout.add_child(command_pane);
-
 
     // build the annotation pane
     let annotation_pane = LinearLayout::horizontal()
         .child(TextView::new("Annotate:     "))
-        .child(create_annotation_edit(process_tx.clone())
-            .with_id("annotation")
-            .min_width((screen.x - 50) as usize));
+        .child(
+            create_annotation_edit(process_tx.clone())
+                .with_id("annotation")
+                .min_width((screen.x - 50) as usize),
+        );
     layout.add_child(annotation_pane);
 
     // build the output kind UI
     let mut output_pane = LinearLayout::horizontal();
-    output_pane.add_child(TextView::new(format!("<Enter> will: {} {}| <Esc> to change | Ctrl-G to jump to selection", &kind.channel, &kind.content)));
+    output_pane.add_child(TextView::new(format!(
+        "<Enter> will: {} {}| <Esc> to change | Ctrl-G to jump to selection",
+        &kind.channel, &kind.content
+    )));
     setup_global_keys(&mut siv, process_tx.clone());
     layout.add_child(output_pane);
 
-    // build top level scene
-    //siv.add_layer(
-    //    Dialog::around(layout.min_size((width, height)))
-    //       .padding((0, 0, 0, 0))
-    //        .title("~ weaver ~"));
-    siv.add_layer(
-        layout.min_size((screen.x, screen.y)));
+    siv.add_layer(layout.min_size((screen.x, screen.y)));
 
     // Do the initial display;
     process_tx.send(Msg::Filter(String::from("")));
@@ -182,8 +208,7 @@ pub fn main_screen(actions: Vec<FormattedAction>, kind: &OutputKind,
     let _ = processor.join();
 
     // Extract the desired output kind, needs to be done in the same thread.
-    user_selection
-        .chain_err(|| "could not receive final result")
+    user_selection.chain_err(|| "could not receive final result")
 }
 
 fn custom_theme_from_cursive(siv: &Cursive) -> Theme {

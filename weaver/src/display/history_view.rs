@@ -1,3 +1,4 @@
+/// The table view for the history.
 use chan;
 use cursive::align::HAlign;
 use cursive::Cursive;
@@ -10,8 +11,8 @@ use lib_goo::entities::FormattedAction;
 pub enum BasicColumn {
     Annotation,
     Index,
-    Epic,
-    Kind,
+    //Epic,
+    //Kind,
     Name,
 }
 
@@ -20,8 +21,8 @@ impl TableViewItem<BasicColumn> for FormattedAction {
         match column {
             BasicColumn::Annotation => self.annotation.as_ref().map_or(String::from(""), |s| s.to_string()),
             BasicColumn::Index => if self.id != 0 { format!("{}", self.id) } else { String::from("") },
-            BasicColumn::Epic => self.epic.as_ref().map_or(String::from(""), |s| s.to_string()),
-            BasicColumn::Kind => self.kind.to_string(),
+            //BasicColumn::Epic => self.epic.as_ref().map_or(String::from(""), |s| s.to_string()),
+            //BasicColumn::Kind => self.kind.to_string(),
             BasicColumn::Name => self.name.to_string(),
         }
     }
@@ -30,8 +31,8 @@ impl TableViewItem<BasicColumn> for FormattedAction {
         match column {
             BasicColumn::Annotation => self.annotation.cmp(&other.annotation),
             BasicColumn::Index => self.id.cmp(&other.id),
-            BasicColumn::Epic => self.epic.cmp(&other.epic),
-            BasicColumn::Kind => self.kind.cmp(&other.kind),
+            //BasicColumn::Epic => self.epic.cmp(&other.epic),
+            //BasicColumn::Kind => self.kind.cmp(&other.kind),
             BasicColumn::Name => self.name.cmp(&other.name),
         }
     }
@@ -44,10 +45,11 @@ pub type TView = TableView<FormattedAction, BasicColumn>;
 pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &chan::Sender<Msg>) -> TView {
     let mut view = TView::new()
         .column(BasicColumn::Index, "#", |c| c.width(6))
-        .column(BasicColumn::Kind, " ", |c| c.align(HAlign::Left).width(1))
-        .column(BasicColumn::Epic, "Epic", |c| c.align(HAlign::Left).width(6))
-        .column(BasicColumn::Name, "Command", |c| c.align(HAlign::Left))
-        .column(BasicColumn::Annotation, "Annotation", |c| c.align(HAlign::Left).width(10));
+        //.column(BasicColumn::Kind, " ", |c| c.align(HAlign::Left).width(1))
+        //.column(BasicColumn::Epic, "Epic", |c| c.align(HAlign::Left).width(6))
+        .column(BasicColumn::Name, "History", |c| c.align(HAlign::Left))
+        //.column(BasicColumn::Annotation, "Annotation", |c| c.align(HAlign::Left).width(10))
+        ;
 
     // Select the current entry when 'enter' is pressed, then end the application.
     {
