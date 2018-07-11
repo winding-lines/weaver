@@ -5,6 +5,7 @@ use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
 use cursive::Cursive;
+use lib_ai::recommender;
 use lib_error::*;
 use lib_goo::config::{Destination, Environment, OutputKind};
 use lib_goo::entities::FormattedAction;
@@ -15,7 +16,6 @@ mod history_view;
 mod output_selector;
 mod processor;
 mod recommend_view;
-mod recommender;
 
 const MARGIN_X: usize = 7;
 

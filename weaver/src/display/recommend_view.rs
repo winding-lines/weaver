@@ -4,7 +4,7 @@ use cursive::align::HAlign;
 use cursive_table_view::{TableView, TableViewItem};
 use std::cmp::Ordering;
 use super::processor::Msg;
-use super::recommender::RecommendedAction;
+use lib_ai::recommender::RecommendedAction;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Column {

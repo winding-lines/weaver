@@ -1,0 +1,8 @@
+[package]
+name = "lib-ai"
+version = "0.1.0"
+authors = ["Marius Seritan <git@winding-lines.com>"]
+
+
+[dependencies]
+lib-goo = {path = "../lib-goo"}

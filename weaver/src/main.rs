@@ -31,9 +31,10 @@ extern crate serde_json;
 extern crate termion;
 extern crate walkdir;
 // Workspace crates
+extern crate lib_ai;
 extern crate lib_error;
-extern crate lib_rpc;
 extern crate lib_goo;
+extern crate lib_rpc;
 
 
 mod cli;

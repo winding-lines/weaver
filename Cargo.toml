@@ -6,9 +6,10 @@ authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [workspace]
 members = [
-  "lib-goo",
+  "lib-ai",
   "lib-db",
   "lib-error",
+  "lib-goo",
   "lib-index",
   "lib-rpc",
   "lib-server",
