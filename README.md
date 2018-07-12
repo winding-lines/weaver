@@ -26,10 +26,7 @@ Follow the following steps to install the local server/cli component.
 
 - Install rust from [https://rustup.rs/](https://rustup.rs/)
 - Checkout weaver from git@gitlab.com:lab-flow/weaver.git
-- Install required libraries, on Linux
-    
-    `sudo apt-get install libncurses-dev libsqlite3-dev lisqlite3 libncursesw5-dev`
-    
+- Install required libraries, see .gitlab-ci.yml
 - Build with `cargo build -all --release`
 - Install in your `$PATH`
 - Create all the data stores `weaver-data setup`
@@ -38,7 +35,6 @@ Follow the following steps to install the local server/cli component.
 Every time your reboot your computer you will need to restart the server.
 
 See the documentation for weaver-data and weaver-server on how to setup a staging environment for development.
-
 
 ## Chrome integration
 
