@@ -8,7 +8,7 @@ stages:
 variables:
   CARGO_HOME: $CI_PROJECT_DIR/cargo
   APT_CACHE_DIR: $CI_PROJECT_DIR/apt
-  RUST_SODIUM_USE_PKG_CONFIG: true
+  RUST_SODIUM_USE_PKG_CONFIG: "true"
 
 before_script:
   - apt-get update -yq
