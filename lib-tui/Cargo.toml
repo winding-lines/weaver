@@ -1,0 +1,8 @@
+[package]
+name = "lib-tui"
+version = "0.1.0"
+description = "A library for terminal ui widgets on top of cursive."
+authors = ["Marius Seritan <git@winding-lines.com>"]
+
+[dependencies]
+cursive = { git = "https://github.com/gyscos/Cursive", rev = "4c70b7966397464cd0a6e93723b4edbfb", default-features = false }

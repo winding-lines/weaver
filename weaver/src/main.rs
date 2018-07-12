@@ -20,7 +20,6 @@ extern crate chrono;
 extern crate clap;
 extern crate clipboard;
 extern crate cursive;
-extern crate cursive_table_view;
 extern crate env_logger;
 #[macro_use]
 extern crate log;
@@ -35,7 +34,7 @@ extern crate lib_ai;
 extern crate lib_error;
 extern crate lib_goo;
 extern crate lib_rpc;
-
+extern crate lib_tui;
 
 mod cli;
 mod display;

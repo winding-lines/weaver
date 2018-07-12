@@ -2,7 +2,7 @@
 use chan;
 use cursive::align::HAlign;
 use cursive::Cursive;
-use cursive_table_view::{TableView, TableViewItem};
+use lib_tui::{ActionListView, ActionListViewItem};
 use std::cmp::Ordering;
 use super::processor::Msg;
 use lib_goo::entities::FormattedAction;
@@ -16,7 +16,7 @@ pub enum BasicColumn {
     Name,
 }
 
-impl TableViewItem<BasicColumn> for FormattedAction {
+impl ActionListViewItem<BasicColumn> for FormattedAction {
     fn to_column(&self, column: BasicColumn) -> String {
         match column {
             BasicColumn::Annotation => self.annotation.as_ref().map_or(String::from(""), |s| s.to_string()),
@@ -39,7 +39,7 @@ impl TableViewItem<BasicColumn> for FormattedAction {
 }
 
 // An alias for the table view.
-pub type TView = TableView<FormattedAction, BasicColumn>;
+pub type TView = ActionListView<FormattedAction, BasicColumn>;
 
 // Create the Cursive table for actions.
 pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &chan::Sender<Msg>) -> TView {
