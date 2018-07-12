@@ -8,10 +8,11 @@ stages:
 variables:
   CARGO_HOME: $CI_PROJECT_DIR/cargo
   APT_CACHE_DIR: $CI_PROJECT_DIR/apt
+  RUST_SODIUM_USE_PKG_CONFIG: true
 
 before_script:
   - apt-get update -yq
-  - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y sqlite3 libsqlite3-dev libncurses5-dev libncursesw5-dev libgmp3-dev libdbus-1-dev
+  - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y sqlite3 libsqlite3-dev libncurses5-dev libncursesw5-dev libgmp3-dev libdbus-1-dev libsodium-dev
 
 test:
   stage: test
