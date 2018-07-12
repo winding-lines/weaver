@@ -19,6 +19,11 @@ pub fn check() -> Result<()> {
     Ok(())
 }
 
+/// Do not save this input line in the database
+fn reject_input(input: &str) -> bool {
+    input.len() > 9 && &input[0..10] == "weaver_cmd"
+}
+
 /// Internal function to process shell prompt
 fn _run(destination: &Destination, env: &Environment) -> Result<()> {
     // output the current epic so that it can end up in the prompt
@@ -26,8 +31,7 @@ fn _run(destination: &Destination, env: &Environment) -> Result<()> {
 
     // save any shell history items in the store
     for input in file_utils::read_stdin(1)? {
-        let reject = input.len() > 10 && &input[0..10] == "weaver_cmd";
-        if !reject {
+        if !reject_input(&input) {
             let action = NewAction::build_from_shell(&input, env)?;
             local_api::insert_action(&action, destination)?;
         }
@@ -43,4 +47,14 @@ pub fn run(destination: &Destination, env: &Environment) -> Result<()> {
     };
     let _ = io::stdout().flush();
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reject() {
+        assert!(reject_input("weaver_cmd"));
+    }
 }
