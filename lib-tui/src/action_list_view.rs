@@ -22,7 +22,7 @@ where
 {
     /// Method returning a string representation of the item for the
     /// specified column from type `H`.
-    fn to_column(&self, column: H) -> String;
+    fn to_column(&self, column: H, is_focussed: bool) -> String;
 
     /// Method returning true if this item should be render as an important item.
     fn color_style(&self) -> Option<ColorStyle>
@@ -384,17 +384,19 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
             callback(printer, column);
 
+            /* Do not draw columns for now.
             if index < column_count - 1 {
                 printer.print((column.width + 1, 0), sep);
             }
+            */
 
             column_offset += column.width + 3;
         }
     }
 
-    fn draw_item(&self, printer: &Printer, i: usize) {
+    fn draw_item(&self, printer: &Printer, i: usize, is_focussed: bool) {
         self.draw_columns(printer, "┆ ", |printer, column| {
-            let value = self.items[self.rows_to_items[i]].to_column(column.column);
+            let value = self.items[self.rows_to_items[i]].to_column(column.column, is_focussed);
             column.draw_row(printer, value.as_str());
         });
     }
@@ -427,7 +429,7 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
             };
 
             printer.with_color(color, |printer| {
-                self.draw_item(printer, i);
+                self.draw_item(printer, i, i == self.focus);
             });
         });
     }

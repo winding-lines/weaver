@@ -9,33 +9,29 @@ use lib_tui::{ActionListView, ActionListViewItem};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum BasicColumn {
-    Index,
     Name,
+    Detail,
 }
 
 impl ActionListViewItem<BasicColumn> for Row {
-    fn to_column(&self, column: BasicColumn) -> String {
+    fn to_column(&self, column: BasicColumn, is_focussed: bool) -> String {
         match *self {
             Row::Regular(ref r) => match column {
-                BasicColumn::Index => if r.id != 0 {
-                    format!("{}", r.id)
+                BasicColumn::Name => r.name.to_string(),
+                BasicColumn::Detail => if is_focussed && r.location.is_some() {
+                    r.location.as_ref().unwrap().clone()
                 } else {
                     String::new()
                 },
-                BasicColumn::Name => r.name.to_string(),
             },
             Row::Recommended(ref r) => match column {
-                BasicColumn::Index => if r.id != 0 {
-                    format!("{}", r.id)
-                } else {
-                    String::new()
-                },
-                BasicColumn::Name => r.name.to_string()
+                BasicColumn::Name => r.name.to_string(),
+                BasicColumn::Detail => "recommendation".into(),
             },
             Row::Separator => match column {
-                BasicColumn::Index => String::new(),
                 BasicColumn::Name => "----\\ Recommended /-----".to_string(),
-            }
+                BasicColumn::Detail => String::new(),
+            },
         }
     }
 
@@ -54,9 +50,8 @@ pub type TView = ActionListView<Row, BasicColumn>;
 // Create the Cursive table for actions.
 pub fn create_view(initial: Vec<Row>, processor_tx: &chan::Sender<Msg>) -> TView {
     let mut view = TView::new()
-        //.column(BasicColumn::Index, |c| c.width(6))
-        .column(BasicColumn::Name, |c| c.align(HAlign::Left))
-        ;
+        .column(BasicColumn::Name, |c| c.align(HAlign::Left).width_percent(70))
+        .column(BasicColumn::Detail, |c| c.align(HAlign::Right));
 
     debug!("Entering create_view with {} entries", initial.len());
     // Select the current entry when 'enter' is pressed, then end the application.
