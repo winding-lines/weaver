@@ -44,11 +44,11 @@ pub type TView = ActionListView<FormattedAction, BasicColumn>;
 // Create the Cursive table for actions.
 pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &chan::Sender<Msg>) -> TView {
     let mut view = TView::new()
-        .column(BasicColumn::Index, "#", |c| c.width(6))
-        //.column(BasicColumn::Kind, " ", |c| c.align(HAlign::Left).width(1))
-        //.column(BasicColumn::Epic, "Epic", |c| c.align(HAlign::Left).width(6))
-        .column(BasicColumn::Name, "History", |c| c.align(HAlign::Left))
-        //.column(BasicColumn::Annotation, "Annotation", |c| c.align(HAlign::Left).width(10))
+        .column(BasicColumn::Index, |c| c.width(6))
+        //.column(BasicColumn::Kind, |c| c.align(HAlign::Left).width(1))
+        //.column(BasicColumn::Epic, |c| c.align(HAlign::Left).width(6))
+        .column(BasicColumn::Name, |c| c.align(HAlign::Left))
+        //.column(BasicColumn::Annotation, |c| c.align(HAlign::Left).width(10))
         ;
 
     // Select the current entry when 'enter' is pressed, then end the application.

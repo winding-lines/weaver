@@ -32,7 +32,7 @@ pub type TView = ActionListView<RecommendedAction, Column>;
 // Create the Cursive table for actions.
 pub fn create_view(initial: Vec<RecommendedAction>, _processor_tx: &chan::Sender<Msg>) -> TView {
     let mut view = TView::new()
-        .column(Column::Name, "Recommended", |c| c.align(HAlign::Left));
+        .column(Column::Name, |c| c.align(HAlign::Left));
     redisplay(&mut view, initial);
     view
 }

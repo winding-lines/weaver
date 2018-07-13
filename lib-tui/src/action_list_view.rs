@@ -30,12 +30,13 @@ pub trait ActionListViewItem<H>: Clone + Sized
 
 }
 
+const HEIGHT_SUB: usize = 0;
+
 pub struct ActionListView<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> {
     enabled: bool,
     scrollbase: ScrollBase,
     last_size: Vec2,
 
-    column_select: bool,
     columns: Vec<TableColumn<H>>,
     column_indicies: HashMap<H, usize>,
 
@@ -43,7 +44,6 @@ pub struct ActionListView<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone 
     items: Vec<T>,
     rows_to_items: Vec<usize>,
 
-    on_sort: Option<Rc<Fn(&mut Cursive, H, Ordering)>>,
     // TODO Pass drawing offsets into the handlers so a popup menu
     // can be created easily?
     on_submit: Option<Rc<Fn(&mut Cursive, usize, usize)>>,
@@ -62,7 +62,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             scrollbase: ScrollBase::new(),
             last_size: Vec2::new(0, 0),
 
-            column_select: false,
             columns: Vec::new(),
             column_indicies: HashMap::new(),
 
@@ -70,7 +69,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             items: Vec::new(),
             rows_to_items: Vec::new(),
 
-            on_sort: None,
             on_submit: None,
             on_select: None
         }
@@ -81,83 +79,17 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     ///
     /// The provided callback can be used to further configure the
     /// created [`TableColumn`](struct.TableColumn.html).
-    pub fn column<S: Into<String>, C: FnOnce(TableColumn<H>) -> TableColumn<H>>(
+    pub fn column<C: FnOnce(TableColumn<H>) -> TableColumn<H>>(
         mut self,
         column: H,
-        title: S,
         callback: C
 
     ) -> Self {
         self.column_indicies.insert(column, self.columns.len());
-        self.columns.push(callback(TableColumn::new(column, title.into())));
+        self.columns.push(callback(TableColumn::new(column)));
 
-        // Make the first colum the default one
-        if self.columns.len() == 1 {
-            self.default_column(column)
-
-        } else {
-            self
-        }
-    }
-
-    /// Sets the initially active column of the table.
-    pub fn default_column(mut self, column: H) -> Self {
-        if self.column_indicies.contains_key(&column) {
-            for c in &mut self.columns {
-                c.selected = c.column == column;
-                if c.selected {
-                    c.order = c.default_order;
-
-                } else {
-                    c.order = Ordering::Equal;
-                }
-            }
-        }
         self
     }
-
-    /// Sorts the table using the specified table `column` and the passed
-    /// `order`.
-    pub fn sort_by(&mut self, column: H, order: Ordering) {
-
-        if self.column_indicies.contains_key(&column) {
-            for c in &mut self.columns {
-                c.selected = c.column == column;
-                if c.selected {
-                    c.order = order;
-
-                } else {
-                    c.order = Ordering::Equal;
-                }
-            }
-        }
-
-        self.sort_items(column, order);
-
-    }
-
-    /// Sorts the table using the currently active column and its
-    /// ordering.
-    pub fn sort(&mut self) {
-        if let Some((column, order)) = self.order() {
-            self.sort_items(column, order);
-        }
-    }
-
-    /// Returns the currently active column that is used for sorting
-    /// along with its ordering.
-    ///
-    /// Might return `None` if there are currently no items in the table
-    /// and it has not been sorted yet.
-    pub fn order(&self) -> Option<(H, Ordering)> {
-        for c in &self.columns {
-            if c.order != Ordering::Equal {
-                return Some((c.column, c.order));
-            }
-        }
-        None
-    }
-
     /// Disables this view.
     ///
     /// A disabled view cannot be selected.
@@ -178,40 +110,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// Returns `true` if this view is enabled.
     pub fn is_enabled(&self) -> bool {
         self.enabled
-    }
-
-    /// Sets a callback to be used when a selected column is sorted by
-    /// pressing `<Enter>`.
-    ///
-    /// # Example
-    ///
-    /// ```norun
-    /// table.set_on_sort(|siv: &mut Cursive, column: BasicColumn, order: Ordering| {
-    ///
-    /// });
-    /// ```
-    pub fn set_on_sort<F>(&mut self, cb: F)
-        where F: Fn(&mut Cursive, H, Ordering) + 'static
-    {
-        self.on_sort = Some(Rc::new(move |s, h, o| cb(s, h, o)));
-    }
-
-    /// Sets a callback to be used when a selected column is sorted by
-    /// pressing `<Enter>`.
-    ///
-    /// Chainable variant.
-    ///
-    /// # Example
-    ///
-    /// ```norun
-    /// table.on_sort(|siv: &mut Cursive, column: BasicColumn, order: Ordering| {
-    ///
-    /// });
-    /// ```
-    pub fn on_sort<F>(self, cb: F) -> Self
-        where F: Fn(&mut Cursive, H, Ordering) + 'static
-    {
-        self.with(|t| t.set_on_sort(cb))
     }
 
     /// Sets a callback to be used when `<Enter>` is pressed while an item
@@ -345,10 +243,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             self.rows_to_items.push(i);
         }
 
-        if let Some((column, order)) = self.order() {
-            self.sort_by(column, order);
-        }
-
         self.set_selected_row(0);
 
     }
@@ -430,13 +324,9 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
         self.rows_to_items.push(self.items.len());
 
         self.scrollbase.set_heights(
-            self.last_size.y.saturating_sub(2),
+            self.last_size.y.saturating_sub(HEIGHT_SUB),
             self.rows_to_items.len()
         );
-
-        if let Some((column, order)) = self.order() {
-            self.sort_by(column, order);
-        }
 
     }
 
@@ -464,7 +354,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
             // Update scroll height to prevent out of index drawing
             self.scrollbase.set_heights(
-                self.last_size.y.saturating_sub(2),
+                self.last_size.y.saturating_sub(HEIGHT_SUB),
                 self.rows_to_items.len()
             );
 
@@ -478,7 +368,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
     /// Removes all items from the underlying storage and returns them.
     pub fn take_items(&mut self) -> Vec<T> {
-        self.scrollbase.set_heights(self.last_size.y.saturating_sub(2), 0);
+        self.scrollbase.set_heights(self.last_size.y.saturating_sub(HEIGHT_SUB), 0);
         self.set_selected_row(0);
         self.rows_to_items.clear();
         self.items.drain(0..).collect()
@@ -514,27 +404,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
     }
 
-    fn sort_items(&mut self, column: H, order: Ordering) {
-        if !self.is_empty() {
-
-            let old_item = self.item().unwrap();
-
-            let mut rows_to_items = self.rows_to_items.clone();
-            rows_to_items.sort_by(|a, b| {
-                if order == Ordering::Less {
-                    self.items[*a].cmp(&self.items[*b], column)
-
-                } else {
-                    self.items[*b].cmp(&self.items[*a], column)
-                }
-            });
-            self.rows_to_items = rows_to_items;
-
-            self.set_selected_item(old_item);
-
-        }
-    }
-
     fn draw_item(&self, printer: &Printer, i: usize) {
         self.draw_columns(printer, "┆ ", |printer, column| {
             let value = self.items[
@@ -552,100 +421,17 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     fn focus_down(&mut self, n: usize) {
         self.focus = cmp::min(self.focus + n, self.items.len() - 1);
     }
-
-    fn active_column(&self) -> usize {
-        self.columns.iter().position(|c| c.selected).unwrap_or(0)
-    }
-
-    fn column_cancel(&mut self) {
-        self.column_select = false;
-        for column in &mut self.columns {
-            column.selected = column.order != Ordering::Equal;
-        }
-    }
-
-    fn column_next(&mut self) -> bool {
-        let column = self.active_column();
-        if column < self.columns.len() - 1 {
-            self.columns[column].selected = false;
-            self.columns[column + 1].selected = true;
-            true
-
-        } else {
-            false
-        }
-    }
-
-    fn column_prev(&mut self) -> bool {
-        let column = self.active_column();
-        if column > 0 {
-            self.columns[column].selected = false;
-            self.columns[column - 1].selected = true;
-            true
-
-        } else {
-            false
-        }
-    }
-
-    fn column_select(&mut self) {
-
-        let next = self.active_column();
-        let column = self.columns[next].column;
-        let current = self.columns.iter().position(|c| {
-            c.order != Ordering::Equal
-
-        }).unwrap_or(0);
-
-        let order = if current != next {
-            self.columns[next].default_order
-
-        } else if self.columns[current].order == Ordering::Less {
-            Ordering::Greater
-
-        } else {
-            Ordering::Less
-        };
-
-        self.sort_by(column, order);
-
-    }
-
 }
 
 impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> View for ActionListView<T, H> {
 
     fn draw(&self, printer: &Printer) {
 
-        self.draw_columns(printer, "╷ ", |printer, column| {
-
-            let color = if column.order != Ordering::Equal || column.selected {
-                if self.column_select && column.selected && self.enabled && printer.focused {
-                    ColorStyle::highlight()
-
-                } else {
-                    ColorStyle:: highlight_inactive()
-                }
-
-            } else {
-                ColorStyle::primary()
-            };
-
-            printer.with_color(color, |printer| {
-                column.draw_header(printer);
-            });
-
-        });
-
-        self.draw_columns(&printer.offset((0, 1)).cropped(printer.size), "┴─", |printer, column| {
-            printer.print_hline((0, 0), column.width + 1, "─");
-        });
-
-        let printer = &printer.offset((0, 2)).cropped(printer.size);
+        let printer = &printer.cropped(printer.size);
         self.scrollbase.draw(printer, |printer, i| {
 
             let color = if i == self.focus {
-                if !self.column_select && self.enabled && printer.focused {
+                if !self.enabled && printer.focused {
                     ColorStyle::highlight()
 
                 } else {
@@ -712,7 +498,7 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
             ).floor() as usize;
         }
 
-        self.scrollbase.set_heights(size.y.saturating_sub(2), item_count);
+        self.scrollbase.set_heights(size.y.saturating_sub(HEIGHT_SUB), item_count);
         self.last_size = size;
 
     }
@@ -730,76 +516,30 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
         let last_focus = self.focus;
         match event {
             Event::Key(Key::Right) => {
-                if self.column_select {
-                    if !self.column_next() {
-                        return EventResult::Ignored;
-                    }
-
-                } else {
-                    self.column_select = true;
-                }
             },
             Event::Key(Key::Left) => {
-                if self.column_select {
-                    if !self.column_prev() {
-                        return EventResult::Ignored;
-                    }
-
-                } else {
-                    self.column_select = true;
-                }
             },
-            Event::Key(Key::Up) if self.focus > 0 || self.column_select => {
-                if self.column_select {
-                    self.column_cancel();
-
-                } else {
+            Event::Key(Key::Up) if self.focus > 0  => {
                     self.focus_up(1);
-                }
             },
-            Event::Key(Key::Down) if self.focus + 1 < self.items.len() || self.column_select => {
-                if self.column_select {
-                    self.column_cancel();
-
-                } else {
+            Event::Key(Key::Down) if self.focus + 1 < self.items.len() => {
                     self.focus_down(1);
-                }
             },
             Event::Key(Key::PageUp) => {
-                self.column_cancel();
                 self.focus_up(10);
             },
             Event::Key(Key::PageDown) => {
-                self.column_cancel();
                 self.focus_down(10);
             }
             Event::Key(Key::Home) => {
-                self.column_cancel();
                 self.focus = 0;
             },
             Event::Key(Key::End) => {
-                self.column_cancel();
                 self.focus = self.items.len() - 1;
             },
             Event::Key(Key::Enter) => {
-                if self.column_select {
 
-                    self.column_select();
-
-                    if self.on_sort.is_some() {
-
-                        let c = &self.columns[self.active_column()];
-                        let column = c.column;
-                        let order = c.order;
-
-                        let cb = self.on_sort.clone().unwrap();
-                        return EventResult::Consumed(Some(Callback::from_fn(move |s| {
-                            cb(s, column, order)
-                        })));
-
-                    }
-
-                } else if !self.is_empty() && self.on_submit.is_some() {
+                if !self.is_empty() && self.on_submit.is_some() {
                     let cb = self.on_submit.clone().unwrap();
                     let row = self.row().unwrap();
                     let index = self.item().unwrap();
@@ -814,10 +554,7 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
         let focus = self.focus;
         self.scrollbase.scroll_to(focus);
 
-        if self.column_select {
-            EventResult::Consumed(None)
-
-        } else if !self.is_empty() && last_focus != focus {
+        if !self.is_empty() && last_focus != focus {
             let row = self.row().unwrap();
             let index = self.item().unwrap();
             EventResult::Consumed(self.on_select.clone().map(|cb| {
@@ -837,10 +574,7 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
 /// [`ActionListView`](struct.ActionListView.html).
 pub struct TableColumn<H: Copy + Clone + 'static> {
     column: H,
-    title: String,
-    selected: bool,
     alignment: HAlign,
-    order: Ordering,
     width: usize,
     default_order: Ordering,
     requested_width: Option<TableColumnWidth>,
@@ -878,35 +612,14 @@ impl<H: Copy + Clone + 'static> TableColumn<H> {
         self
     }
 
-    fn new(column: H, title: String) -> Self {
+    fn new(column: H) -> Self {
         Self {
             column,
-            title,
-            selected: false,
             alignment: HAlign::Left,
-            order: Ordering::Equal,
             width: 0,
             default_order: Ordering::Less,
             requested_width: None
         }
-    }
-
-    fn draw_header(&self, printer: &Printer) {
-
-        let order = match self.order {
-            Ordering::Less => "^",
-            Ordering::Greater => "v",
-            Ordering::Equal => " "
-        };
-
-        let header = match self.alignment {
-            HAlign::Left => format!("{:<width$} [{}]", self.title, order, width=self.width.saturating_sub(4)),
-            HAlign::Right => format!("{:>width$} [{}]", self.title, order, width=self.width.saturating_sub(4)),
-            HAlign::Center => format!("{:^width$} [{}]", self.title, order, width=self.width.saturating_sub(4))
-        };
-
-        printer.print((0, 0), header.as_str());
-
     }
 
     fn draw_row(&self, printer: &Printer, value: &str) {
