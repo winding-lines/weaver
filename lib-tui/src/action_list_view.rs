@@ -22,7 +22,7 @@ where
 {
     /// Method returning a string representation of the item for the
     /// specified column from type `H`.
-    fn to_column(&self, column: H, is_focussed: bool) -> String;
+    fn to_column(&self, column: H, is_focussed: bool) -> Option<String>;
 
     /// Method returning true if this item should be render as an important item.
     fn color_style(&self) -> Option<ColorStyle>
@@ -397,7 +397,9 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     fn draw_item(&self, printer: &Printer, i: usize, is_focussed: bool) {
         self.draw_columns(printer, "┆ ", |printer, column| {
             let value = self.items[self.rows_to_items[i]].to_column(column.column, is_focussed);
-            column.draw_row(printer, value.as_str());
+            if let Some(value) = value {
+                column.draw_row(printer, value.as_str());
+            }
         });
     }
 

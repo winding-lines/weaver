@@ -14,23 +14,23 @@ pub enum BasicColumn {
 }
 
 impl ActionListViewItem<BasicColumn> for Row {
-    fn to_column(&self, column: BasicColumn, is_focussed: bool) -> String {
+    fn to_column(&self, column: BasicColumn, is_focussed: bool) -> Option<String> {
         match *self {
             Row::Regular(ref r) => match column {
-                BasicColumn::Name => r.name.to_string(),
+                BasicColumn::Name => Some(r.name.to_string()),
                 BasicColumn::Detail => if is_focussed && r.location.is_some() {
-                    r.location.as_ref().unwrap().clone()
+                    Some(r.location.as_ref().unwrap().clone())
                 } else {
-                    String::new()
+                    None
                 },
             },
             Row::Recommended(ref r) => match column {
-                BasicColumn::Name => r.name.to_string(),
-                BasicColumn::Detail => "recommendation".into(),
+                BasicColumn::Name => Some(r.name.to_string()),
+                BasicColumn::Detail => Some("recommendation".into()),
             },
             Row::Separator => match column {
-                BasicColumn::Name => "----\\ Recommended /-----".to_string(),
-                BasicColumn::Detail => String::new(),
+                BasicColumn::Name => Some("----\\ Recommended /-----".to_string()),
+                BasicColumn::Detail => None,
             },
         }
     }
