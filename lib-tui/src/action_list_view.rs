@@ -1,33 +1,33 @@
 // STD Dependencies -----------------------------------------------------------
-use std::rc::Rc;
-use std::hash::Hash;
 use std::cmp::{self, Ordering};
 use std::collections::HashMap;
-
+use std::hash::Hash;
+use std::rc::Rc;
 
 // External Dependencies ------------------------------------------------------
-use cursive::With;
-use cursive::vec::Vec2;
 use cursive::align::HAlign;
-use cursive::theme::ColorStyle;
-use cursive::{Cursive, Printer};
 use cursive::direction::Direction;
-use cursive::view::{ScrollBase, View};
 use cursive::event::{Callback, Event, EventResult, Key};
-
+use cursive::theme::ColorStyle;
+use cursive::vec::Vec2;
+use cursive::view::{ScrollBase, View};
+use cursive::With;
+use cursive::{Cursive, Printer};
 
 /// A trait for displaying and sorting items inside a
 /// [`ActionListView`](struct.ActionListView.html).
 pub trait ActionListViewItem<H>: Clone + Sized
-    where H: Eq + Hash + Copy + Clone + 'static {
-
+where
+    H: Eq + Hash + Copy + Clone + 'static,
+{
     /// Method returning a string representation of the item for the
     /// specified column from type `H`.
     fn to_column(&self, column: H) -> String;
 
-    /// Method comparing two items via their specified column from type `H`.
-    fn cmp(&self, other: &Self, column: H) -> Ordering where Self: Sized;
-
+    /// Method returning true if this item should be render as an important item.
+    fn color_style(&self) -> Option<ColorStyle>
+    where
+        Self: Sized;
 }
 
 const HEIGHT_SUB: usize = 0;
@@ -47,11 +47,10 @@ pub struct ActionListView<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone 
     // TODO Pass drawing offsets into the handlers so a popup menu
     // can be created easily?
     on_submit: Option<Rc<Fn(&mut Cursive, usize, usize)>>,
-    on_select: Option<Rc<Fn(&mut Cursive, usize, usize)>>
+    on_select: Option<Rc<Fn(&mut Cursive, usize, usize)>>,
 }
 
 impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionListView<T, H> {
-
     /// Creates a new empty `ActionListView` without any columns.
     ///
     /// A ActionListView should be accompanied by a enum of type `H` representing
@@ -70,7 +69,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             rows_to_items: Vec::new(),
 
             on_submit: None,
-            on_select: None
+            on_select: None,
         }
     }
 
@@ -82,8 +81,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     pub fn column<C: FnOnce(TableColumn<H>) -> TableColumn<H>>(
         mut self,
         column: H,
-        callback: C
-
+        callback: C,
     ) -> Self {
         self.column_indicies.insert(column, self.columns.len());
         self.columns.push(callback(TableColumn::new(column)));
@@ -126,7 +124,8 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// });
     /// ```
     pub fn set_on_submit<F>(&mut self, cb: F)
-        where F: Fn(&mut Cursive, usize, usize) + 'static
+    where
+        F: Fn(&mut Cursive, usize, usize) + 'static,
     {
         self.on_submit = Some(Rc::new(move |s, row, index| cb(s, row, index)));
     }
@@ -147,7 +146,8 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// });
     /// ```
     pub fn on_submit<F>(self, cb: F) -> Self
-        where F: Fn(&mut Cursive, usize, usize) + 'static
+    where
+        F: Fn(&mut Cursive, usize, usize) + 'static,
     {
         self.with(|t| t.set_on_submit(cb))
     }
@@ -165,7 +165,8 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// });
     /// ```
     pub fn set_on_select<F>(&mut self, cb: F)
-        where F: Fn(&mut Cursive, usize, usize) + 'static
+    where
+        F: Fn(&mut Cursive, usize, usize) + 'static,
     {
         self.on_select = Some(Rc::new(move |s, row, index| cb(s, row, index)));
     }
@@ -185,7 +186,8 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// });
     /// ```
     pub fn on_select<F>(self, cb: F) -> Self
-        where F: Fn(&mut Cursive, usize, usize) + 'static
+    where
+        F: Fn(&mut Cursive, usize, usize) + 'static,
     {
         self.with(|t| t.set_on_select(cb))
     }
@@ -211,7 +213,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     pub fn row(&self) -> Option<usize> {
         if self.items.is_empty() {
             None
-
         } else {
             Some(self.focus)
         }
@@ -235,7 +236,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// The currently active sort order is preserved and will be applied to all
     /// items.
     pub fn set_items(&mut self, items: Vec<T>) {
-
         self.items = items;
         self.rows_to_items = Vec::with_capacity(self.items.len());
 
@@ -244,7 +244,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
         }
 
         self.set_selected_row(0);
-
     }
 
     /// Sets the contained items of the table.
@@ -285,7 +284,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     pub fn item(&self) -> Option<usize> {
         if self.items.is_empty() {
             None
-
         } else {
             Some(self.rows_to_items[self.focus])
         }
@@ -319,22 +317,19 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// The currently active sort order is preserved and will be applied to the
     /// newly inserted item.
     pub fn insert_item(&mut self, item: T) {
-
         self.items.push(item);
         self.rows_to_items.push(self.items.len());
 
         self.scrollbase.set_heights(
             self.last_size.y.saturating_sub(HEIGHT_SUB),
-            self.rows_to_items.len()
+            self.rows_to_items.len(),
         );
-
     }
 
     /// Removes the item at the specified index within the underlying storage
     /// vector and returns it.
     pub fn remove_item(&mut self, item_index: usize) -> Option<T> {
         if item_index < self.items.len() {
-
             // Move the selection if the currently selected item gets removed
             if let Some(selected_index) = self.item() {
                 if selected_index == item_index {
@@ -355,12 +350,11 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             // Update scroll height to prevent out of index drawing
             self.scrollbase.set_heights(
                 self.last_size.y.saturating_sub(HEIGHT_SUB),
-                self.rows_to_items.len()
+                self.rows_to_items.len(),
             );
 
             // Remove actual item from the underlying storage
             Some(self.items.remove(item_index))
-
         } else {
             None
         }
@@ -368,29 +362,25 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
     /// Removes all items from the underlying storage and returns them.
     pub fn take_items(&mut self) -> Vec<T> {
-        self.scrollbase.set_heights(self.last_size.y.saturating_sub(HEIGHT_SUB), 0);
+        self.scrollbase
+            .set_heights(self.last_size.y.saturating_sub(HEIGHT_SUB), 0);
         self.set_selected_row(0);
         self.rows_to_items.clear();
         self.items.drain(0..).collect()
     }
-
 }
 
 impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionListView<T, H> {
-
     fn draw_columns<C: Fn(&Printer, &TableColumn<H>)>(
         &self,
         printer: &Printer,
         sep: &str,
-        callback: C
+        callback: C,
     ) {
-
         let mut column_offset = 0;
         let column_count = self.columns.len();
         for (index, column) in self.columns.iter().enumerate() {
-
-            let printer = &printer.offset( (column_offset, 0))
-                .cropped( printer.size);
+            let printer = &printer.offset((column_offset, 0)).cropped(printer.size);
 
             callback(printer, column);
 
@@ -399,17 +389,12 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             }
 
             column_offset += column.width + 3;
-
         }
-
     }
 
     fn draw_item(&self, printer: &Printer, i: usize) {
         self.draw_columns(printer, "┆ ", |printer, column| {
-            let value = self.items[
-                self.rows_to_items[i]
-
-            ].to_column(column.column);
+            let value = self.items[self.rows_to_items[i]].to_column(column.column);
             column.draw_row(printer, value.as_str());
         });
     }
@@ -423,35 +408,31 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     }
 }
 
-impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> View for ActionListView<T, H> {
-
+impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> View
+    for ActionListView<T, H>
+{
     fn draw(&self, printer: &Printer) {
-
         let printer = &printer.cropped(printer.size);
         self.scrollbase.draw(printer, |printer, i| {
-
             let color = if i == self.focus {
                 if !self.enabled && printer.focused {
                     ColorStyle::highlight()
-
                 } else {
                     ColorStyle::highlight_inactive()
                 }
-
             } else {
-                ColorStyle::primary()
+                self.items[self.rows_to_items[i]]
+                    .color_style()
+                    .unwrap_or_else(|| ColorStyle::primary())
             };
 
             printer.with_color(color, |printer| {
                 self.draw_item(printer, i);
             });
-
         });
-
     }
 
     fn layout(&mut self, size: Vec2) {
-
         if size == self.last_size {
             return;
         }
@@ -460,16 +441,13 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
         let column_count = self.columns.len();
 
         // Split up all columns into sized / unsized groups
-        let (mut sized, mut usized): (
-            Vec<&mut TableColumn<H>>,
-            Vec<&mut TableColumn<H>>
-
-        ) = self.columns.iter_mut().partition(|c| c.requested_width.is_some());
+        let (mut sized, mut usized): (Vec<&mut TableColumn<H>>, Vec<&mut TableColumn<H>>) =
+            self.columns
+                .iter_mut()
+                .partition(|c| c.requested_width.is_some());
 
         // Subtract one for the seperators between our columns (that's column_count - 1)
-        let mut available_width = size.x.saturating_sub(
-            column_count.saturating_sub(1) * 3
-        );
+        let mut available_width = size.x.saturating_sub(column_count.saturating_sub(1) * 3);
 
         // Reduce the with in case we are displaying a scrollbar
         if size.y.saturating_sub(1) < item_count {
@@ -482,9 +460,9 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
             column.width = match *column.requested_width.as_ref().unwrap() {
                 TableColumnWidth::Percent(width) => cmp::min(
                     (size.x as f32 / 100.0 * width as f32).ceil() as usize,
-                    remaining_width
+                    remaining_width,
                 ),
-                TableColumnWidth::Absolute(width) => width
+                TableColumnWidth::Absolute(width) => width,
             };
             remaining_width = remaining_width.saturating_sub(column.width);
         }
@@ -492,15 +470,12 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
         // Spread the remaining with across the unsized columns
         let remaining_columns = usized.len();
         for column in &mut usized {
-            column.width = (
-                remaining_width as f32 / remaining_columns as f32
-
-            ).floor() as usize;
+            column.width = (remaining_width as f32 / remaining_columns as f32).floor() as usize;
         }
 
-        self.scrollbase.set_heights(size.y.saturating_sub(HEIGHT_SUB), item_count);
+        self.scrollbase
+            .set_heights(size.y.saturating_sub(HEIGHT_SUB), item_count);
         self.last_size = size;
-
     }
 
     fn take_focus(&mut self, _: Direction) -> bool {
@@ -508,37 +483,33 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
     }
 
     fn on_event(&mut self, event: Event) -> EventResult {
-
         if !self.enabled {
             return EventResult::Ignored;
         }
 
         let last_focus = self.focus;
         match event {
-            Event::Key(Key::Right) => {
-            },
-            Event::Key(Key::Left) => {
-            },
-            Event::Key(Key::Up) if self.focus > 0  => {
-                    self.focus_up(1);
-            },
+            Event::Key(Key::Right) => {}
+            Event::Key(Key::Left) => {}
+            Event::Key(Key::Up) if self.focus > 0 => {
+                self.focus_up(1);
+            }
             Event::Key(Key::Down) if self.focus + 1 < self.items.len() => {
-                    self.focus_down(1);
-            },
+                self.focus_down(1);
+            }
             Event::Key(Key::PageUp) => {
                 self.focus_up(10);
-            },
+            }
             Event::Key(Key::PageDown) => {
                 self.focus_down(10);
             }
             Event::Key(Key::Home) => {
                 self.focus = 0;
-            },
+            }
             Event::Key(Key::End) => {
                 self.focus = self.items.len() - 1;
-            },
+            }
             Event::Key(Key::Enter) => {
-
                 if !self.is_empty() && self.on_submit.is_some() {
                     let cb = self.on_submit.clone().unwrap();
                     let row = self.row().unwrap();
@@ -547,8 +518,8 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
                         cb(s, row, index)
                     })));
                 }
-            },
-            _ => return EventResult::Ignored
+            }
+            _ => return EventResult::Ignored,
         }
 
         let focus = self.focus;
@@ -557,18 +528,16 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
         if !self.is_empty() && last_focus != focus {
             let row = self.row().unwrap();
             let index = self.item().unwrap();
-            EventResult::Consumed(self.on_select.clone().map(|cb| {
-                Callback::from_fn(move |s| cb(s, row, index))
-            }))
-
+            EventResult::Consumed(
+                self.on_select
+                    .clone()
+                    .map(|cb| Callback::from_fn(move |s| cb(s, row, index))),
+            )
         } else {
             EventResult::Ignored
         }
-
     }
-
 }
-
 
 /// A type used for the construction of columns in a
 /// [`ActionListView`](struct.ActionListView.html).
@@ -582,11 +551,10 @@ pub struct TableColumn<H: Copy + Clone + 'static> {
 
 enum TableColumnWidth {
     Percent(usize),
-    Absolute(usize)
+    Absolute(usize),
 }
 
 impl<H: Copy + Clone + 'static> TableColumn<H> {
-
     /// Sets the default ordering of the column.
     pub fn ordering(mut self, order: Ordering) -> Self {
         self.default_order = order;
@@ -618,21 +586,17 @@ impl<H: Copy + Clone + 'static> TableColumn<H> {
             alignment: HAlign::Left,
             width: 0,
             default_order: Ordering::Less,
-            requested_width: None
+            requested_width: None,
         }
     }
 
     fn draw_row(&self, printer: &Printer, value: &str) {
-
         let value = match self.alignment {
-            HAlign::Left => format!("{:<width$} ", value, width=self.width),
-            HAlign::Right => format!("{:>width$} ", value, width=self.width),
-            HAlign::Center => format!("{:^width$} ", value, width=self.width)
+            HAlign::Left => format!("{:<width$} ", value, width = self.width),
+            HAlign::Right => format!("{:>width$} ", value, width = self.width),
+            HAlign::Center => format!("{:^width$} ", value, width = self.width),
         };
 
         printer.print((0, 0), value.as_str());
-
     }
-
 }
-

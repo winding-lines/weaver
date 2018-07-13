@@ -42,6 +42,7 @@ pub fn epic_names(destination: &Destination) -> Result<Vec<Epic>> {
     )
 }
 
+#[allow(dead_code)]
 pub fn set_annotation(destination: &Destination, id: u64, content: &str) -> Result<u64> {
     dispatch!(destination,
         client::rest::set_annotation, (id, content)

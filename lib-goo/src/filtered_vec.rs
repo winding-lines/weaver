@@ -1,10 +1,11 @@
-/// Provide a filtered view on top of a vector of FormattedActions.
-/// Will generalize as needed.
-use entities::FormattedAction;
+/// Provide a filtered view on top of a vector of items.
 use regex::Regex;
 
-pub struct FilteredVec {
-    content: Vec<FormattedAction>,
+pub trait FilteredItem {
+    fn is_match(&self, regex: &Regex) -> bool;
+}
+pub struct FilteredVec<T> {
+    content: Vec<T>,
     rows: usize,
 }
 
@@ -18,26 +19,21 @@ struct Matcher {
 
 impl Matcher {
     pub fn build(s: &str) -> Matcher {
-        Matcher {
-            r: str_to_regex(s),
-        }
+        Matcher { r: str_to_regex(s) }
     }
 
-    fn is_match(&self, fa: &FormattedAction) -> bool {
-        self.r.is_match(&fa.name)
+    fn is_match<F: FilteredItem>(&self, fa: &F) -> bool {
+        fa.is_match(&self.r)
     }
 }
 
-
-impl FilteredVec {
-    pub fn new(content: Vec<FormattedAction>, rows: usize) -> FilteredVec {
-        FilteredVec {
-            content,
-            rows,
-        }
+impl<T: FilteredItem + Clone + Default>
+ FilteredVec<T> {
+    pub fn new(content: Vec<T>, rows: usize) -> FilteredVec<T> {
+        FilteredVec { content, rows }
     }
 
-    pub fn get(&self, i: usize) -> Option<FormattedAction> {
+    pub fn get(&self, i: usize) -> Option<T> {
         self.content.get(i).cloned()
     }
 
@@ -85,9 +81,8 @@ impl FilteredVec {
 
     /// Build a vector with the entries that match this filter.
     /// For None returns a new vector.
-    pub fn filter(&self, filter: Option<&str>) -> Vec<FormattedAction> {
-        let mut content: Vec<FormattedAction> = Vec::new();
-
+    pub fn filter(&self, filter: Option<&str>) -> Vec<T> {
+        let mut content: Vec<T> = Vec::new();
 
         if let Some(f) = filter {
             let matcher = Matcher::build(f);
@@ -102,17 +97,25 @@ impl FilteredVec {
 
         // Make sure content is at the bottom of the screen
         while content.len() < self.rows {
-            content.insert(0, FormattedAction::default())
-        };
+            content.insert(0, T::default())
+        }
 
         content
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[derive(Clone, Default)]
+    struct Name(String);
+
+    impl FilteredItem for Name {
+        fn is_match(&self, regex: &Regex) -> bool {
+            regex.is_match(&self.0)
+        }
+    }
 
     #[test]
     fn test_filtered_prev() {
@@ -138,22 +141,18 @@ mod tests {
         let table = build_table();
         let filtered = table.filter(Some("z"));
 
-        assert_eq!(2, filtered.len(), "always have the required number of entries, even if no matches");
-        assert_eq!("", filtered[0].name, "when no matches the name is empty");
+        assert_eq!(
+            2,
+            filtered.len(),
+            "always have the required number of entries, even if no matches"
+        );
+        assert_eq!("", filtered[0].0, "when no matches the name is empty");
     }
 
     #[test]
     fn test_match_simple_string() {
-        let abc = FormattedAction {
-            name: "abc".into(),
-            id: 0,
-            ..Default::default()
-        };
-        let def = FormattedAction {
-            name: "def".into(),
-            id: 1,
-            ..Default::default()
-        };
+        let abc = Name("abc".into());
+        let def = Name("def".into());
         let matcher = Matcher::build("e");
         assert_eq!(true, matcher.is_match(&def), "'e' matches 'def'");
         assert_eq!(false, matcher.is_match(&abc), "'e' does not match 'abc'");
@@ -161,11 +160,7 @@ mod tests {
 
     #[test]
     fn test_match_regex() {
-        let abc = FormattedAction {
-            name: "abc".into(),
-            id: 0,
-            ..Default::default()
-        };
+        let abc = Name("abc".into());
         let matcher = Matcher::build("^b");
         assert_eq!(false, matcher.is_match(&abc), "'^b' does not match 'abc'");
         let matcher = Matcher::build("c$");
@@ -174,18 +169,13 @@ mod tests {
         assert_eq!(true, matcher.is_match(&abc), "'a.*c' matches 'abc'");
     }
 
-    fn build_table() -> FilteredVec {
-        FilteredVec::new(vec![
-            FormattedAction {
-                name: "abc".into(),
-                id: 0,
-                ..Default::default()
-            },
-            FormattedAction {
-                name: "abcde".into(),
-                id: 1,
-                ..Default::default()
-            },
-        ], 2)
+    fn build_table() -> FilteredVec<Name> {
+        FilteredVec::new(
+            vec![
+                Name("abc".into()),
+                Name("abcde".into()),
+            ],
+            2,
+        )
     }
 }

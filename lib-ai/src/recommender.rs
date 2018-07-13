@@ -1,6 +1,12 @@
 /// Build a list of recommended actions from the historical list of actions and current context.
 use lib_goo::entities::FormattedAction;
 
+fn to_recommended(action: &FormattedAction) -> FormattedAction {
+    let mut out = action.clone();
+    out.id = 0;
+    out
+}
+
 // The following will be returned:
 // - Previous folder unless there is just one command in the current folder,
 //   in that case return the folder before.
@@ -9,27 +15,14 @@ use lib_goo::entities::FormattedAction;
 // - Find the earlier instances of the last command and return the most recent
 //   and most frequent commands.
 
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub struct RecommendedAction {
-    pub name: String,
-}
-
-impl RecommendedAction {
-    fn from(fa: &FormattedAction) -> RecommendedAction {
-        RecommendedAction {
-            name: fa.name.clone(),
-        }
-    }
-}
-
-pub fn recommend(history: &[FormattedAction]) -> Vec<RecommendedAction> {
+pub fn recommend(history: &[FormattedAction]) -> Vec<FormattedAction> {
     let mut out = Vec::new();
     if history.is_empty() {
         return out;
     }
     let recent_1 = history.last().unwrap();
     if history.len() == 1 {
-        out.push(RecommendedAction::from(&recent_1));
+        out.push(to_recommended(recent_1));
         return out;
     }
     // find earlier instances of the current actions and recommend the one following it,
@@ -46,7 +39,7 @@ pub fn recommend(history: &[FormattedAction]) -> Vec<RecommendedAction> {
         }
     }
     if let Some(earlier) = earlier {
-        out.push(RecommendedAction::from(earlier))
+        out.push(to_recommended(earlier))
     }
 
     out

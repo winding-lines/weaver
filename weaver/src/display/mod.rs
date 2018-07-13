@@ -9,13 +9,13 @@ use lib_ai::recommender;
 use lib_error::*;
 use lib_goo::config::{Destination, Environment, OutputKind};
 use lib_goo::entities::FormattedAction;
-use lib_goo::FilteredVec;
+use lib_goo::filtered_vec::{FilteredVec, FilteredItem};
+use regex::Regex;
 use std::sync::Arc;
 
 mod history_view;
 mod output_selector;
 mod processor;
-mod recommend_view;
 
 const MARGIN_X: usize = 7;
 
@@ -60,12 +60,14 @@ fn create_command_edit(tx: chan::Sender<Msg>) -> EditView {
     })
 }
 
+/*
 fn create_annotation_edit(tx: chan::Sender<Msg>) -> EditView {
     EditView::new().on_submit(move |_: &mut Cursive, content: &str| {
         let message = Msg::AnnotationSubmit(Some(String::from(content)));
         send(&tx, message);
     })
 }
+*/
 
 fn setup_global_keys(siv: &mut Cursive, ch: chan::Sender<Msg>) {
     let mapping = vec![
@@ -85,6 +87,47 @@ fn setup_global_keys(siv: &mut Cursive, ch: chan::Sender<Msg>) {
     });
 }
 
+/// Enum used to represent historical and recommended actions for the UI.
+#[derive(Clone, Debug)]
+pub enum Row {
+    Regular(FormattedAction),
+    Recommended(FormattedAction),
+    Separator,
+}
+
+impl Default for Row {
+    fn default() -> Row {
+        Row::Regular(FormattedAction::default())
+    }
+}
+
+impl FilteredItem for Row {
+    fn is_match(&self, regex: &Regex) -> bool {
+        match *self {
+            Row::Regular(ref fa) => regex.is_match(&fa.name),
+            _ => true 
+        }
+    }
+}
+
+impl Row {
+
+    /// Build the final list of actions by augmenting the historical ones with the recommended ones.
+    fn build(initial: Vec<FormattedAction>) -> Vec<Row> {
+        let recommended = recommender::recommend(&initial);
+        debug!("Got {} recommended entries, first {:?}", recommended.len(), recommended.first());
+        let mut rows = Vec::with_capacity(initial.len() + recommended.len() + 1);
+        for i in initial {
+            rows.push(Row::Regular(i));
+        }
+        rows.push(Row::Separator);
+        for i in recommended {
+            rows.push(Row::Recommended(i));
+        }
+        rows
+    }
+}
+
 /// Display the UI which allows the user to exlore and select one of the options.
 pub fn main_screen(
     actions: Vec<FormattedAction>,
@@ -92,6 +135,7 @@ pub fn main_screen(
     env: Arc<Environment>,
     destination: &Destination,
 ) -> Result<UserSelection> {
+    debug!("Entering main screen with {} actions, first {:?}", actions.len(), actions.first());
     // initialize cursive
     let mut siv = create_cursive();
 
@@ -99,13 +143,9 @@ pub fn main_screen(
     let screen = siv.screen_size();
     let content_height = (screen.y - 9) as usize;
 
-    // Recommendation table
-    let recommend_height = content_height;
-    let recommend_width = 30;
-
     // History table, the current margin constants found by experimentation.
     let history_height = content_height;
-    let history_width = (screen.x - recommend_width - MARGIN_X) as usize;
+    let history_width = (screen.x - MARGIN_X) as usize;
 
     // communication channels between views and data processor.
     let (process_tx, process_rx) = chan::sync(0);
@@ -114,7 +154,8 @@ pub fn main_screen(
     let (submit_tx, submit_rx) = chan::sync(0);
 
     // Build the main components: table and processor.
-    let table = FilteredVec::new(actions, history_height);
+    let rows = Row::build(actions);
+    let table = FilteredVec::new(rows, history_height);
     let initial = table.filter(None);
 
     let processor_thread = processor::ProcessorThread {
@@ -130,23 +171,11 @@ pub fn main_screen(
 
     let processor = processor_thread.spawn();
 
-    let recommended = recommender::recommend(&initial);
     // build the table pane
-    let mut content = LinearLayout::horizontal();
-    content.add_child(
-        history_view::create_view(initial, &process_tx)
-            .with_id("actions")
-            .min_height(history_height)
-            .fixed_width(history_width),
-    );
-    content.add_child(BoxView::with_fixed_size((4, 0), DummyView));
-    // build the recommendation pane
-    content.add_child(
-        recommend_view::create_view(recommended, &process_tx)
-            .with_id("recommend")
-            .min_height(recommend_height)
-            .fixed_width(recommend_width),
-    );
+    let content = history_view::create_view(initial, &process_tx)
+        .with_id("actions")
+        .min_height(history_height)
+        .fixed_width(history_width);
 
     // Assemble the table pane with the bottom fields
     let mut layout = LinearLayout::vertical();
@@ -174,6 +203,7 @@ pub fn main_screen(
     layout.add_child(command_pane);
 
     // build the annotation pane
+    /*
     let annotation_pane = LinearLayout::horizontal()
         .child(TextView::new("Annotate:     "))
         .child(
@@ -182,6 +212,7 @@ pub fn main_screen(
                 .min_width((screen.x - 50) as usize),
         );
     layout.add_child(annotation_pane);
+    */
 
     // build the output kind UI
     let mut output_pane = LinearLayout::horizontal();

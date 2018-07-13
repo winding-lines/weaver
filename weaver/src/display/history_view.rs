@@ -1,56 +1,64 @@
+use super::processor::Msg;
+use super::Row;
 /// The table view for the history.
 use chan;
 use cursive::align::HAlign;
+use cursive::theme::ColorStyle;
 use cursive::Cursive;
 use lib_tui::{ActionListView, ActionListViewItem};
-use std::cmp::Ordering;
-use super::processor::Msg;
-use lib_goo::entities::FormattedAction;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum BasicColumn {
-    Annotation,
     Index,
-    //Epic,
-    //Kind,
     Name,
 }
 
-impl ActionListViewItem<BasicColumn> for FormattedAction {
+impl ActionListViewItem<BasicColumn> for Row {
     fn to_column(&self, column: BasicColumn) -> String {
-        match column {
-            BasicColumn::Annotation => self.annotation.as_ref().map_or(String::from(""), |s| s.to_string()),
-            BasicColumn::Index => if self.id != 0 { format!("{}", self.id) } else { String::from("") },
-            //BasicColumn::Epic => self.epic.as_ref().map_or(String::from(""), |s| s.to_string()),
-            //BasicColumn::Kind => self.kind.to_string(),
-            BasicColumn::Name => self.name.to_string(),
+        match *self {
+            Row::Regular(ref r) => match column {
+                BasicColumn::Index => if r.id != 0 {
+                    format!("{}", r.id)
+                } else {
+                    String::new()
+                },
+                BasicColumn::Name => r.name.to_string(),
+            },
+            Row::Recommended(ref r) => match column {
+                BasicColumn::Index => if r.id != 0 {
+                    format!("{}", r.id)
+                } else {
+                    String::new()
+                },
+                BasicColumn::Name => r.name.to_string()
+            },
+            Row::Separator => match column {
+                BasicColumn::Index => String::new(),
+                BasicColumn::Name => "----\\ Recommended /-----".to_string(),
+            }
         }
     }
 
-    fn cmp(&self, other: &Self, column: BasicColumn) -> Ordering where Self: Sized {
-        match column {
-            BasicColumn::Annotation => self.annotation.cmp(&other.annotation),
-            BasicColumn::Index => self.id.cmp(&other.id),
-            //BasicColumn::Epic => self.epic.cmp(&other.epic),
-            //BasicColumn::Kind => self.kind.cmp(&other.kind),
-            BasicColumn::Name => self.name.cmp(&other.name),
+    fn color_style(&self) -> Option<ColorStyle> {
+        match self {
+            Row::Recommended(_) => Some(ColorStyle::secondary()),
+            Row::Regular(_) => Some(ColorStyle::primary()),
+            Row::Separator => Some(ColorStyle::secondary()),
         }
     }
 }
 
 // An alias for the table view.
-pub type TView = ActionListView<FormattedAction, BasicColumn>;
+pub type TView = ActionListView<Row, BasicColumn>;
 
 // Create the Cursive table for actions.
-pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &chan::Sender<Msg>) -> TView {
+pub fn create_view(initial: Vec<Row>, processor_tx: &chan::Sender<Msg>) -> TView {
     let mut view = TView::new()
-        .column(BasicColumn::Index, |c| c.width(6))
-        //.column(BasicColumn::Kind, |c| c.align(HAlign::Left).width(1))
-        //.column(BasicColumn::Epic, |c| c.align(HAlign::Left).width(6))
+        //.column(BasicColumn::Index, |c| c.width(6))
         .column(BasicColumn::Name, |c| c.align(HAlign::Left))
-        //.column(BasicColumn::Annotation, |c| c.align(HAlign::Left).width(10))
         ;
 
+    debug!("Entering create_view with {} entries", initial.len());
     // Select the current entry when 'enter' is pressed, then end the application.
     {
         let view_tx = processor_tx.clone();
@@ -85,7 +93,7 @@ pub fn create_view(initial: Vec<FormattedAction>, processor_tx: &chan::Sender<Ms
 }
 
 // Display and redisplay the content, for example when the filter changes.
-pub fn redisplay(view: &mut TView, content: Vec<FormattedAction>) {
+pub fn redisplay(view: &mut TView, content: Vec<Row>) {
     view.clear();
     let select = content.len();
     view.set_items(content);
@@ -93,5 +101,3 @@ pub fn redisplay(view: &mut TView, content: Vec<FormattedAction>) {
         view.set_selected_row(select - 1);
     }
 }
-
-

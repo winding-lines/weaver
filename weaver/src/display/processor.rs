@@ -1,14 +1,14 @@
-use cursive::{CbFunc as CursiveCbFunc, Cursive};
+use super::output_selector;
+use super::Row;
+use super::{history_view, FormattedAction, UserSelection};
+use chan;
 use cursive::views::EditView;
+use cursive::{CbFunc as CursiveCbFunc, Cursive};
+use lib_goo::config::Destination;
+use lib_goo::{config, FilteredVec};
 use local_api;
 use std::sync::{Arc, Mutex};
-use chan;
 use std::thread;
-use super::{FormattedAction, history_view, UserSelection};
-use super::output_selector;
-use lib_goo::{config, FilteredVec};
-use lib_goo::config::Destination;
-
 
 /// Message types sent to the selection processor
 #[derive(Clone)]
@@ -16,8 +16,8 @@ pub enum Msg {
     ExtractState,
 
     // Events from the table
-    Selection(Option<FormattedAction>),
-    TableSubmit(Option<FormattedAction>),
+    Selection(Option<Row>),
+    TableSubmit(Option<Row>),
 
     // Events from the filter edit view
     Filter(String),
@@ -30,7 +30,7 @@ pub enum Msg {
     CommandSubmit(Option<String>),
 
     // Events from the annotation edit view
-    AnnotationSubmit(Option<String>),
+    // AnnotationSubmit(Option<String>),
 
     // Global events
     ShowOutputSelector,
@@ -46,8 +46,9 @@ struct Processor {
     // output_kind needs to be accessed from multiple threads.
     pub output_kind: Arc<Mutex<config::OutputKind>>,
     pub env: Arc<config::Environment>,
+    #[allow(dead_code)]
     destination: Destination,
-    table: FilteredVec,
+    table: FilteredVec<Row>,
     // current search/filter string
     search_string: Option<String>,
     cursive_sink: chan::Sender<Box<CursiveCbFunc>>,
@@ -58,11 +59,13 @@ struct Processor {
 impl Processor {
     fn _update_ui(&mut self) {
         // Build the content to display.
-        let content = self.formatted_action.as_ref().map(|f| {
-            let data = self.output_kind.lock().unwrap();
-            f.clone().into_shell_command(&(*data).content, &self.env)
-        }).unwrap_or_else(String::new);
-
+        let content = self.formatted_action
+            .as_ref()
+            .map(|f| {
+                let data = self.output_kind.lock().unwrap();
+                f.clone().into_shell_command(&(*data).content, &self.env)
+            })
+            .unwrap_or_else(String::new);
 
         // Update the UI
         let update_command = move |siv: &mut Cursive| {
@@ -73,8 +76,12 @@ impl Processor {
         self.cursive_sink.send(Box::new(update_command));
     }
 
-    fn select_action(&mut self, selection: Option<FormattedAction>) {
-        self.formatted_action = selection;
+    fn select_action(&mut self, selection: Option<Row>) {
+        self.formatted_action = match selection {
+            Some(Row::Recommended(r)) => Some(r),
+            Some(Row::Regular(r)) => Some(r),
+            _ => None,
+        };
         self._update_ui();
     }
 
@@ -137,12 +144,13 @@ impl Processor {
     }
 
     fn jump_to_next(&mut self) {
-        debug!("jumpToNext, search {:?} current {:?} ", self.search_string, self.formatted_action);
+        debug!(
+            "jumpToNext, search {:?} current {:?} ",
+            self.search_string, self.formatted_action
+        );
         let maybe_pos = match (self.search_string.as_ref(), self.formatted_action.as_ref()) {
-            (Some(search), Some(action)) => {
-                self.table.find_next(search, action.id - 1)
-            }
-            _ => None
+            (Some(search), Some(action)) => self.table.find_next(search, action.id - 1),
+            _ => None,
         };
         if let Some(new_pos) = maybe_pos {
             self.set_selected_row(new_pos);
@@ -150,12 +158,13 @@ impl Processor {
     }
 
     fn jump_to_prev(&mut self) {
-        debug!("jumpToPrev, search {:?} current {:?} ", self.search_string, self.formatted_action);
+        debug!(
+            "jumpToPrev, search {:?} current {:?} ",
+            self.search_string, self.formatted_action
+        );
         let maybe_pos = match (self.search_string.as_ref(), self.formatted_action.as_ref()) {
-            (Some(search), Some(action)) => {
-                self.table.find_previous(search, action.id - 1)
-            }
-            _ => None
+            (Some(search), Some(action)) => self.table.find_previous(search, action.id - 1),
+            _ => None,
         };
         if let Some(new_pos) = maybe_pos {
             self.set_selected_row(new_pos);
@@ -173,6 +182,7 @@ impl Processor {
         self.cursive_sink.send(Box::new(show_kind));
     }
 
+    #[allow(dead_code)]
     fn set_annotation(&self, annotation: &str) {
         if let Some(selection) = self.formatted_action.as_ref() {
             local_api::set_annotation(&self.destination, selection.id as u64, annotation)
@@ -192,7 +202,7 @@ impl Processor {
 /// - owns the current selections, receives and processes selection events
 /// - refreshes the UI with the filtered data or selection
 pub struct ProcessorThread {
-    pub table: FilteredVec,
+    pub table: FilteredVec<Row>,
     pub kind: config::OutputKind,
     pub env: Arc<config::Environment>,
     pub destination: Destination,
@@ -202,10 +212,8 @@ pub struct ProcessorThread {
     pub cursive_sink: chan::Sender<Box<CursiveCbFunc>>,
 }
 
-
 impl ProcessorThread {
-    pub fn spawn(self)
-              -> thread::JoinHandle<()> {
+    pub fn spawn(self) -> thread::JoinHandle<()> {
         thread::spawn(move || {
             let mut processor = Processor {
                 table: self.table,
@@ -232,20 +240,27 @@ impl ProcessorThread {
                     }
 
                     Some(Msg::FilterSubmit) => {
-                        debug!("Exiting in FilterSubmit, selection {:?}", processor.formatted_action);
+                        debug!(
+                            "Exiting in FilterSubmit, selection {:?}",
+                            processor.formatted_action
+                        );
                         processor.exit();
                     }
 
+                    /*
                     Some(Msg::AnnotationSubmit(f)) => {
                         let input = f.as_ref().map(|s| s.as_str());
                         let content = input.unwrap_or("");
                         processor.set_annotation(content);
-                    }
+                    }*/
 
                     Some(Msg::CommandSubmit(f)) => {
                         // Handle a string submitted from the command box.
                         processor.submit_command(f);
-                        debug!("Exiting in EditSubmit, selection {:?}", processor.formatted_action);
+                        debug!(
+                            "Exiting in EditSubmit, selection {:?}",
+                            processor.formatted_action
+                        );
                         processor.exit();
                     }
 
@@ -279,10 +294,9 @@ impl ProcessorThread {
                         });
                         return;
                     }
-                    None => debug!("received None message")
+                    None => debug!("received None message"),
                 }
             }
         })
     }
 }
-

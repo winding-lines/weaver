@@ -3,6 +3,7 @@
 
 // Crate Dependencies ---------------------------------------------------------
 extern crate cursive;
+extern crate regex;
 
 mod action_list_view;
 

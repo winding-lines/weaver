@@ -16,7 +16,7 @@ extern crate lib_error;
 
 pub use self::filtered_vec::FilteredVec;
 
-mod filtered_vec;
+pub mod filtered_vec;
 pub mod entities;
 pub mod config;
 
