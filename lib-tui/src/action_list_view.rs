@@ -42,7 +42,6 @@ pub struct ActionListView<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone 
 
     focus: usize,
     items: Vec<T>,
-    rows_to_items: Vec<usize>,
 
     // TODO Pass drawing offsets into the handlers so a popup menu
     // can be created easily?
@@ -66,7 +65,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
             focus: 0,
             items: Vec::new(),
-            rows_to_items: Vec::new(),
 
             on_submit: None,
             on_select: None,
@@ -195,7 +193,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// Removes all items from this view.
     pub fn clear(&mut self) {
         self.items.clear();
-        self.rows_to_items.clear();
         self.focus = 0;
     }
 
@@ -237,11 +234,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// items.
     pub fn set_items(&mut self, items: Vec<T>) {
         self.items = items;
-        self.rows_to_items = Vec::with_capacity(self.items.len());
-
-        for i in 0..self.items.len() {
-            self.rows_to_items.push(i);
-        }
 
         self.set_selected_row(0);
     }
@@ -285,7 +277,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
         if self.items.is_empty() {
             None
         } else {
-            Some(self.rows_to_items[self.focus])
+            Some(self.focus)
         }
     }
 
@@ -294,13 +286,8 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     pub fn set_selected_item(&mut self, item_index: usize) {
         // TODO optimize the performance for very large item lists
         if item_index < self.items.len() {
-            for (row, item) in self.rows_to_items.iter().enumerate() {
-                if *item == item_index {
-                    self.focus = row;
-                    self.scrollbase.scroll_to(row);
-                    break;
-                }
-            }
+            self.focus = item_index;
+            self.scrollbase.scroll_to(item_index);
         }
     }
 
@@ -318,11 +305,10 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// newly inserted item.
     pub fn insert_item(&mut self, item: T) {
         self.items.push(item);
-        self.rows_to_items.push(self.items.len());
 
         self.scrollbase.set_heights(
             self.last_size.y.saturating_sub(HEIGHT_SUB),
-            self.rows_to_items.len(),
+            self.items.len(),
         );
     }
 
@@ -337,20 +323,10 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
                 }
             }
 
-            // Remove the sorted reference to the item
-            self.rows_to_items.retain(|i| *i != item_index);
-
-            // Adjust remaining references
-            for ref_index in &mut self.rows_to_items {
-                if *ref_index > item_index {
-                    *ref_index -= 1;
-                }
-            }
-
             // Update scroll height to prevent out of index drawing
             self.scrollbase.set_heights(
                 self.last_size.y.saturating_sub(HEIGHT_SUB),
-                self.rows_to_items.len(),
+                self.items.len() - 1,
             );
 
             // Remove actual item from the underlying storage
@@ -365,7 +341,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
         self.scrollbase
             .set_heights(self.last_size.y.saturating_sub(HEIGHT_SUB), 0);
         self.set_selected_row(0);
-        self.rows_to_items.clear();
         self.items.drain(0..).collect()
     }
 }
@@ -374,12 +349,11 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     fn draw_columns<C: Fn(&Printer, &TableColumn<H>)>(
         &self,
         printer: &Printer,
-        sep: &str,
+        _sep: &str,
         callback: C,
     ) {
         let mut column_offset = 0;
-        let column_count = self.columns.len();
-        for (index, column) in self.columns.iter().enumerate() {
+        for column in self.columns.iter() {
             let printer = &printer.offset((column_offset, 0)).cropped(printer.size);
 
             callback(printer, column);
@@ -396,7 +370,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
     fn draw_item(&self, printer: &Printer, i: usize, is_focussed: bool) {
         self.draw_columns(printer, "┆ ", |printer, column| {
-            let value = self.items[self.rows_to_items[i]].to_column(column.column, is_focussed);
+            let value = self.items[i].to_column(column.column, is_focussed);
             if let Some(value) = value {
                 column.draw_row(printer, value.as_str());
             }
@@ -425,7 +399,7 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
                     ColorStyle::highlight_inactive()
                 }
             } else {
-                self.items[self.rows_to_items[i]]
+                self.items[i]
                     .color_style()
                     .unwrap_or_else(|| ColorStyle::primary())
             };
