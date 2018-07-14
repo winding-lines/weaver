@@ -362,9 +362,10 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             if index < column_count - 1 {
                 printer.print((column.width + 1, 0), sep);
             }
+            column_offset += column.width + 2;
             */
 
-            column_offset += column.width + 3;
+            column_offset += column.width + 1;
         }
     }
 
@@ -467,7 +468,9 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
 
         let last_focus = self.focus;
         match event {
-            Event::Key(Key::Right) => {}
+            Event::Key(Key::Right) => {
+
+            }
             Event::Key(Key::Left) => {}
             Event::Key(Key::Up) if self.focus > 0 => {
                 self.focus_up(1);

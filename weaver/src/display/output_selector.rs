@@ -1,4 +1,4 @@
-use chan;
+use crossbeam_channel as channel;
 use cursive::Cursive;
 use cursive::event::{Event, Key};
 use cursive::view::Margins;
@@ -45,7 +45,7 @@ fn create_radio_group<T>(container: &mut LinearLayout, values: Vec<T>, initial: 
 }
 
 /// Display the Outpu selector with the current state selected.
-pub fn show_output_selection(siv: &mut Cursive, kind: &OutputKind, ch: &chan::Sender<Msg>) {
+pub fn show_output_selection(siv: &mut Cursive, kind: &OutputKind, ch: &channel::Sender<Msg>) {
     let mut output_pane = LinearLayout::vertical();
 
     output_pane.add_child(TextView::new("Output content:"));

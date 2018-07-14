@@ -15,10 +15,10 @@
 //! The shell process manages the current epic in a local json store and reads the rest
 //! of the information from the [weaver-server](../../weaver_server/index.html).
 //!
-extern crate chan;
 extern crate chrono;
 extern crate clap;
 extern crate clipboard;
+extern crate crossbeam_channel;
 extern crate cursive;
 extern crate env_logger;
 #[macro_use]
@@ -38,16 +38,16 @@ extern crate lib_rpc;
 extern crate lib_tui;
 
 mod cli;
-mod display;
 mod controllers;
+mod display;
 mod local_api;
 mod local_store;
 
 fn main() {
     // Setup the logger on the env variable WEAVER.
     // This allows one to do `export WEAVER=debug` to get a lot more errors.
-    use std::env;
     use env_logger::{Builder, Target};
+    use std::env;
 
     // Use the builder api for more flexibility.
     let mut builder = Builder::new();

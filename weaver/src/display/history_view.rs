@@ -1,7 +1,7 @@
 use super::processor::Msg;
 use super::Row;
 /// The table view for the history.
-use chan;
+use crossbeam_channel as channel;
 use cursive::align::HAlign;
 use cursive::theme::ColorStyle;
 use cursive::Cursive;
@@ -48,7 +48,7 @@ impl ActionListViewItem<BasicColumn> for Row {
 pub type TView = ActionListView<Row, BasicColumn>;
 
 // Create the Cursive table for actions.
-pub fn create_view(initial: Vec<Row>, processor_tx: &chan::Sender<Msg>) -> TView {
+pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TView {
     let mut view = TView::new()
         .column(BasicColumn::Name, |c| c.align(HAlign::Left).width_percent(70))
         .column(BasicColumn::Detail, |c| c.align(HAlign::Right));

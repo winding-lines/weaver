@@ -1,6 +1,6 @@
 use super::processor::{self, Msg};
-use super::{Row, history_view, UserSelection};
-use chan;
+use super::{history_view, Row, UserSelection};
+use crossbeam_channel as channel;
 use cursive::event::{Event, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
 use cursive::traits::*;
@@ -28,11 +28,11 @@ fn create_cursive() -> Cursive {
     siv
 }
 
-fn send(tx: &chan::Sender<Msg>, msg: Msg) {
+fn send(tx: &channel::Sender<Msg>, msg: Msg) {
     tx.send(msg);
 }
 
-fn create_filter_edit(tx: chan::Sender<Msg>) -> EditView {
+fn create_filter_edit(tx: channel::Sender<Msg>) -> EditView {
     let tx2 = tx.clone();
     EditView::new()
         .on_edit(move |_: &mut Cursive, text: &str, _position: usize| {
@@ -43,7 +43,7 @@ fn create_filter_edit(tx: chan::Sender<Msg>) -> EditView {
         })
 }
 
-fn create_command_edit(tx: chan::Sender<Msg>) -> EditView {
+fn create_command_edit(tx: channel::Sender<Msg>) -> EditView {
     EditView::new().on_submit(move |_: &mut Cursive, content: &str| {
         let message = Msg::CommandSubmit(Some(String::from(content)));
         send(&tx, message);
@@ -51,7 +51,7 @@ fn create_command_edit(tx: chan::Sender<Msg>) -> EditView {
 }
 
 /*
-fn create_annotation_edit(tx: chan::Sender<Msg>) -> EditView {
+fn create_annotation_edit(tx: channel::Sender<Msg>) -> EditView {
     EditView::new().on_submit(move |_: &mut Cursive, content: &str| {
         let message = Msg::AnnotationSubmit(Some(String::from(content)));
         send(&tx, message);
@@ -59,7 +59,7 @@ fn create_annotation_edit(tx: chan::Sender<Msg>) -> EditView {
 }
 */
 
-fn setup_global_keys(siv: &mut Cursive, ch: chan::Sender<Msg>) {
+fn setup_global_keys(siv: &mut Cursive, ch: channel::Sender<Msg>) {
     let mapping = vec![
         (Event::CtrlChar('g'), Msg::JumpToSelection),
         (Event::CtrlChar('p'), Msg::JumpToPrevMatch),
@@ -101,10 +101,10 @@ pub fn display(
     let history_width = (screen.x - MARGIN_X) as usize;
 
     // communication channels between views and data processor.
-    let (process_tx, process_rx) = chan::sync(0);
+    let (process_tx, process_rx) = channel::bounded(10);
 
     // communication channel between processor and main function
-    let (submit_tx, submit_rx) = chan::sync(0);
+    let (submit_tx, submit_rx) = channel::bounded(10);
 
     // Build the main components: table and processor.
     let rows = Row::build(actions);

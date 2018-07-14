@@ -1,7 +1,7 @@
 use super::output_selector;
 use super::Row;
 use super::{history_view,  UserSelection};
-use chan;
+use crossbeam_channel as channel;
 use cursive::views::EditView;
 use cursive::{CbFunc as CursiveCbFunc, Cursive};
 use lib_goo::config::Destination;
@@ -52,9 +52,9 @@ struct Processor {
     table: FilteredVec<Row>,
     // current search/filter string
     search_string: Option<String>,
-    cursive_sink: chan::Sender<Box<CursiveCbFunc>>,
+    cursive_sink: channel::Sender<Box<CursiveCbFunc>>,
     // A transmit channel to the Processors main loop
-    self_tx: chan::Sender<Msg>,
+    self_tx: channel::Sender<Msg>,
 }
 
 impl Processor {
@@ -207,10 +207,10 @@ pub struct ProcessorThread {
     pub kind: config::OutputKind,
     pub env: Arc<config::Environment>,
     pub destination: Destination,
-    pub rx: chan::Receiver<Msg>,
-    pub self_tx: chan::Sender<Msg>,
-    pub tx: chan::Sender<UserSelection>,
-    pub cursive_sink: chan::Sender<Box<CursiveCbFunc>>,
+    pub rx: channel::Receiver<Msg>,
+    pub self_tx: channel::Sender<Msg>,
+    pub tx: channel::Sender<UserSelection>,
+    pub cursive_sink: channel::Sender<Box<CursiveCbFunc>>,
 }
 
 impl ProcessorThread {
