@@ -1,11 +1,12 @@
 use super::output_selector;
 use super::Row;
-use super::{history_view, FormattedAction, UserSelection};
+use super::{history_view,  UserSelection};
 use chan;
 use cursive::views::EditView;
 use cursive::{CbFunc as CursiveCbFunc, Cursive};
 use lib_goo::config::Destination;
 use lib_goo::{config, FilteredVec};
+use lib_goo::entities::FormattedAction;
 use local_api;
 use std::sync::{Arc, Mutex};
 use std::thread;

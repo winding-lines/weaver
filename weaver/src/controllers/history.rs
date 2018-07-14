@@ -11,7 +11,7 @@ pub fn run(destination: &Destination, output_kind: &OutputKind, env: &Arc<Enviro
     use lib_goo::config::Channel::*;
 
     let actions = local_api::history(&env, &destination)?;
-    let user_selection = display::main_screen(actions, &output_kind, Arc::clone(&env), destination)?;
+    let user_selection = display::main_screen::display(actions, &output_kind, Arc::clone(&env), destination)?;
     if let Some(action) = user_selection.action {
         match user_selection.kind {
             Some(OutputKind { channel: Run, ref content }) => {
