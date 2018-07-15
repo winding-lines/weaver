@@ -4,6 +4,7 @@
   "actions": [
     "cargo build --all",
     "kill  `cat ~/.weaver/server/server.pid`",
+    "sleep 1",
     "cp target/debug/weaver ~/.cargo/bin",
     "cp target/debug/weaver-server ~/.cargo/bin",
     "cp target/debug/weaver-data ~/.cargo/bin",

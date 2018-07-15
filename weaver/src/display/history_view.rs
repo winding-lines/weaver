@@ -60,13 +60,8 @@ pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TV
     {
         let view_tx = processor_tx.clone();
         view.set_on_submit(
-            move |siv: &mut Cursive, _row: usize, column: usize, index: usize| {
-                if let Some(mut t) = siv.find_id::<TView>("actions") {
-                    let value = t.borrow_item(index).cloned();
-                    view_tx.send(Msg::TableSubmit(value));
-                } else {
-                    error!("cannot find table");
-                }
+            move |siv: &mut Cursive, _row: usize, _column: usize, _index: usize| {
+                view_tx.send(Msg::TableSubmit());
 
                 siv.quit();
             },
@@ -79,7 +74,7 @@ pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TV
         view.set_on_select(
             move |siv: &mut Cursive, _row: usize, column: usize, index: usize| {
                 if let Some(mut t) = siv.find_id::<TView>("actions") {
-                    let value = t.borrow_item(index).cloned().map(|a| 
+                    let value = t.borrow_item(index).cloned().map(|a| {
                         (
                             a,
                             if column == 0 {
@@ -88,7 +83,7 @@ pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TV
                                 Column::Right
                             },
                         )
-                    );
+                    });
                     view_tx.send(Msg::Selection(value));
                 } else {
                     // Errors are harder to display in Cursive mode, also need to redirect stderr to file.

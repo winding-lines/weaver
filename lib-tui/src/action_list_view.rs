@@ -113,13 +113,13 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// Sets a callback to be used when `<Enter>` is pressed while an item
     /// is selected.
     ///
-    /// Both the currently selected row and the index of the corresponding item
+    /// The currently selected row, column and the index of the corresponding item
     /// within the underlying storage vector will be given to the callback.
     ///
     /// # Example
     ///
     /// ```norun
-    /// table.set_on_submit(|siv: &mut Cursive, row: usize, index: usize| {
+    /// table.set_on_submit(|siv: &mut Cursive, row: usize, column: usize, index: usize| {
     ///
     /// });
     /// ```
@@ -135,7 +135,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// Sets a callback to be used when `<Enter>` is pressed while an item
     /// is selected.
     ///
-    /// Both the currently selected row and the index of the corresponding item
+    /// The currently selected row, column and the index of the corresponding item
     /// within the underlying storage vector will be given to the callback.
     ///
     /// Chainable variant.
@@ -143,7 +143,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// # Example
     ///
     /// ```norun
-    /// table.on_submit(|siv: &mut Cursive, row: usize, index: usize| {
+    /// table.on_submit(|siv: &mut Cursive, row: usize, column: usize, index: usize| {
     ///
     /// });
     /// ```
@@ -156,13 +156,13 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
     /// Sets a callback to be used when an item is selected.
     ///
-    /// Both the currently selected row and the index of the corresponding item
+    /// The currently selected row, column and the index of the corresponding item
     /// within the underlying storage vector will be given to the callback.
     ///
     /// # Example
     ///
     /// ```norun
-    /// table.set_on_select(|siv: &mut Cursive, row: usize, index: usize| {
+    /// table.set_on_select(|siv: &mut Cursive, row: usize, column: usize, index: usize| {
     ///
     /// });
     /// ```
@@ -177,7 +177,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
     /// Sets a callback to be used when an item is selected.
     ///
-    /// Both the currently selected row and the index of the corresponding item
+    /// The currently selected row, column and the index of the corresponding item
     /// within the underlying storage vector will be given to the callback.
     ///
     /// Chainable variant.
@@ -185,7 +185,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// # Example
     ///
     /// ```norun
-    /// table.on_select(|siv: &mut Cursive, row: usize, index: usize| {
+    /// table.on_select(|siv: &mut Cursive, row: usize, column: usize, index: usize| {
     ///
     /// });
     /// ```
@@ -224,6 +224,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// Selects the row at the specified index.
     pub fn set_selected_row(&mut self, row_index: usize) {
         self.focus = row_index;
+        self.focus_column = 0;
         self.scrollbase.scroll_to(row_index);
     }
 

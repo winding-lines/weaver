@@ -25,7 +25,7 @@ pub enum Msg {
 
     // Events from the table
     Selection(Option<(Row, Column)>),
-    TableSubmit(Option<Row>),
+    TableSubmit(),
 
     // Events from the filter edit view
     Filter(String),
@@ -82,15 +82,6 @@ impl Processor {
             };
         };
         self.cursive_sink.send(Box::new(update_command));
-    }
-
-    fn select_action(&mut self, selection: Option<Row>) {
-        self.formatted_action = match selection {
-            Some(Row::Recommended(r)) => Some(r),
-            Some(Row::Regular(r)) => Some(r),
-            _ => None,
-        };
-        self._update_ui();
     }
 
     fn select_kind(&mut self, kind: config::OutputKind) {
@@ -166,8 +157,8 @@ impl Processor {
             }
         };
         self.cursive_sink.send(Box::new(jump));
-        let action = self.table.get(row);
-        self.select_action(action);
+        let action = self.table.get(row).map(|a| (a, Column::Left));
+        self.select_row_and_col(action);
     }
 
     fn jump_to_next(&mut self) {
@@ -261,9 +252,8 @@ impl ProcessorThread {
                         processor.select_row_and_col(selection);
                     }
 
-                    Some(Msg::TableSubmit(f)) => {
-                        debug!("Exiting in TableSubmit, selection {:?}", f);
-                        processor.select_action(f);
+                    Some(Msg::TableSubmit()) => {
+                        debug!("Exiting in TableSubmit");
                     }
 
                     Some(Msg::FilterSubmit) => {

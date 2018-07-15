@@ -1,3 +1,4 @@
+use lib_error::*;
 /// Provide a filtered view on top of a vector of items.
 use regex::Regex;
 
@@ -9,26 +10,20 @@ pub struct FilteredVec<T> {
     rows: usize,
 }
 
-fn str_to_regex(s: &str) -> Regex {
-    Regex::new(s).expect("valid regex")
-}
-
-struct Matcher {
-    r: Regex,
-}
+struct Matcher(Regex);
 
 impl Matcher {
-    pub fn build(s: &str) -> Matcher {
-        Matcher { r: str_to_regex(s) }
+    pub fn build(s: &str) -> Result<Matcher> {
+        let r = Regex::new(s).chain_err(|| "invalid regex")?;
+        Ok(Matcher(r))
     }
 
     fn is_match<F: FilteredItem>(&self, fa: &F) -> bool {
-        fa.is_match(&self.r)
+        fa.is_match(&self.0)
     }
 }
 
-impl<T: FilteredItem + Clone + Default>
- FilteredVec<T> {
+impl<T: FilteredItem + Clone + Default> FilteredVec<T> {
     pub fn new(content: Vec<T>, rows: usize) -> FilteredVec<T> {
         FilteredVec { content, rows }
     }
@@ -39,7 +34,13 @@ impl<T: FilteredItem + Clone + Default>
 
     pub fn find_previous(&self, search: &str, current: usize) -> Option<usize> {
         let size = self.content.len();
-        let matcher = Matcher::build(search);
+        let matcher = match Matcher::build(search) {
+            Ok(r) => r,
+            Err(e) => {
+                error!("bad matcher: {:?}", e);
+                return None;
+            }
+        };
 
         for i in 1..size {
             // look through all the array, wrap around at the end
@@ -60,7 +61,13 @@ impl<T: FilteredItem + Clone + Default>
 
     pub fn find_next(&self, search: &str, current: usize) -> Option<usize> {
         let size = self.content.len();
-        let matcher = Matcher::build(search);
+        let matcher = match Matcher::build(search) {
+            Ok(r) => r,
+            Err(e) => {
+                error!("bad matcher: {:?}", e);
+                return None;
+            }
+        };
 
         for i in 1..size {
             // look through all the array, wrap around at the end
@@ -84,13 +91,22 @@ impl<T: FilteredItem + Clone + Default>
     pub fn filter(&self, filter: Option<&str>) -> Vec<T> {
         let mut content: Vec<T> = Vec::new();
 
-        if let Some(f) = filter {
-            let matcher = Matcher::build(f);
-            for entry in &self.content {
-                if matcher.is_match(entry) {
-                    content.push(entry.clone());
+        // Filter if a search item is passed in.
+        if let Some(search) = filter {
+            match Matcher::build(search) {
+                // Only filter if the matcher is valid.
+                Ok(matcher) => {
+                    for entry in &self.content {
+                        if matcher.is_match(entry) {
+                            content.push(entry.clone());
+                        }
+                    }
                 }
-            }
+                Err(e) => {
+                    // TODO: log the error in a notification in the UI.
+                    error!("bad matcher: {:?}", e);
+                }
+            };
         } else {
             content.extend_from_slice(&self.content);
         }
@@ -170,12 +186,6 @@ mod tests {
     }
 
     fn build_table() -> FilteredVec<Name> {
-        FilteredVec::new(
-            vec![
-                Name("abc".into()),
-                Name("abcde".into()),
-            ],
-            2,
-        )
+        FilteredVec::new(vec![Name("abc".into()), Name("abcde".into())], 2)
     }
 }
