@@ -41,12 +41,13 @@ pub struct ActionListView<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone 
     column_indicies: HashMap<H, usize>,
 
     focus: usize,
+    focus_column: usize,
     items: Vec<T>,
 
     // TODO Pass drawing offsets into the handlers so a popup menu
     // can be created easily?
-    on_submit: Option<Rc<Fn(&mut Cursive, usize, usize)>>,
-    on_select: Option<Rc<Fn(&mut Cursive, usize, usize)>>,
+    on_submit: Option<Rc<Fn(&mut Cursive, usize, usize, usize)>>,
+    on_select: Option<Rc<Fn(&mut Cursive, usize, usize, usize)>>,
 }
 
 impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionListView<T, H> {
@@ -64,6 +65,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             column_indicies: HashMap::new(),
 
             focus: 0,
+            focus_column: 0,
             items: Vec::new(),
 
             on_submit: None,
@@ -123,9 +125,11 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// ```
     pub fn set_on_submit<F>(&mut self, cb: F)
     where
-        F: Fn(&mut Cursive, usize, usize) + 'static,
+        F: Fn(&mut Cursive, usize, usize, usize) + 'static,
     {
-        self.on_submit = Some(Rc::new(move |s, row, index| cb(s, row, index)));
+        self.on_submit = Some(Rc::new(move |s, row, column, index| {
+            cb(s, row, column, index)
+        }));
     }
 
     /// Sets a callback to be used when `<Enter>` is pressed while an item
@@ -145,7 +149,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// ```
     pub fn on_submit<F>(self, cb: F) -> Self
     where
-        F: Fn(&mut Cursive, usize, usize) + 'static,
+        F: Fn(&mut Cursive, usize, usize, usize) + 'static,
     {
         self.with(|t| t.set_on_submit(cb))
     }
@@ -164,9 +168,11 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// ```
     pub fn set_on_select<F>(&mut self, cb: F)
     where
-        F: Fn(&mut Cursive, usize, usize) + 'static,
+        F: Fn(&mut Cursive, usize, usize, usize) + 'static,
     {
-        self.on_select = Some(Rc::new(move |s, row, index| cb(s, row, index)));
+        self.on_select = Some(Rc::new(move |s, row, column, index| {
+            cb(s, row, column, index)
+        }));
     }
 
     /// Sets a callback to be used when an item is selected.
@@ -185,7 +191,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// ```
     pub fn on_select<F>(self, cb: F) -> Self
     where
-        F: Fn(&mut Cursive, usize, usize) + 'static,
+        F: Fn(&mut Cursive, usize, usize, usize) + 'static,
     {
         self.with(|t| t.set_on_select(cb))
     }
@@ -380,10 +386,12 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
     fn focus_up(&mut self, n: usize) {
         self.focus -= cmp::min(self.focus, n);
+        self.focus_column = 0;
     }
 
     fn focus_down(&mut self, n: usize) {
         self.focus = cmp::min(self.focus + n, self.items.len() - 1);
+        self.focus_column = 0;
     }
 }
 
@@ -467,11 +475,18 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
         }
 
         let last_focus = self.focus;
+        let last_focus_column = self.focus_column;
         match event {
             Event::Key(Key::Right) => {
-
+                self.focus_column += if self.focus_column < self.columns.len() - 1 {
+                    1
+                } else {
+                    0
+                };
             }
-            Event::Key(Key::Left) => {}
+            Event::Key(Key::Left) => {
+                self.focus_column -= if self.focus_column > 0 { 1 } else { 0 };
+            }
             Event::Key(Key::Up) if self.focus > 0 => {
                 self.focus_up(1);
             }
@@ -495,8 +510,9 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
                     let cb = self.on_submit.clone().unwrap();
                     let row = self.row().unwrap();
                     let index = self.item().unwrap();
+                    let column = self.focus_column;
                     return EventResult::Consumed(Some(Callback::from_fn(move |s| {
-                        cb(s, row, index)
+                        cb(s, row, column, index)
                     })));
                 }
             }
@@ -504,15 +520,17 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
         }
 
         let focus = self.focus;
+        let focus_column = self.focus_column;
         self.scrollbase.scroll_to(focus);
 
-        if !self.is_empty() && last_focus != focus {
+        if !self.is_empty() && (last_focus != focus || last_focus_column != focus_column) {
             let row = self.row().unwrap();
             let index = self.item().unwrap();
+            let column = self.focus_column;
             EventResult::Consumed(
                 self.on_select
                     .clone()
-                    .map(|cb| Callback::from_fn(move |s| cb(s, row, index))),
+                    .map(|cb| Callback::from_fn(move |s| cb(s, row, column, index))),
             )
         } else {
             EventResult::Ignored

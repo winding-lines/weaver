@@ -1,4 +1,4 @@
-use super::processor::Msg;
+use super::processor::{Column, Msg};
 use super::Row;
 /// The table view for the history.
 use crossbeam_channel as channel;
@@ -50,37 +50,52 @@ pub type TView = ActionListView<Row, BasicColumn>;
 // Create the Cursive table for actions.
 pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TView {
     let mut view = TView::new()
-        .column(BasicColumn::Name, |c| c.align(HAlign::Left).width_percent(70))
+        .column(BasicColumn::Name, |c| {
+            c.align(HAlign::Left).width_percent(70)
+        })
         .column(BasicColumn::Detail, |c| c.align(HAlign::Right));
 
     debug!("Entering create_view with {} entries", initial.len());
     // Select the current entry when 'enter' is pressed, then end the application.
     {
         let view_tx = processor_tx.clone();
-        view.set_on_submit(move |siv: &mut Cursive, _row: usize, index: usize| {
-            if let Some(mut t) = siv.find_id::<TView>("actions") {
-                let value = t.borrow_item(index).cloned();
-                view_tx.send(Msg::TableSubmit(value));
-            } else {
-                error!("cannot find table");
-            }
+        view.set_on_submit(
+            move |siv: &mut Cursive, _row: usize, column: usize, index: usize| {
+                if let Some(mut t) = siv.find_id::<TView>("actions") {
+                    let value = t.borrow_item(index).cloned();
+                    view_tx.send(Msg::TableSubmit(value));
+                } else {
+                    error!("cannot find table");
+                }
 
-            siv.quit();
-        });
+                siv.quit();
+            },
+        );
     }
 
     // Notify the UI that the selection is changed.
     {
         let view_tx = processor_tx.clone();
-        view.set_on_select(move |siv: &mut Cursive, _row: usize, index: usize| {
-            if let Some(mut t) = siv.find_id::<TView>("actions") {
-                let value = t.borrow_item(index).cloned();
-                view_tx.send(Msg::Selection(value));
-            } else {
-                // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
-                error!("cannot find table");
-            }
-        });
+        view.set_on_select(
+            move |siv: &mut Cursive, _row: usize, column: usize, index: usize| {
+                if let Some(mut t) = siv.find_id::<TView>("actions") {
+                    let value = t.borrow_item(index).cloned().map(|a| 
+                        (
+                            a,
+                            if column == 0 {
+                                Column::Left
+                            } else {
+                                Column::Right
+                            },
+                        )
+                    );
+                    view_tx.send(Msg::Selection(value));
+                } else {
+                    // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
+                    error!("cannot find table");
+                }
+            },
+        );
     }
     redisplay(&mut view, initial);
 

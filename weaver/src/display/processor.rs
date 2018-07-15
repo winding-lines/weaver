@@ -1,15 +1,22 @@
 use super::output_selector;
 use super::Row;
-use super::{history_view,  UserSelection};
+use super::{history_view, UserSelection};
 use crossbeam_channel as channel;
 use cursive::views::EditView;
 use cursive::{CbFunc as CursiveCbFunc, Cursive};
 use lib_goo::config::Destination;
-use lib_goo::{config, FilteredVec};
 use lib_goo::entities::FormattedAction;
+use lib_goo::{config, FilteredVec};
 use local_api;
 use std::sync::{Arc, Mutex};
 use std::thread;
+
+/// Which of the columns is being selected.
+#[derive(Clone, Debug)]
+pub enum Column {
+    Left,
+    Right,
+}
 
 /// Message types sent to the selection processor
 #[derive(Clone)]
@@ -17,7 +24,7 @@ pub enum Msg {
     ExtractState,
 
     // Events from the table
-    Selection(Option<Row>),
+    Selection(Option<(Row, Column)>),
     TableSubmit(Option<Row>),
 
     // Events from the filter edit view
@@ -94,6 +101,25 @@ impl Processor {
         self._update_ui();
     }
 
+    fn select_row_and_col(&mut self, selection: Option<(Row, Column)>) {
+        match selection {
+            None => self.formatted_action = None,
+            Some((row, col)) => {
+                self.formatted_action = match row {
+                    Row::Recommended(r) => Some(r),
+                    Row::Regular(r) => Some(r),
+                    Row::Separator => None,
+                };
+                let mut mine = self.output_kind.lock().unwrap();
+                mine.content = match col {
+                    Column::Left => config::Content::Command,
+                    Column::Right => config::Content::PathWithCommand,
+                }
+            }
+        };
+        self._update_ui();
+    }
+
     // Handle a submit from the command edit view.
     fn submit_command(&mut self, f: Option<String>) {
         let name = f.unwrap_or_else(String::new);
@@ -122,7 +148,7 @@ impl Processor {
                 if select > 0 {
                     let index = selected_row.unwrap_or(select - 1);
                     tview.set_selected_row(index);
-                    let selected = tview.borrow_item(index).cloned();
+                    let selected = tview.borrow_item(index).cloned().map(|a| (a, Column::Left));
 
                     // Update the rest of the system with the selection.
                     // Since there are state changes need to defer to the processor.
@@ -232,7 +258,7 @@ impl ProcessorThread {
                 match self.rx.recv() {
                     Some(Msg::Selection(selection)) => {
                         debug!("Received selection message {:?}", selection);
-                        processor.select_action(selection);
+                        processor.select_row_and_col(selection);
                     }
 
                     Some(Msg::TableSubmit(f)) => {
@@ -254,7 +280,6 @@ impl ProcessorThread {
                         let content = input.unwrap_or("");
                         processor.set_annotation(content);
                     }*/
-
                     Some(Msg::CommandSubmit(f)) => {
                         // Handle a string submitted from the command box.
                         processor.submit_command(f);
