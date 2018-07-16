@@ -8,7 +8,7 @@ use std::rc::Rc;
 use cursive::align::HAlign;
 use cursive::direction::Direction;
 use cursive::event::{Callback, Event, EventResult, Key};
-use cursive::theme::ColorStyle;
+use cursive::theme::{ColorStyle, Style, Effect};
 use cursive::vec::Vec2;
 use cursive::view::{ScrollBase, View};
 use cursive::With;
@@ -352,28 +352,42 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     }
 }
 
+struct DrawConfig {
+    item: usize,
+    is_focussed: bool,
+    focus_column: usize,
+}
+
 impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionListView<T, H> {
-    fn draw_columns<C: Fn(&Printer, &TableColumn<H>)>(
+    fn draw_columns<C: Fn(&Printer, &TableColumn<H>, usize)>(
         &self,
         printer: &Printer,
         _sep: &str,
         callback: C,
     ) {
         let mut column_offset = 0;
-        for column in self.columns.iter() {
+        for (index, column) in self.columns.iter().enumerate() {
             let printer = &printer.offset((column_offset, 0)).cropped(printer.size);
 
-            callback(printer, column);
+            callback(printer, column, index);
 
             column_offset += column.width + 1;
         }
     }
 
-    fn draw_item(&self, printer: &Printer, i: usize, is_focussed: bool) {
-        self.draw_columns(printer, "┆ ", |printer, column| {
-            let value = self.items[i].to_column(column.column, is_focussed);
+    fn draw_item(&self, printer: &Printer, draw_config: DrawConfig) {
+        self.draw_columns(printer, "┆ ", |printer, column, ci| {
+            let value =
+                self.items[draw_config.item].to_column(column.column, draw_config.is_focussed);
             if let Some(value) = value {
-                column.draw_row(printer, value.as_str());
+                let effect = if ci == draw_config.focus_column {
+                    Effect::Bold
+                } else {
+                    Effect::Simple
+                };
+                printer.with_style(effect, |printer| {
+                    column.draw_row(printer, value.as_str())
+                });
             }
         });
     }
@@ -408,7 +422,12 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
             };
 
             printer.with_color(color, |printer| {
-                self.draw_item(printer, i, i == self.focus);
+                let config = DrawConfig {
+                    item: i,
+                    is_focussed: i == self.focus,
+                    focus_column: self.focus_column,
+                };
+                self.draw_item(printer, config);
             });
         });
     }

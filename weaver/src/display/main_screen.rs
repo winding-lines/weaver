@@ -23,7 +23,7 @@ fn create_cursive() -> Cursive {
     siv.set_theme(theme);
 
     // set the fps parameter to enable callbacks.
-    siv.set_fps(60);
+    // siv.set_fps(60);
 
     siv
 }
