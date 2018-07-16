@@ -169,7 +169,7 @@ mod tests {
     fn test_match_simple_string() {
         let abc = Name("abc".into());
         let def = Name("def".into());
-        let matcher = Matcher::build("e");
+        let matcher = Matcher::build("e").unwrap();
         assert_eq!(true, matcher.is_match(&def), "'e' matches 'def'");
         assert_eq!(false, matcher.is_match(&abc), "'e' does not match 'abc'");
     }
@@ -177,11 +177,11 @@ mod tests {
     #[test]
     fn test_match_regex() {
         let abc = Name("abc".into());
-        let matcher = Matcher::build("^b");
+        let matcher = Matcher::build("^b").unwrap();
         assert_eq!(false, matcher.is_match(&abc), "'^b' does not match 'abc'");
-        let matcher = Matcher::build("c$");
+        let matcher = Matcher::build("c$").unwrap();
         assert_eq!(true, matcher.is_match(&abc), "'c$' matches 'abc'");
-        let matcher = Matcher::build("a.*c");
+        let matcher = Matcher::build("a.*c").unwrap();
         assert_eq!(true, matcher.is_match(&abc), "'a.*c' matches 'abc'");
     }
 

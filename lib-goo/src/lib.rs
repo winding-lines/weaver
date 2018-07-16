@@ -10,13 +10,12 @@ extern crate regex;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate lib_error;
 extern crate serde_json;
 extern crate sys_info;
-extern crate lib_error;
 
 pub use self::filtered_vec::FilteredVec;
 
-pub mod filtered_vec;
-pub mod entities;
 pub mod config;
-
+pub mod entities;
+pub mod filtered_vec;

@@ -34,7 +34,11 @@
             "args": [
                 "test",
                 "-p",
-                "weaver"
+                "weaver",
+                "-p",
+                "lib-goo",
+                "-p",
+                "lib-tui"
             ],
             "problemMatcher": [
                 "$rustc"
