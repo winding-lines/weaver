@@ -365,13 +365,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
             callback(printer, column);
 
-            /* Do not draw columns for now.
-            if index < column_count - 1 {
-                printer.print((column.width + 1, 0), sep);
-            }
-            column_offset += column.width + 2;
-            */
-
             column_offset += column.width + 1;
         }
     }

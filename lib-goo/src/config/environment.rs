@@ -1,18 +1,18 @@
-use std::borrow::Cow;
-use std::env;
-use std::path::Path;
 use lib_error::{Result, ResultExt};
+use std::env;
+use std::path::{Path, PathBuf};
 
 /// Store information needed to move between different shell environments.
 /// This will be useful when you use the same server between a desktop and a laptop.
 pub struct Environment {
-    cwd: String,
+    pub cwd: PathBuf,
     epic: Option<String>,
-    pub home_dir: String,
+    pub home_dir: PathBuf,
+    /// Hold cwd rebased on home, speeds up some operations,
+    pub(crate) cwd_rebased: PathBuf,
 }
 
 impl Environment {
-
     /// Standardize the way to encode paths for this application, at this time
     /// this is a lossy encoding. Building the Environment will ensure that it
     /// makes sense at least for the home and current directory.
@@ -21,134 +21,207 @@ impl Environment {
     }
 
     pub fn build(epic: Option<String>) -> Result<Environment> {
-
-        let home_dir: String = match env::home_dir() {
-            Some(p) => {
-                match p.as_path().to_str() {
-                    Some(s) => s.into(),
-                    None =>  return Err("home directory is not utf-8".into())
-                }
-            },
-            None => return Err("cannot get home directory location".into())
+        let home_dir = match env::home_dir() {
+            Some(d) => d,
+            None => return Err("cannot get home directory location".into()),
         };
-        let cwd_path = env::current_dir()
-            .chain_err(|| "getting current directory")?;
-        let cwd: String = match cwd_path.to_str() {
-            Some(s) => s.into(),
-            None => return Err("cannot utf-8 encode the current directory".into())
-        };
-
-        Ok(Environment{
+        let cwd = env::current_dir().chain_err(|| "getting current directory")?;
+        let cwd_rebased = Self::normalize_base_dir(cwd.clone(), &home_dir, "~")?;
+        Ok(Environment {
             cwd,
             epic,
-            home_dir,
+            home_dir: home_dir,
+            cwd_rebased,
         })
-    }
-
-    pub fn cwd(&self) -> &str {
-       self.cwd.as_ref()
     }
 
     pub fn epic(&self) -> Option<&str> {
         self.epic.as_ref().map(|e| e.as_str())
     }
 
-    pub fn localized_path<'a>(&self, path: &'a str) -> Cow<'a, str> {
-        if path.starts_with(&self.home_dir) {
-            Cow::Borrowed(path)
-        } else if path.starts_with("/home") || path.starts_with("/Users") {
-            let mut buf = String::with_capacity(path.len());
-
-            let mut hd_pos = 0;
-            let mut in_pos = 0;
-            let hd_len = self.home_dir.len();
-            let in_len = path.len();
-
-            // invariant going in the loop: `buf` has the processed data up to hd_pos & in_pos
-            loop {
-                // no more to replace, copy the rest of the input
-                if hd_pos == hd_len {
-                    // the home_dir may be missing the final '/'
-                    if hd_len > 0 && !buf.ends_with('/') {
-                        buf.push('/');
-                    };
-                    buf.push_str(&path[in_pos..in_len]);
-                    in_pos = in_len;
-                }
-
-                // no more input, return what we have so far
-                if in_pos == in_len {
-                    return Cow::Owned(buf);
-                }
-
-                // use the next component from the home_directory;
-                let hd_next = self.home_dir[hd_pos..].find('/')
-                    .map(|i| i + hd_pos + 1).unwrap_or(hd_len);
-                buf.push_str(&self.home_dir[hd_pos..hd_next]);
-                hd_pos = hd_next;
-
-                // skip the next component in the input
-                in_pos = path[in_pos..].find('/')
-                    .map(|i| i + in_pos + 1).unwrap_or(in_len);
+    /// If path is inside the base then replace the base prefix with the given replacement.
+    pub(crate) fn normalize_base_dir(path: PathBuf, base: &Path, replacement: &str) -> Result<PathBuf> {
+        if path.starts_with(base) {
+            let relative = path.strip_prefix(base).chain_err(|| "strip prefix")?;
+            let mut out = PathBuf::new();
+            out.push(replacement);
+            if !relative.components().next().is_none() {
+                out.push(relative);
             }
+            Ok(out)
         } else {
-            Cow::Borrowed(path)
+            Ok(path)
         }
     }
-}
 
+    /// Check if this path is already rebased on the home folder.
+    pub(crate) fn is_rebased_on_home(path:&Path) -> bool {
+        match path.components().next() {
+            Some(a) => a.as_os_str() == "~",
+            None => false,
+        }
+    }
+
+    /// Rebase the file name in the current environment. Try both the current
+    /// working folder and the home directory. This is only valid for display
+    /// since it depends on the current home.
+    pub fn rebase(&self, path: PathBuf) -> Result<PathBuf> {
+        let on_cwd = self.rebase_on_cwd(path)?;
+        self.rebase_on_home(on_cwd)
+    }
+
+    /// Rebase just on cwd, for testing.
+    pub(crate) fn rebase_on_cwd(&self, path: PathBuf) -> Result<PathBuf> {
+        // Need to check if the incoming path is already relative to home, cwd may be more specific.
+        let matching_cwd = if Self::is_rebased_on_home(&path) {
+            // Select the cwd represenation in the same format as the input.
+            &self.cwd_rebased
+        } else {
+            &self.cwd
+        };
+        if path.starts_with(matching_cwd) {
+            Self::normalize_base_dir(path, matching_cwd, ".")
+        } else {
+            Ok(path)
+        }
+
+    }
+
+    /// Rebase just on home, this is suitable to save in the database.
+    pub fn rebase_on_home(&self, path: PathBuf) -> Result<PathBuf> {
+        Self::normalize_base_dir(path, &self.home_dir, "~")
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn not_home_path() {
-        let e = Environment {
-            cwd: String::new(),
+    fn normalize_home_path() {
+        let normalized =
+            Environment::normalize_base_dir(Path::new("/haha").into(), Path::new("/haha"), "~")
+                .unwrap();
+        assert_eq!("~", normalized.to_str().unwrap());
+    }
+
+    #[test]
+    fn normalize_in_sub_folder() {
+        let normalized =
+            Environment::normalize_base_dir(Path::new("/haha/one").into(), Path::new("/haha"), "~")
+                .unwrap();
+        assert_eq!("~/one", normalized.to_str().unwrap());
+    }
+
+    #[test]
+    fn normalize_tilde_in_sub_folder() {
+        let normalized =
+            Environment::normalize_base_dir(Path::new("~/haha/one").into(), Path::new("~/haha"), ".")
+                .unwrap();
+        assert_eq!("./one", normalized.to_str().unwrap());
+    }
+
+    #[test]
+    fn normalize_empty_home() {
+        let normalized =
+            Environment::normalize_base_dir(Path::new("/haha").into(), Path::new(""), "~").unwrap();
+        assert_eq!("/haha", normalized.to_str().unwrap());
+    }
+
+    #[test]
+    fn test_is_rebased_on_home() {
+        assert!(Environment::is_rebased_on_home(&Path::new("~/foo")));
+        assert!(!Environment::is_rebased_on_home(&Path::new("/foo")));
+    }
+
+    /// Build test Environment.
+    fn env(cwd: &str, home_dir: &str) -> Environment {
+        let cwd = PathBuf::from(cwd);
+        let home_dir = PathBuf::from(home_dir);
+        let cwd_rebased = Environment::normalize_base_dir(cwd.clone(), &home_dir, "~").unwrap();
+        Environment {
+            cwd: cwd,
             epic: None,
-            home_dir: "/home/username".into(),
-        };
-        assert_eq!("/haha", e.localized_path("/haha"))
+            home_dir,
+            cwd_rebased
+        }
+    }
+
+    #[test]
+    fn not_home_path() {
+        let e = env("", "/home/username");
+        assert_eq!(Path::new("/haha"), e.rebase("/haha".into()).unwrap());
+        let normalized = Environment::normalize_base_dir(
+            Path::new("/haha").into(),
+            Path::new("/home/username"),
+            "~",
+        ).unwrap();
+        assert_eq!("/haha", normalized.to_str().unwrap());
     }
 
     #[test]
     fn empty_home_path() {
-        let e = Environment {
-            cwd: String::new(),
-            epic: None,
-            home_dir: "".into(),
-        };
-        assert_eq!("/home/username/dev", e.localized_path("/home/username/dev"))
+        let e = env("", "");
+        assert_eq!(
+            Path::new("/home/username/dev"),
+            e.rebase("/home/username/dev".into()).unwrap()
+        );
+        let normalized =
+            Environment::normalize_base_dir(Path::new("/haha").into(), Path::new(""), "~").unwrap();
+        assert_eq!("/haha", normalized.to_str().unwrap());
     }
 
     #[test]
-    fn already_home_path() {
-        let e = Environment {
-            cwd: String::new(),
-            epic: None,
-            home_dir: "/home/username".into(),
-        };
-        assert_eq!("/home/username/dev", e.localized_path("/home/username/dev"))
+    fn rebase_cwd_in_home() {
+        let e = env("/home/username/dev", "/home/username");
+        assert_eq!(
+            Path::new("./foo"),
+            e.rebase("/home/username/dev/foo".into()).unwrap()
+        );
+        assert_eq!(
+            Path::new("~/dev/foo"),
+            e.rebase_on_home("/home/username/dev/foo".into()).unwrap()
+        );
     }
 
     #[test]
-    fn other_home_path() {
-        let e = Environment {
-            cwd: String::new(),
-            epic: None,
-            home_dir: "/home/username".into(),
-        };
-        assert_eq!("/home/username/dev", e.localized_path("/Users/other/dev"));
+    fn cwd_rebased() {
+        // when cwd under home
+        let e = env("/home/username/dev", "/home/username");
+        assert_eq!(Path::new("~/dev"), e.cwd_rebased);
+
+        // when cwd not under home
+        let e = env("/home/username/dev", "/home/foo");
+        assert_eq!(Path::new("/home/username/dev"), e.cwd_rebased);
     }
 
     #[test]
-    fn other_short() {
-        let e = Environment {
-            cwd: String::new(),
-            epic: None,
-            home_dir: "/home/username".into(),
-        };
-        assert_eq!("/home/", e.localized_path("/Users"));
+    fn rebase_on_home_tilde() {
+        let e = env("/home/username/dev", "/home/username");
+        assert_eq!(
+            Path::new("~/dev/foo"),
+            e.rebase_on_home("/home/username/dev/foo".into()).unwrap()
+        );
+
+        // already rebased
+        assert_eq!(
+            Path::new("~/dev/foo"),
+            e.rebase_on_home("~/dev/foo".into()).unwrap()
+        );
+    }
+
+    #[test]
+    fn rebase_on_cwd_tilde() {
+        let e = env("/home/username/dev", "/home/username");
+        let input = Path::new("~/dev/foo");
+        assert!(Environment::is_rebased_on_home(&input));
+        assert_eq!(Path::new("./foo"), e.rebase_on_cwd(input.into()).unwrap());
+    }
+
+    #[test]
+    fn rebase_tilde() {
+        let e = env("/home/username/dev", "/home/username");
+        let input = Path::new("~/dev/foo");
+        assert_eq!(Path::new("./foo"), e.rebase(input.into()).unwrap());
     }
 }

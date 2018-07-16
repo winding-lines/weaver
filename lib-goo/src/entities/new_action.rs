@@ -19,14 +19,15 @@ impl NewAction {
 
     pub fn build_from_shell(command: &str, env: &Environment) -> Result<NewAction> {
         let host = sys_info::hostname()?;
-        let location = Some(env.cwd());
+        let location = env.rebase_on_home(env.cwd.clone())?;
+        let location = Some(Environment::encode_path(&location));
         let executed = now();
 
         Ok(NewAction {
             executed,
             kind: "shell".into(),
             command: command.into(),
-            location: location.map(String::from),
+            location,
             epic: env.epic().map(String::from),
             host,
         })
