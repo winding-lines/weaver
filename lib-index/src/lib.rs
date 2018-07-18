@@ -18,7 +18,7 @@ pub use indexer::Results;
 use lib_error::*;
 
 mod indexer;
-mod repo;
+pub mod repo;
 mod config;
 pub use repo::Repo;
 

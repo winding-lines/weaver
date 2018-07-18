@@ -1,4 +1,7 @@
 //! Provide a repository of documents, encrypts them with a key stored in the registry.
+//! The repo supports multiple collections which translate to folders on disk.
+//! The documents are just binary blobs, it is the responsibility of the caller 
+//! to add some structure to them.
 
 use bincode::{deserialize, serialize};
 use keyring;
@@ -18,6 +21,17 @@ pub struct Repo {
     key: secretbox::Key,
     /// The base folder where all the encrypted files are saved.
     base_folder: PathBuf,
+}
+
+
+/// Represents a collection in the repo.
+#[derive(Debug)]
+pub struct Collection(pub String);
+
+impl Collection {
+    fn name(&self) -> &str {
+        &self.0
+    }
 }
 
 /// An encrypted file saved to disk.
@@ -59,7 +73,14 @@ impl Repo {
         })
     }
 
-    // Read the password from the keyring.
+    /// Compute the path for the given collection.
+    fn collection_path(&self, collection: &Collection) -> PathBuf {
+        let mut out = self.base_folder.clone();
+        out.push(collection.name());
+        out
+    }
+
+    /// Read the password from the keyring.
     fn get_password(source: &PasswordSource) -> Result<String> {
         match source {
             PasswordSource::Keyring => {
@@ -105,7 +126,7 @@ impl Repo {
 
     /// Add the file to the repository, encrypt it.
     /// Return the handler under which it was saved.
-    pub fn add(&self, content: &[u8]) -> Result<String> {
+    pub fn add(&self, collection: &Collection, content: &[u8]) -> Result<String> {
 
         // Generate nonce and encrypt
         let nonce = secretbox::gen_nonce();
@@ -115,7 +136,7 @@ impl Repo {
         let mut hasher = MetroHash128::default();
         hasher.write(&ciphertext);
         let hash = format!("{}", hasher.finish());
-        let mut out = self.base_folder.clone();
+        let mut out = self.collection_path(collection);
         out.push(hash.clone());
 
         // Build the final struct and then write to disk.
@@ -132,8 +153,8 @@ impl Repo {
     }
 
     /// Delete the file from the repo.
-    pub fn delete(&self, id: &str) -> Result<()> {
-        let mut out = self.base_folder.clone();
+    pub fn delete(&self, collection: &Collection, id: &str) -> Result<()> {
+        let mut out = self.collection_path(collection);
         out.push(id);
         if out.exists() {
             remove_file(&out)
@@ -144,8 +165,8 @@ impl Repo {
     }
 
     /// List all the encrypted files.
-    pub fn list(&self) -> Result<RepoDir> {
-        let read_dir = read_dir(&self.base_folder)?;
+    pub fn list(&self, collection: &Collection) -> Result<RepoDir> {
+        let read_dir = read_dir(&self.collection_path(collection))?;
 
 
         Ok(RepoDir {
@@ -155,10 +176,10 @@ impl Repo {
     }
 
     /// Read and decrypt the given handle.
-    pub fn read(&self, id: &str) -> Result<Vec<u8>> {
+    pub fn read(&self, collection: &Collection, id: &str) -> Result<Vec<u8>> {
 
         // Read the file
-        let mut out = self.base_folder.clone();
+        let mut out = self.collection_path(collection);
         out.push(id);
         self.read_file(&out)
     }

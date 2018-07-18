@@ -1,6 +1,7 @@
 use clap::{App, Arg, SubCommand};
 use lib_goo::config::db;
 use lib_goo::config::file_utils::set_app_location;
+use lib_index::repo::Collection;
 
 pub const APP_NAME: &str = env!["CARGO_PKG_NAME"];
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -14,11 +15,11 @@ pub enum DataSubCommand {
     /// Check the various stores.
     Check,
     /// Decrypt the store document with the given hash (= filename under the repo folder)
-    Decrypt(String),
+    Decrypt(Collection, String),
     /// Dump the content of the url policies (restrictions) table.
     DumpUrlPolicies,
     /// Encrypt the file with the given name and save in the repo.
-    Encrypt(String),
+    Encrypt(Collection, String),
     Noop,
     /// Delete the text index and rebuilds it by replaying the document in the store.
     RebuildIndex,
@@ -36,37 +37,61 @@ pub fn parse() -> ConfigAndCommand {
     let matches = App::new(APP_NAME)
         .version(VERSION)
         .about(DESCRIPTION)
-        .arg(Arg::with_name("version")
-            .short("V")
-            .help("Display the version"))
-        .arg(Arg::with_name("location")
-            .short("C")
-            .long("location")
-            .takes_value(true)
-            .value_name("FOLDER")
-            .help("Select a different location for the store"))
-        .arg(Arg::with_name("password")
-            .short("P")
-            .long("password")
-            .help("Prompt for password - instead of the default of taking from keyring"))
-        .subcommand(SubCommand::with_name("sqlite")
-            .about("Start an sqlite3 shell"))
-        .subcommand(SubCommand::with_name("setup")
-            .about("Create the sqlite3 database"))
-        .subcommand(SubCommand::with_name("encrypt")
-            .arg(Arg::with_name("NAME")
-                .index(1))
-            .about("Encrypt a file"))
-        .subcommand(SubCommand::with_name("decrypt")
-            .arg(Arg::with_name("NAME")
-                .index(1))
-            .about("Decrypt the handle"))
-        .subcommand(SubCommand::with_name("check")
-            .about("Validate the state of the various repos"))
-        .subcommand(SubCommand::with_name("rebuild-index")
-            .about("Rebuild the text search index from the files in the encrypted repo"))
-        .subcommand(SubCommand::with_name("dump-url-policies")
-            .about("Show the current url policies"))
+        .arg(
+            Arg::with_name("version")
+                .short("V")
+                .help("Display the version"),
+        )
+        .arg(
+            Arg::with_name("location")
+                .short("C")
+                .long("location")
+                .takes_value(true)
+                .value_name("FOLDER")
+                .help("Select a different location for the store"),
+        )
+        .arg(
+            Arg::with_name("password")
+                .short("P")
+                .long("password")
+                .help("Prompt for password - instead of the default of taking from keyring"),
+        )
+        .subcommand(SubCommand::with_name("sqlite").about("Start an sqlite3 shell"))
+        .subcommand(SubCommand::with_name("setup").about("Create the sqlite3 database"))
+        .subcommand(
+            SubCommand::with_name("encrypt")
+                .arg(
+                    Arg::with_name("collection")
+                        .long("collection")
+                        .required(true)
+                        .takes_value(true)
+                        .value_name("COLLECTION")
+                        .help("Specify the repo collection to operate on"),
+                )
+                .arg(Arg::with_name("NAME").index(1))
+                .about("Encrypt a file"),
+        )
+        .subcommand(
+            SubCommand::with_name("decrypt")
+                .arg(
+                    Arg::with_name("collection")
+                        .long("collection")
+                        .required(true)
+                        .takes_value(true)
+                        .value_name("COLLECTION")
+                        .help("Specify the repo collection to operate on"),
+                )
+                .arg(Arg::with_name("NAME").index(1))
+                .about("Decrypt the handle"),
+        )
+        .subcommand(SubCommand::with_name("check").about("Validate the state of the various repos"))
+        .subcommand(
+            SubCommand::with_name("rebuild-index")
+                .about("Rebuild the text search index from the files in the encrypted repo"),
+        )
+        .subcommand(
+            SubCommand::with_name("dump-url-policies").about("Show the current url policies"),
+        )
         .get_matches();
 
     if let Some(location) = matches.value_of("location") {
@@ -92,10 +117,12 @@ pub fn parse() -> ConfigAndCommand {
         DataSubCommand::Check
     } else if let Some(encrypt) = matches.subcommand_matches("encrypt") {
         let name = encrypt.value_of("NAME").unwrap();
-        DataSubCommand::Encrypt(name.to_string())
+        let collection = encrypt.value_of("collection").unwrap();
+        DataSubCommand::Encrypt(Collection(collection.into()), name.to_string())
     } else if let Some(decrypt) = matches.subcommand_matches("decrypt") {
         let name = decrypt.value_of("NAME").unwrap();
-        DataSubCommand::Decrypt(name.to_string())
+        let collection = decrypt.value_of("collection").unwrap();
+        DataSubCommand::Decrypt(Collection(collection.into()), name.to_string())
     } else if matches.subcommand_matches("rebuild-index").is_some() {
         DataSubCommand::RebuildIndex
     } else if matches.subcommand_matches("dump-url-policies").is_some() {
@@ -105,6 +132,6 @@ pub fn parse() -> ConfigAndCommand {
     };
     ConfigAndCommand {
         password_source: Some(password_source),
-        command
+        command,
     }
 }

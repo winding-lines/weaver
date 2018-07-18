@@ -3,6 +3,7 @@
 use actix_web::{App, http, HttpResponse, Json, Query, State};
 use app_state::AppState;
 use lib_goo::entities::PageContent;
+use lib_index::repo::Collection;
 use lib_db::url_policies;
 use lib_error::{Result as Wesult, ResultExt};
 use bincode;
@@ -26,7 +27,7 @@ fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageS
 
     let serialized = bincode::serialize(&*input)
         .chain_err(|| "serializing for the repo")?;
-    repo.add(&serialized)?;
+    repo.add(&Collection(PageContent::collection_name().into()), &serialized)?;
     let indexer = &*(state.indexer);
     let _id = indexer.add(&input)?;
 

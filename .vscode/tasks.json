@@ -43,6 +43,25 @@
             "problemMatcher": [
                 "$rustc"
             ]
+        },
+        {
+            "type": "shell",
+            "label": "cargo test-data",
+            "command": "cargo",
+            "args": [
+                "test",
+                "-p",
+                "weaver-data",
+                "-p",
+                "lib-goo",
+                "-p",
+                "lib-index",
+                "-p",
+                "lib-db"
+            ],
+            "problemMatcher": [
+                "$rustc"
+            ]
         }
     ]
 }

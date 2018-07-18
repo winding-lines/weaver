@@ -8,7 +8,7 @@ use std::rc::Rc;
 use cursive::align::HAlign;
 use cursive::direction::Direction;
 use cursive::event::{Callback, Event, EventResult, Key};
-use cursive::theme::{ColorStyle, Style, Effect};
+use cursive::theme::{ColorStyle, Effect};
 use cursive::vec::Vec2;
 use cursive::view::{ScrollBase, View};
 use cursive::With;

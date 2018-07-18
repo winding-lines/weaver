@@ -1,11 +1,11 @@
-use ::cli::{ConfigAndCommand, DataSubCommand, parse};
 use bincode;
+use cli::{parse, ConfigAndCommand, DataSubCommand};
+use lib_db::{self, setup, RealStore};
+use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use lib_goo::config::file_utils;
 use lib_goo::entities::PageContent;
-use lib_db::{self, RealStore, setup};
-use lib_error::*;
-use lib_index::{self, Indexer, Repo};
+use lib_index::{self, repo, Indexer};
 use std::fs::read;
 use std::path::PathBuf;
 use std::process::Command;
@@ -15,7 +15,10 @@ use std::process::Command;
 pub fn run() -> Result<()> {
     use self::DataSubCommand::*;
 
-    let ConfigAndCommand { password_source, command } = parse();
+    let ConfigAndCommand {
+        password_source,
+        command,
+    } = parse();
     debug!("Executing cli command {:?}", command);
     let password_source = password_source.unwrap_or(PasswordSource::Keyring);
 
@@ -29,7 +32,7 @@ pub fn run() -> Result<()> {
                 println!("Failure in the sqlite store: {:?}", e);
                 failures += 1;
             }
-            if let Err(e) = Repo::check(&password_source) {
+            if let Err(e) = repo::Repo::check(&password_source) {
                 println!("Failure in the text repo: {:?}", e);
                 failures += 1;
             }
@@ -45,72 +48,67 @@ pub fn run() -> Result<()> {
         }
         Create => {
             RealStore::create_database_if_missing()?;
-            Repo::setup_if_needed(&password_source)?;
+            repo::Repo::setup_if_needed(&password_source)?;
             let store = RealStore::build()?;
             setup::populate_data(&store.connection()?)?;
             Indexer::setup_if_needed()?;
             Ok(())
         }
-        Decrypt(handle) => {
-            let repo = Repo::build(&password_source)?;
+        Decrypt(collection, handle) => {
+            let repo = repo::Repo::build(&password_source)?;
 
-            let decoded = repo.read(&handle)?;
+            let decoded = repo.read(&collection, &handle)?;
             println!("{}", String::from_utf8(decoded).unwrap());
             Ok(())
         }
         DumpUrlPolicies => {
-
             let store = RealStore::build()?;
             let policies = lib_db::url_policies::fetch_all(&store.connection()?)?;
             println!("\nLog all url accesses, with the following exceptions:");
             for p in policies.do_not_log {
-                println!( "  {}", p);
+                println!("  {}", p);
             }
             println!("\nFull text index only the following urls:");
             for p in policies.do_index {
-                println!( "  {}", p);
+                println!("  {}", p);
             }
             println!("\nException from the full text index list:");
             for p in policies.do_not_index {
-                println!( "  {}", p);
+                println!("  {}", p);
             }
             Ok(())
         }
-        Encrypt(filename) => {
-            let repo = Repo::build(&password_source)?;
+        Encrypt(collection, filename) => {
+            let repo = repo::Repo::build(&password_source)?;
 
             // open source file
             let path = PathBuf::from(filename);
             let content = read(&path)?;
 
             // encrypt
-            let handle = repo.add(&content)?;
+            let handle = repo.add(&collection, &content)?;
 
             // print the handle
             println!("{}", handle);
             Ok(())
-        }        Noop => {
-            Ok(())
         }
+        Noop => Ok(()),
         RebuildIndex => {
             lib_index::init()?;
-            let repo = Repo::build(&password_source)?;
+            let repo = repo::Repo::build(&password_source)?;
             Indexer::delete_all()?;
             Indexer::setup_if_needed()?;
             let indexer = Indexer::build()?;
-            for entry in repo.list()? {
+            for entry in repo.list(&repo::Collection(PageContent::collection_name().into()))? {
                 let decrypted = entry?;
                 let page_content = bincode::deserialize::<PageContent>(decrypted.as_slice())
                     .chain_err(|| "cannot bindecode")?;
                 let handle = indexer.add(&page_content)?;
                 println!("Indexed {} as {}", &page_content.url, handle);
-
             }
             Ok(())
         }
-        Sqlite => {
-            execute_sqlite()
-        }
+        Sqlite => execute_sqlite(),
     }
 }
 
@@ -127,4 +125,3 @@ fn execute_sqlite() -> Result<()> {
         Err("Bad db path".into())
     }
 }
-

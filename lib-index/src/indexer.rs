@@ -154,7 +154,7 @@ impl Indexer {
         })
     }
 
-    /// Delete all the files int the repo.
+    /// Delete all the files int the index.
     pub fn delete_all() -> Result<()> {
         let index_path = index_path()?;
         if index_path.exists() {
