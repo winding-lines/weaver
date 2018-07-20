@@ -1,15 +1,30 @@
+//! Url building constants and data structures used over the wire.
+//!
+use entities::FormattedAction;
+
 pub const ACTIONS_BASE: &str = "/actions";
+pub const ACTIONS2_BASE: &str = "/v2/actions";
 pub const ANNOTATIONS: &str = "/annotations";
 pub const EPICS: &str = "/epics";
 
-#[derive(Deserialize)]
-pub struct Pagination {
-    pub start: Option<usize>,
-    pub length: Option<usize>,
-}
-
+/// A request to change the annotation for a given entry.
 #[derive(Serialize, Deserialize)]
 pub struct Annotation {
     pub annotation: String,
 }
 
+/// A request for paginated data.
+#[derive(Default, Deserialize, Serialize)]
+pub struct Pagination {
+    /// Offset
+    pub start: Option<i64>,
+    /// How many to fetch. For sqlite3 -1 means no limit.
+    pub length: Option<i64>,
+}
+
+/// A paginated response.
+#[derive(Deserialize, Serialize)]
+pub struct PaginatedActions {
+    pub entries: Vec<FormattedAction>,
+    pub total: usize,
+}

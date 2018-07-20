@@ -1,11 +1,11 @@
-use ::backends::schema::*;
-use ::Connection;
-use ::db;
-use lib_goo::entities::{FormattedAction, NewAction};
+use backends::schema::*;
+use db;
 use diesel;
 use diesel::prelude::*;
 use lib_error::*;
-
+use lib_goo::config::net::Pagination;
+use lib_goo::entities::{FormattedAction, NewAction};
+use Connection;
 
 #[derive(Queryable)]
 #[allow(dead_code)]
@@ -42,16 +42,35 @@ struct Command {
     command: String,
 }
 
-/// Fetch all actions as FormattedActions.
-pub fn fetch_all(connection: &Connection) -> Result<Vec<FormattedAction>> {
+/// Count the number of actions.
+pub fn count(connection: &Connection) -> Result<usize> {
+    let first: i64 = actions2::table.count().get_result(connection)?;
+    Ok(first as usize)
+}
+
+type Backend = diesel::sqlite::Sqlite;
+
+/// Fetch all actions as FormattedActions, use the pagination settings for the range. If present
+pub fn fetch_all(connection: &Connection, pagination: &Pagination) -> Result<Vec<FormattedAction>> {
     let joined = actions2::table
         .inner_join(commands::table)
         .left_join(locations::table)
-        .left_join(epics::table)
-        .load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection)
-        .chain_err(|| "joined load of actions2")?;
+        .left_join(epics::table);
+
+    // Note: in sqlite3 you cannot pass offset without limit.
+    let joined = joined.limit(pagination.length.unwrap_or(-1)).offset(pagination.start.unwrap_or(0));
+    let paginated: QueryResult<_> = match pagination.length {
+        Some(l) => joined
+            .limit(l as i64)
+            .load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection),
+        _ => joined.load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection),
+    };
+
+    let loaded = paginated.chain_err(
+        || format!("paginated load of actions2 {:?}", diesel::debug_query::<Backend, _>(&joined)),
+    )?;
     let mut out = Vec::new();
-    for (action2, command, location, epic) in joined {
+    for (action2, command, location, epic) in loaded {
         let formatted = FormattedAction {
             annotation: action2.annotation,
             id: action2.id.unwrap_or(0) as usize,
@@ -76,8 +95,12 @@ pub fn last_url(connection: &Connection) -> Result<Option<(String, String)>> {
         .load::<(Action2, Command, Option<Location>)>(connection)
         .chain_err(|| "loading last url")?;
     let first = entries.into_iter().next();
-    Ok(first.map(|(_, command, location)|
-        (command.command, location.map(|l| l.location).unwrap_or_else(String::new))))
+    Ok(first.map(|(_, command, location)| {
+        (
+            command.command,
+            location.map(|l| l.location).unwrap_or_else(String::new),
+        )
+    }))
 }
 
 /// Insert a new action in the database.
@@ -95,7 +118,8 @@ pub fn insert(connection: &Connection, action: &NewAction) -> Result<u64> {
         } else {
             None
         };
-        let command_id = db::commands::fetch_or_create_id(connection, &action.kind, &action.command)?;
+        let command_id =
+            db::commands::fetch_or_create_id(connection, &action.kind, &action.command)?;
         let host_id = db::hosts::fetch_or_create_id(connection, &action.host)?;
         let migrated = (
             actions2::dsl::command_id.eq(command_id),
@@ -104,7 +128,7 @@ pub fn insert(connection: &Connection, action: &NewAction) -> Result<u64> {
             actions2::dsl::epic_id.eq(epic_id),
             actions2::dsl::sent.eq(false),
             actions2::dsl::annotation.eq(String::new()),
-            actions2::dsl::host_id.eq(host_id)
+            actions2::dsl::host_id.eq(host_id),
         );
         let count = diesel::insert_into(actions2::table)
             .values(migrated)
@@ -129,19 +153,17 @@ pub fn set_annotation(connection: &Connection, id: u64, annotation: &str) -> Res
 #[cfg(test)]
 mod tests {
     use diesel;
-    use ::lib_goo::entities::NewAction;
+    use lib_goo::config::net::*;
+    use lib_goo::entities::NewAction;
 
     embed_migrations!("../migrations");
 
-
     fn connection_with_tables() -> diesel::sqlite::SqliteConnection {
-        use diesel::Connection as DieselConnection;
         use diesel::sqlite::SqliteConnection;
+        use diesel::Connection as DieselConnection;
 
-        let connection = SqliteConnection::establish(":memory:")
-            .expect("in memory database");
-        embedded_migrations::run(&connection)
-            .expect("create tables");
+        let connection = SqliteConnection::establish(":memory:").expect("in memory database");
+        embedded_migrations::run(&connection).expect("create tables");
         connection
     }
 
@@ -158,17 +180,28 @@ mod tests {
 
     #[test]
     fn test_insert_and_fetch() {
-
         let connection = connection_with_tables();
 
         let res = super::insert(&connection, &new_action());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
 
-        let all = super::fetch_all(&connection);
+        let all = super::fetch_all(&connection, &Pagination::default());
         assert!(res.is_ok(), format!("fetch_all failed {:?}", res));
 
         let actions = all.unwrap();
         assert_eq!(actions.len(), 1);
+    }
+
+    #[test]
+    fn test_insert_and_count() {
+        let connection = connection_with_tables();
+
+        let res = super::insert(&connection, &new_action());
+        assert!(res.is_ok(), format!("insert failed {:?}", res));
+
+        let count = super::count(&connection).unwrap();
+
+        assert_eq!(count, 1);
     }
 
     #[test]
@@ -181,9 +214,12 @@ mod tests {
         let update = super::set_annotation(&connection, 1, "ha-not-ate");
         assert!(update.is_ok(), format!("update failed {:?}", update));
 
-        let all = super::fetch_all(&connection);
+        let all = super::fetch_all(&connection, &Pagination::default());
         assert!(res.is_ok(), format!("fetch_all failed {:?}", res));
 
-        assert_eq!(all.unwrap().get(0).unwrap().annotation, Some(String::from("ha-not-ate")));
+        assert_eq!(
+            all.unwrap().get(0).unwrap().annotation,
+            Some(String::from("ha-not-ate"))
+        );
     }
 }

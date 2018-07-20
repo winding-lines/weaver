@@ -15,7 +15,10 @@ fn fetch(state: State<AppState>) -> HttpResponse {
             all.do_not_index.clear();
             HttpResponse::Ok().json(all)
         }
-        Err(_) => HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).finish(),
+        Err(e) => {
+            error!("url_policies error {:?}", e);
+            HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).finish()
+        }
     }
 }
 
