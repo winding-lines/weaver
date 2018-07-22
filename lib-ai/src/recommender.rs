@@ -1,9 +1,10 @@
 /// Build a list of recommended actions from the historical list of actions and current context.
-use lib_goo::entities::FormattedAction;
+use lib_goo::entities::{FormattedAction, RecommendReason};
 
 fn to_recommended(action: &FormattedAction) -> FormattedAction {
     let mut out = action.clone();
     out.id = 0;
+    out.reason = RecommendReason::CorrelatedWithCommand;
     out
 }
 

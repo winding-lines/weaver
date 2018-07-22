@@ -2,7 +2,7 @@ use lib_error::*;
 use lib_goo::config::Destination;
 use lib_goo::config::{file_utils, Environment};
 use lib_goo::entities::NewAction;
-use local_api;
+use lib_rpc::{client as rpc_client};
 use std::env;
 use std::io::{self, Write};
 
@@ -33,7 +33,7 @@ fn _run(destination: &Destination, env: &Environment) -> Result<()> {
     for input in file_utils::read_stdin(1)? {
         if !reject_input(&input) {
             let action = NewAction::build_from_shell(&input, None, env)?;
-            local_api::insert_action(&action, destination)?;
+            rpc_client::add(destination, &action)?;
         }
     }
     Ok(())

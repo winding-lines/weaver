@@ -23,7 +23,7 @@ fn create_cursive() -> Cursive {
     siv.set_theme(theme);
 
     // set the fps parameter to enable callbacks.
-    // siv.set_fps(60);
+    siv.set_fps(10);
 
     siv
 }
@@ -85,7 +85,7 @@ pub fn display(
     destination: &Destination,
 ) -> Result<UserSelection> {
     debug!(
-        "Entering main screen with {} actions, first {:?}",
+        "Entering main screen with {} actions, first one {:?}",
         actions.len(),
         actions.first()
     );

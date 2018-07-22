@@ -5,6 +5,7 @@ use entities::FormattedAction;
 pub const ACTIONS_BASE: &str = "/actions";
 pub const ACTIONS2_BASE: &str = "/v2/actions";
 pub const ANNOTATIONS: &str = "/annotations";
+pub const RECOMMENDATIONS: &str = "/recommendations";
 pub const EPICS: &str = "/epics";
 
 /// A request to change the annotation for a given entry.
@@ -27,4 +28,12 @@ pub struct Pagination {
 pub struct PaginatedActions {
     pub entries: Vec<FormattedAction>,
     pub total: usize,
+}
+
+/// Request parameters to fetch recommendations.
+#[derive(Deserialize, Serialize)]
+pub struct RecommendationQuery {
+    pub term: Option<String>,
+    pub start: Option<i64>,
+    pub length: Option<i64>,
 }

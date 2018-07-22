@@ -6,6 +6,7 @@ extern crate bson;
 extern crate bytes;
 extern crate futures;
 extern crate inflections;
+extern crate lib_ai;
 extern crate lib_db;
 extern crate lib_error;
 extern crate lib_goo;

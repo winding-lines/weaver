@@ -1,6 +1,5 @@
-use lib_ai::recommender;
 use lib_goo::config::OutputKind;
-use lib_goo::entities::FormattedAction;
+use lib_goo::entities::{FormattedAction, RecommendReason};
 use lib_goo::filtered_vec::FilteredItem;
 use regex::Regex;
 
@@ -40,19 +39,13 @@ impl FilteredItem for Row {
 impl Row {
     /// Build the final list of actions by augmenting the historical ones with the recommended ones.
     fn build(initial: Vec<FormattedAction>) -> Vec<Row> {
-        let recommended = recommender::recommend(&initial);
-        debug!(
-            "Got {} recommended entries, first {:?}",
-            recommended.len(),
-            recommended.first()
-        );
-        let mut rows = Vec::with_capacity(initial.len() + recommended.len() + 1);
+        let mut rows = Vec::with_capacity(initial.len() + 1);
         for i in initial {
-            rows.push(Row::Regular(i));
-        }
-        rows.push(Row::Separator);
-        for i in recommended {
-            rows.push(Row::Recommended(i));
+            let ui = match i.reason {
+                RecommendReason::Historical => Row::Regular(i),
+                _ => Row::Recommended(i)
+            };
+            rows.push(ui);
         }
         rows
     }

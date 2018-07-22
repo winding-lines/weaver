@@ -31,7 +31,6 @@ extern crate serde_json;
 extern crate termion;
 extern crate walkdir;
 // Workspace crates
-extern crate lib_ai;
 extern crate lib_error;
 extern crate lib_goo;
 extern crate lib_rpc;
@@ -40,7 +39,6 @@ extern crate lib_tui;
 mod cli;
 mod controllers;
 mod display;
-mod local_api;
 mod local_store;
 
 fn main() {
@@ -53,14 +51,17 @@ fn main() {
     let mut builder = Builder::new();
     // send output to stderr in order to be able to debug Cursive layer
     builder.target(Target::Stderr);
-    if env::var("WEAVER").is_ok() {
+    let has_weaver_env = env::var("WEAVER").is_ok();
+    if has_weaver_env {
         builder.parse(&env::var("WEAVER").unwrap());
     }
     builder.init();
 
     // Run the main loop, be concise with error reporting since we may run in PS1.
     if let Err(ref e) = controllers::app::run() {
-        print!(" ERR `export WEAVER=error` for more");
+        if !has_weaver_env {
+            print!(" ERR `export WEAVER=error` for more");
+        };
         error!("error {}", e);
 
         for e in e.iter().skip(1) {
@@ -72,7 +73,9 @@ fn main() {
         if let Some(backtrace) = e.backtrace() {
             error!("backtrace: {:?}", backtrace);
         }
-        error!(" `export WEAVER=debug` for more details.");
+        if !has_weaver_env {
+            error!(" `export WEAVER=debug` for more details.");
+        }
 
         ::std::process::exit(1);
     }

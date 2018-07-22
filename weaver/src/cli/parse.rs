@@ -1,6 +1,6 @@
-use ::lib_goo::config::{OutputKind, ServerConfig};
-use clap::{App, Arg, ArgGroup, ArgMatches, SubCommand};
 use super::APP_NAME;
+use clap::{App, Arg, ArgGroup, ArgMatches, SubCommand};
+use lib_goo::config::{OutputKind, ServerConfig};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DESCRIPTION: &str = env!["CARGO_PKG_DESCRIPTION"];
@@ -13,7 +13,6 @@ pub enum Command {
     FlowCreate(String, bool),
     FlowRun(String),
     EpicActivate(String),
-    EpicList,
     Noop,
     ShellPrompt(bool),
 }
@@ -22,7 +21,6 @@ pub struct CommandAndConfig {
     pub command: Command,
     pub server_config: ServerConfig,
 }
-
 
 // Constants for command names
 const COMMAND_ACTIONS: &str = "actions";
@@ -33,7 +31,6 @@ const COMMAND_PROMPT: &str = "prompt";
 
 /// Parse a Command from the command line options.
 pub fn parse() -> CommandAndConfig {
-
     // For now the server config is hardcoded.
     let server = ServerConfig::current();
 
@@ -90,10 +87,8 @@ pub fn parse() -> CommandAndConfig {
         .subcommand(SubCommand::with_name(COMMAND_EPIC)
             .about("Manage epics - longer term projects/deliverables you are working on")
             .arg(Arg::with_name("NAME")
-                .index(1))
-            .arg(Arg::with_name("list")
-                .short("l")
-                .help("list current epics")))
+                .index(1)
+                .required(true)))
         .subcommand(SubCommand::with_name(COMMAND_PROMPT)
             .about("Generate the shell prompt, call this from PS1")
             .arg(Arg::with_name("check")
@@ -113,7 +108,7 @@ fn parse_command(matches: &ArgMatches) -> Command {
         return Command::Noop;
     }
     if let Some(actions) = matches.subcommand_matches(COMMAND_ACTIONS) {
-        use lib_goo::config::{Content, Channel};
+        use lib_goo::config::{Channel, Content};
 
         let content = match actions.value_of("output-content") {
             Some("path") => Content::Path,
@@ -137,8 +132,6 @@ fn parse_command(matches: &ArgMatches) -> Command {
     if let Some(run) = matches.subcommand_matches(COMMAND_EPIC) {
         if let Some(name) = run.value_of("NAME") {
             return Command::EpicActivate(String::from(name));
-        } else {
-            return Command::EpicList;
         }
     }
     if let Some(prompt) = matches.subcommand_matches(COMMAND_PROMPT) {

@@ -7,10 +7,17 @@ mod url;
 mod summary;
 mod url_policies;
 
-
+/// Count the number of times the configuration code is ran.
+fn is_first_run() -> bool {
+    use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+    static RUN: AtomicUsize = ATOMIC_USIZE_INIT;
+    let run = RUN.fetch_add(1, Ordering::SeqCst);
+    run == 1
+}
 /// Configure all the handlers in the app
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
-    let app = action_api::config(app);
+    let should_log = is_first_run();
+    let app = action_api::config(app, should_log);
     let app = search_api::config(app);
     let app = url::config(app);
     let app = summary::config(app);

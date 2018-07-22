@@ -4,7 +4,7 @@ use diesel;
 use diesel::prelude::*;
 use lib_error::*;
 use lib_goo::config::net::Pagination;
-use lib_goo::entities::{FormattedAction, NewAction};
+use lib_goo::entities::{FormattedAction, NewAction, RecommendReason};
 use Connection;
 
 #[derive(Queryable)]
@@ -78,6 +78,7 @@ pub fn fetch_all(connection: &Connection, pagination: &Pagination) -> Result<Vec
             kind: command.kind,
             name: command.command,
             location: location.map(|l| l.location),
+            reason: RecommendReason::default(),
         };
         out.push(formatted);
     }

@@ -2,8 +2,8 @@ use super::shell_proxy;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use display;
 use lib_error::*;
-use lib_goo::config::{Destination, Environment, OutputKind};
-use local_api;
+use lib_goo::config::{net, Destination, Environment, OutputKind};
+use lib_rpc::client as rpc_client;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -14,16 +14,32 @@ pub fn run(
 ) -> Result<()> {
     use lib_goo::config::Channel::*;
 
-    let mut actions = local_api::history(&env, &destination)?;
-    // rebase for easier UI interpretation.
+    let net::PaginatedActions {
+        entries: mut actions,
+        total: _total,
+    } = rpc_client::recommendations(
+        &destination,
+        &net::RecommendationQuery {
+            start: Some(0),
+            length: Some(500),
+            term: None,
+        },
+    )?;
+    // rebase the command folders on the current work dir. This simplifies the UI interpretation.
     for mut a in actions.iter_mut() {
         if let Some(mut l) = a.location.as_mut() {
             let rebased = env.rebase(Path::new(&l).into())?;
             *l = Environment::encode_path(&rebased);
         }
     }
+    // Put the most relevant and recent entries at the bottom.
+    actions.reverse();
+
+    // Run the main UI loop.
     let user_selection =
         display::main_screen::display(actions, &output_kind, Arc::clone(&env), destination)?;
+
+    // Dispatch based on the selection.
     if let Some(action) = user_selection.action {
         match user_selection.kind {
             Some(OutputKind {

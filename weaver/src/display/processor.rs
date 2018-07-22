@@ -5,9 +5,9 @@ use crossbeam_channel as channel;
 use cursive::views::EditView;
 use cursive::{CbFunc as CursiveCbFunc, Cursive};
 use lib_goo::config::Destination;
-use lib_goo::entities::FormattedAction;
+use lib_goo::entities::{FormattedAction, RecommendReason};
 use lib_goo::{config, FilteredVec};
-use local_api;
+use lib_rpc::{client as rpc_client};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
@@ -121,6 +121,7 @@ impl Processor {
             annotation: None,
             epic: None,
             location: None,
+            reason: RecommendReason::UserSelected,
         });
         sel.name = name;
     }
@@ -203,7 +204,7 @@ impl Processor {
     #[allow(dead_code)]
     fn set_annotation(&self, annotation: &str) {
         if let Some(selection) = self.formatted_action.as_ref() {
-            local_api::set_annotation(&self.destination, selection.id as u64, annotation)
+            rpc_client::set_annotation(&self.destination, selection.id as u64, annotation)
                 .expect("saving annotation");
         }
     }

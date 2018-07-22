@@ -2,6 +2,22 @@
 //!
 use config;
 
+/// Reasons why an action may be recommended.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum RecommendReason {
+    /// This command occured in the history of commands in the order in which it is returned.
+    Historical,
+    /// Has happened frequently after the command which has just executed.
+    CorrelatedWithCommand,
+    /// The user has selected or typed this command during the current run.
+    UserSelected,
+}
+impl Default for RecommendReason {
+    fn default() -> Self {
+        RecommendReason::Historical
+    }
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct FormattedAction {
     pub annotation: Option<String>,
@@ -10,6 +26,8 @@ pub struct FormattedAction {
     pub kind: String,
     pub name: String,
     pub location: Option<String>,
+    /// The reason why this action is being recommended.
+    pub reason: RecommendReason,
 }
 
 impl FormattedAction {
