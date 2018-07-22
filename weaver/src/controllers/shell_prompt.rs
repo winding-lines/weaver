@@ -32,7 +32,7 @@ fn _run(destination: &Destination, env: &Environment) -> Result<()> {
     // save any shell history items in the store
     for input in file_utils::read_stdin(1)? {
         if !reject_input(&input) {
-            let action = NewAction::build_from_shell(&input, env)?;
+            let action = NewAction::build_from_shell(&input, None, env)?;
             local_api::insert_action(&action, destination)?;
         }
     }

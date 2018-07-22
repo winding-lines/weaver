@@ -2,9 +2,10 @@
 
 extern crate actix_web;
 extern crate bincode;
+extern crate bson;
 extern crate bytes;
-extern crate inflections;
 extern crate futures;
+extern crate inflections;
 extern crate lib_db;
 extern crate lib_error;
 extern crate lib_goo;
@@ -20,10 +21,8 @@ extern crate walkdir;
 
 pub use server::Server;
 
+mod analyses;
 mod app_state;
-mod server;
 mod handlers;
 mod pages;
-mod analyses;
-
-
+mod server;

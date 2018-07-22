@@ -11,6 +11,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate lib_error;
+extern crate libc;
 extern crate serde_json;
 extern crate sys_info;
 

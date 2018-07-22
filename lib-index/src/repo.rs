@@ -10,7 +10,7 @@ use lib_error::*;
 use metrohash::MetroHash128;
 use rpassword;
 use rust_sodium::crypto::{pwhash, secretbox};
-use std::fs::{read, read_dir, ReadDir, remove_file, write};
+use std::fs::{read, read_dir, ReadDir, remove_file, write, create_dir};
 use std::hash::Hasher;
 use std::path::{Path, PathBuf};
 use super::config::Config;
@@ -128,18 +128,22 @@ impl Repo {
     /// Return the handler under which it was saved.
     pub fn add(&self, collection: &Collection, content: &[u8]) -> Result<String> {
 
+        debug!("Adding content to collection \"{}\"", collection.0);
         // Generate nonce and encrypt
         let nonce = secretbox::gen_nonce();
         let ciphertext = secretbox::seal(content, &nonce, &self.key);
 
-        // Build the output path name
+        debug!("Build output path from hashname");
         let mut hasher = MetroHash128::default();
         hasher.write(&ciphertext);
         let hash = format!("{}", hasher.finish());
         let mut out = self.collection_path(collection);
+        if !out.exists() {
+            create_dir(&out).chain_err(|| "create collection folder")?;
+        };
         out.push(hash.clone());
 
-        // Build the final struct and then write to disk.
+        debug!("Build the disk struct");
         let mut nonce_vec = Vec::new();
         nonce_vec.extend_from_slice(&nonce.0);
         let disk_entry = DiskEntry {
@@ -148,6 +152,8 @@ impl Repo {
         };
         let serialized = serialize(&disk_entry)
             .chain_err(|| "serialize disk entry")?;
+        
+        debug!("writing to disk");
         write(&out, &serialized)?;
         Ok(hash)
     }

@@ -23,35 +23,38 @@ extern crate futures;
 extern crate hyper;
 #[macro_use]
 extern crate log;
+extern crate lib_db;
+extern crate lib_error;
+extern crate lib_goo;
+extern crate lib_index;
+extern crate lib_server;
 extern crate mime;
 extern crate serde;
 extern crate serde_json;
-extern crate lib_goo;
-extern crate lib_db;
-extern crate lib_error;
-extern crate lib_index;
-extern crate lib_server;
 use std::io::{self, Write};
 
-
-mod cli;
 mod app;
+mod cli;
 
 fn main() {
     // Setup the logger on the env variable WEAVER.
     // This allows one to do `export WEAVER=debug` to get a lot more errors.
-    use std::env;
     use env_logger::{Builder, Target};
+    use std::env;
 
     // Use the builder api for more flexibility.
     let mut builder = Builder::new();
     // send output to stderr
     builder.target(Target::Stderr);
+
+    // Setup the log levels, WEAVER env variable takes precedene.
     if env::var("WEAVER").is_ok() {
         builder.parse(&env::var("WEAVER").unwrap());
+    } else {
+        builder.filter_module("actix_web", log::LevelFilter::Info);
+        builder.filter_module("tantivy", log::LevelFilter::Info);
+        builder.filter_level(log::LevelFilter::Error);
     }
-    builder.filter_module("actix_web", log::LevelFilter::Info);
-    builder.filter_module("tantivy", log::LevelFilter::Info);
     builder.init();
 
     // Run the main loop, be concise with error reporting since we may run in PS1.

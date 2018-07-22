@@ -14,7 +14,7 @@ pub struct Annotation {
 }
 
 /// A request for paginated data.
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Pagination {
     /// Offset
     pub start: Option<i64>,
