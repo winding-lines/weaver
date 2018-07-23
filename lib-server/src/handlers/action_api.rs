@@ -61,11 +61,12 @@ fn build_recommendations(
     query: &net::RecommendationQuery,
 ) -> Result<net::PaginatedActions> {
     let connection = store.connection()?;
-    let historical = actions2::fetch_all(&connection, &net::Pagination::default())?;
+    let mut historical = actions2::fetch_all(&connection, &net::Pagination::default())?;
     let mut recommended = recommender::recommend(&historical);
 
     // Fill with historical information.
     let max_recs = query.length.unwrap_or(MAX_RECS as i64);
+    historical.reverse();
     let fill = ((max_recs as i64) - (recommended.len() as i64)) as usize;
     recommended.extend_from_slice(&historical[0..fill]);
     let count = actions2::count(&connection)?;
