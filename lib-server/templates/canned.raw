@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{report}} - Weaver{% endblock title %}
+{% block head %}
+  <style>
+  </style>
+{% endblock head %}
+
+{% block content %}
+{{content}}
+{% endblock content %}

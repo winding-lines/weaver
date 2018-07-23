@@ -1,12 +1,8 @@
 
 # Shell
-    - capture parent pid and exit status code
-    - save the actions to disk to allow for better recommendation, replay
-    - use paginated actions, search, recommendataions from UI
-
+    - capture exit status code
 
 # Web UI
-    - keep nav bar on top of ML visualizations
 
 # Document
     - normalize urls
@@ -15,9 +11,9 @@
         - if the same text appears at the bottom/top of most documents then eliminate
 
 # Recommend
-    - move the shell recommend to the server and provide an API
     - move the search to the server and provide an API
 
-# Overall
+# Chrome extension
 
-    - leverage gitlab and run locally?
+    - tests
+    - implement related documents

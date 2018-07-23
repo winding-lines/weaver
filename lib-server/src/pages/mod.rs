@@ -19,9 +19,15 @@ pub fn build_tera() -> Wesult<tera::Tera> {
 
     // Programmatically add all the templates.
     tera.add_raw_templates(vec![
+        // Define the basic structure of the page.
         ("base.html", include_str!("../../templates/base.html")),
+        // Display reports pre-generated on the disk.
+        ("canned.raw", include_str!("../../templates/canned.raw")),
+        // Search across all the documents in the repo.
         ("search-form", include_str!("../../templates/search-form.html")),
+        // Display the search results.
         ("search-results", include_str!("../../templates/search-results.html")),
+        // Display a lot of all the actions.
         ("history", include_str!("../../templates/history.html"))
     ]).chain_err(|| "template error")?;
 
@@ -40,9 +46,18 @@ pub fn build_context(canned: &Option<Vec<Analysis>>) -> tera::Context {
     ctx
 }
 
+/// Count the number of times the configuration code is ran.
+fn is_first_run() -> bool {
+    use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+    static RUN: AtomicUsize = ATOMIC_USIZE_INIT;
+    let run = RUN.fetch_add(1, Ordering::SeqCst);
+    run == 1
+}
+
 /// Configure all the pages in the app
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
-    let app = canned::config(app);
+    let should_log = is_first_run();
+    let app = canned::config(app, should_log);
     let app = search_form::config(app);
     let app = static_assets::config(app);
     history::config(app)
