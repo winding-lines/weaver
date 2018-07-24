@@ -1,5 +1,6 @@
 /// Build a list of recommended actions from the historical list of actions and current context.
 use lib_goo::entities::{FormattedAction, RecommendReason};
+use std::collections::HashMap;
 
 fn to_recommended(action: &FormattedAction) -> FormattedAction {
     let mut out = action.clone();
@@ -27,20 +28,39 @@ pub fn recommend(history: &[FormattedAction]) -> Vec<FormattedAction> {
         return out;
     }
     // find earlier instances of the current actions and recommend the one following it,
-    // since this is a reverse iterator we need the earlier one.
-    let mut earlier: Option<&FormattedAction> = None;
     let name = &recent_1.name;
-    for other in history.iter().rev().skip(1) {
-        if &other.name == name {
-            if earlier.is_some() {
-                break;
+    let mut earlier = None;
+
+    // Track the most frequently used earliest command.
+    let mut counts = HashMap::new();
+    let mut most_frequent: Option<(String, usize)> = None;
+
+    let first_iter = history.iter().rev().skip(1);
+    let second_iter = history.iter().rev().skip(2);
+    for (first, second) in first_iter.zip(second_iter) {
+        if &second.name == name && &first.name != name {
+            if earlier.is_none() {
+                earlier = Some(first);
             }
-        } else {
-            earlier = Some(other);
+            if first.name != earlier.unwrap().name {
+                let entry = counts.entry(&first.name).or_insert(0);
+                *entry += 1;
+                let previous_max = most_frequent.as_ref().map(|a| a.1).unwrap_or(0);
+                if *entry > previous_max {
+                    most_frequent = Some((first.name.clone(), *entry));
+                };
+            }
         }
     }
     if let Some(earlier) = earlier {
+        debug!("Adding earlier {:?}", earlier);
         out.push(to_recommended(earlier))
+    }
+    if let Some(mf) = most_frequent {
+        debug!("Adding more frequent {:?}", mf);
+        let mut freq = to_recommended(recent_1);
+        freq.name = mf.0;
+        out.push(freq);
     }
 
     out
@@ -68,7 +88,7 @@ mod tests {
 
     #[test]
     fn recommend_from_earlier() {
-        let history: Vec<FormattedAction> = vec!["foo", "bar", "foo", "foo", "foo"]
+        let history: Vec<FormattedAction> = vec!["baz", "foo", "bar", "foo", "foo", "foo"]
             .into_iter()
             .map(|a| FormattedAction {
                 name: a.into(),
@@ -76,6 +96,22 @@ mod tests {
             })
             .collect();
         let r = recommend(&history);
+        assert_eq!(r.len(), 1);
         assert_eq!(&r.first().unwrap().name, "bar");
+    }
+    #[test]
+    fn recommend_from_earlier_and_frequent() {
+        let history: Vec<FormattedAction> = vec![
+            "foo", "baz", "foo", "baz", "foo", "bar", "foo", "foo", "foo",
+        ].into_iter()
+            .map(|a| FormattedAction {
+                name: a.into(),
+                ..FormattedAction::default()
+            })
+            .collect();
+        let r = recommend(&history);
+        assert_eq!(r.len(), 2);
+        assert_eq!(&r.first().unwrap().name, "bar");
+        assert_eq!(&r[1].name, "baz");
     }
 }

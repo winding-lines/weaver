@@ -4,6 +4,8 @@
 extern crate url;
 extern crate lib_error;
 extern crate lib_goo;
+#[macro_use]
+extern crate log;
 
 pub mod recommender;
 pub mod normalize;
