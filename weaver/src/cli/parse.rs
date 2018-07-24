@@ -31,8 +31,6 @@ const COMMAND_PROMPT: &str = "prompt";
 
 /// Parse a Command from the command line options.
 pub fn parse() -> CommandAndConfig {
-    // For now the server config is hardcoded.
-    let server = ServerConfig::current();
 
     let matches = App::new(APP_NAME)
         .version(VERSION)
@@ -40,6 +38,12 @@ pub fn parse() -> CommandAndConfig {
         .arg(Arg::with_name("version")
             .short("V")
             .help("Display the version"))
+        .arg(Arg::with_name("port")
+            .long("port")
+            .global(true)
+            .takes_value(true)
+            .value_name("PORT")
+            .help("Select a port to connect to the server"))
         .subcommand(SubCommand::with_name(COMMAND_ACTIONS)
             .about("select one of your earlier actions")
             .arg(Arg::with_name("run")
@@ -96,9 +100,16 @@ pub fn parse() -> CommandAndConfig {
                 .help("validate the setup")))
         .get_matches();
 
+    let server_config = match matches.value_of("port") {
+        Some(port) => ServerConfig {
+            actix_address: format!("127.0.0.1:{}", port),
+        },
+        None => ServerConfig::current(),
+    };
+
     CommandAndConfig {
         command: parse_command(&matches),
-        server_config: server,
+        server_config,
     }
 }
 
