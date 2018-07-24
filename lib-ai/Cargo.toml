@@ -7,6 +7,7 @@ authors = ["Marius Seritan <git@winding-lines.com>"]
 [dependencies]
 url = "1"
 log = "*"
+chrono = "0.4"
 
 lib-error = {path = "../lib-error"}
 lib-goo = {path = "../lib-goo"}

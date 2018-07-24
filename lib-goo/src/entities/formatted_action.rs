@@ -8,7 +8,9 @@ pub enum RecommendReason {
     /// This command occured in the history of commands in the order in which it is returned.
     Historical,
     /// Has happened frequently after the command which has just executed.
-    CorrelatedWithCommand,
+    CorrelatedMostRecent(i64),
+    /// Has occured the most times after the command which has just completed.
+    CorrelatedMostFrequent(u32),
     /// The user has selected or typed this command during the current run.
     UserSelected,
 }

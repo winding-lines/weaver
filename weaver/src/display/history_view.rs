@@ -5,6 +5,7 @@ use crossbeam_channel as channel;
 use cursive::align::HAlign;
 use cursive::theme::ColorStyle;
 use cursive::Cursive;
+use lib_goo::entities::RecommendReason;
 use lib_tui::{ActionListView, ActionListViewItem};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
@@ -26,7 +27,13 @@ impl ActionListViewItem<BasicColumn> for Row {
             },
             Row::Recommended(ref r) => match column {
                 BasicColumn::Name => Some(r.name.to_string()),
-                BasicColumn::Detail => Some("recommendation".into()),
+                BasicColumn::Detail => match r.reason {
+                    RecommendReason::CorrelatedMostRecent(_age) => Some("most recent".into()),
+                    RecommendReason::CorrelatedMostFrequent(repeat) => {
+                        Some(format!("most frequent {}", repeat))
+                    },
+                    _ => None
+                },
             },
             Row::Separator => match column {
                 BasicColumn::Name => Some("----\\ Recommended /-----".to_string()),

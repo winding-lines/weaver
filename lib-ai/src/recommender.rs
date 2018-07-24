@@ -2,10 +2,27 @@
 use lib_goo::entities::{FormattedAction, RecommendReason};
 use std::collections::HashMap;
 
-fn to_recommended(action: &FormattedAction) -> FormattedAction {
+use chrono::prelude::*;
+
+/// Build a recommended action based on most recent.
+fn to_recommended_recent(action: &FormattedAction) -> FormattedAction {
     let mut out = action.clone();
+    let age = if let Ok(when) = DateTime::parse_from_rfc3339("") {
+        Utc::now().signed_duration_since(when).num_minutes()
+    } else {
+        0
+    };
     out.id = 0;
-    out.reason = RecommendReason::CorrelatedWithCommand;
+    out.reason = RecommendReason::CorrelatedMostRecent(age);
+    out
+}
+
+/// Build a recommended action based on frequency.
+fn to_recommended_frequent(action: &FormattedAction, name: String, repeat: u32) -> FormattedAction {
+    let mut out = action.clone();
+    out.name = name;
+    out.id = 0;
+    out.reason = RecommendReason::CorrelatedMostFrequent(repeat);
     out
 }
 
@@ -24,7 +41,7 @@ pub fn recommend(history: &[FormattedAction]) -> Vec<FormattedAction> {
     }
     let recent_1 = history.last().unwrap();
     if history.len() == 1 {
-        out.push(to_recommended(recent_1));
+        out.push(to_recommended_recent(recent_1));
         return out;
     }
     // find earlier instances of the current actions and recommend the one following it,
@@ -54,12 +71,11 @@ pub fn recommend(history: &[FormattedAction]) -> Vec<FormattedAction> {
     }
     if let Some(earlier) = earlier {
         debug!("Adding earlier {:?}", earlier);
-        out.push(to_recommended(earlier))
+        out.push(to_recommended_recent(earlier))
     }
     if let Some(mf) = most_frequent {
         debug!("Adding more frequent {:?}", mf);
-        let mut freq = to_recommended(recent_1);
-        freq.name = mf.0;
+        let mut freq = to_recommended_frequent(recent_1, mf.0, mf.1 as u32);
         out.push(freq);
     }
 
