@@ -109,7 +109,7 @@ pub fn display(
     // Build the main components: table and processor.
     let rows = Row::build(actions);
     let table = FilteredVec::new(rows, history_height);
-    let initial = table.filter(None);
+    let initial = table.filter(None)?;
 
     let processor_thread = processor::ProcessorThread {
         table,

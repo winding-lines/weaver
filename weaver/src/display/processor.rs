@@ -7,7 +7,7 @@ use cursive::{CbFunc as CursiveCbFunc, Cursive};
 use lib_goo::config::Destination;
 use lib_goo::entities::{FormattedAction, RecommendReason};
 use lib_goo::{config, FilteredVec};
-use lib_rpc::{client as rpc_client};
+use lib_rpc::client as rpc_client;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
@@ -111,6 +111,12 @@ impl Processor {
         self._update_ui();
     }
 
+    /// Display a one line error message in the UI.
+    fn show_error(&mut self, message: String) {
+        self.formatted_action = Some(FormattedAction {name: message, ..FormattedAction::default()});
+        self._update_ui();
+    }
+
     // Handle a submit from the command edit view.
     fn submit_command(&mut self, f: Option<String>) {
         let name = f.unwrap_or_else(String::new);
@@ -130,8 +136,14 @@ impl Processor {
     // optionally selects the given row.
     fn filter(&mut self, f: Option<&str>, selected_row: Option<usize>) {
         debug!("Received filter message {:?}", f);
-        let content = self.table.filter(f);
         let tx = self.self_tx.clone();
+        let content = match self.table.filter(f) {
+            Ok(content) => content,
+            Err(_e) => {
+                self.show_error("BAD REGULAR EXPRESSION".into());
+                return;
+            }
+        };
         let update_table = move |siv: &mut Cursive| {
             if let Some(mut tview) = siv.find_id::<history_view::TView>("actions") {
                 tview.clear();

@@ -88,25 +88,18 @@ impl<T: FilteredItem + Clone + Default> FilteredVec<T> {
 
     /// Build a vector with the entries that match this filter.
     /// For None returns a new vector.
-    pub fn filter(&self, filter: Option<&str>) -> Vec<T> {
+    pub fn filter(&self, filter: Option<&str>) -> Result<Vec<T>> {
         let mut content: Vec<T> = Vec::new();
 
         // Filter if a search item is passed in.
         if let Some(search) = filter {
-            match Matcher::build(search) {
-                // Only filter if the matcher is valid.
-                Ok(matcher) => {
-                    for entry in &self.content {
-                        if matcher.is_match(entry) {
-                            content.push(entry.clone());
-                        }
-                    }
+            let matcher = Matcher::build(search)?;
+            // Only filter if the matcher is valid.
+            for entry in &self.content {
+                if matcher.is_match(entry) {
+                    content.push(entry.clone());
                 }
-                Err(e) => {
-                    // TODO: log the error in a notification in the UI.
-                    error!("bad matcher: {:?}", e);
-                }
-            };
+            }
         } else {
             content.extend_from_slice(&self.content);
         }
@@ -116,7 +109,7 @@ impl<T: FilteredItem + Clone + Default> FilteredVec<T> {
             content.insert(0, T::default())
         }
 
-        content
+        Ok(content)
     }
 }
 
@@ -155,7 +148,7 @@ mod tests {
     #[test]
     fn test_filtered_filter_no_matches() {
         let table = build_table();
-        let filtered = table.filter(Some("z"));
+        let filtered = table.filter(Some("z")).unwrap();
 
         assert_eq!(
             2,
