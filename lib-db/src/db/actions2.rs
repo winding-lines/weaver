@@ -176,6 +176,8 @@ mod tests {
             location: None,
             epic: None,
             host: String::new(),
+            parent_id: None,
+            status_code: None,
         }
     }
 

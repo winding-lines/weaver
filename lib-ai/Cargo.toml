@@ -5,4 +5,7 @@ authors = ["Marius Seritan <git@winding-lines.com>"]
 
 
 [dependencies]
+url = "1"
+
+lib-error = {path = "../lib-error"}
 lib-goo = {path = "../lib-goo"}

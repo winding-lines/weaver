@@ -81,6 +81,19 @@
             ]
         },
         {
+            "type": "shell",
+            "label": "cargo test-lib-ai",
+            "command": "cargo",
+            "args": [
+                "test",
+                "-p",
+                "lib-ai"
+            ],
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
             "type": "cargo",
             "label": "cargo test",
             "command": "cargo",

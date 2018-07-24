@@ -2,6 +2,7 @@
 
 use actix_web::{App, http, HttpResponse, Json, Query, State};
 use app_state::AppState;
+use lib_ai::normalize;
 use lib_goo::entities::PageContent;
 use lib_index::repo::Collection;
 use lib_db::url_policies;
@@ -15,11 +16,13 @@ struct PageStatus {
     summary: Option<String>,
 }
 
-fn _create((state, input): (State<AppState>, Json<PageContent>)) -> Wesult<PageStatus> {
+fn _create((state, mut input): (State<AppState>, Json<PageContent>)) -> Wesult<PageStatus> {
     let store = &*state.store;
     let repo = &*state.repo;
 
     let connection = store.connection()?;
+    input.url = normalize::normalize_url(&input.url)?.into_owned();
+
     let url_restrictions = url_policies::fetch_all(&connection)?;
     if !url_restrictions.should_index(&input.url) {
         return Ok(PageStatus { is_indexed: false, summary: state.indexer.summary() });
