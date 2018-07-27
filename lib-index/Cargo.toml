@@ -21,5 +21,5 @@ lib-goo = {path="../lib-goo"}
 
 [dependencies.tantivy]
 git = "https://github.com/tantivy-search/tantivy"
-rev = "5bc9683801e3a3a7e298b65f196f2ffe10c8b1ed"
+rev = "190e60a41c7a473e6106f07520b117303b6141bd"
 features = ["mmap"]
