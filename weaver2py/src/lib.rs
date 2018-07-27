@@ -49,7 +49,7 @@ fn repo_list(py: Python, password: String) -> PyResult<PyList> {
         .map_err(|e| as_py_err(py, e))?;
 
     let mut entries: Vec<PyObject> = Vec::new();
-    for entry in repo.list().map_err(|e| as_py_err(py, e))? {
+    for entry in repo.list(&PageContent::collection_name().into()).map_err(|e| as_py_err(py, e))? {
         let decrypted = entry.map_err(|e| as_py_err(py, e))?;
         let page_content = bincode::deserialize::<PageContent>(decrypted.as_slice())
             .map_err(|e| as_py_err(py, e))?;

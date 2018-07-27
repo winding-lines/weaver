@@ -14,6 +14,7 @@ use std::fs::{read, read_dir, ReadDir, remove_file, write, create_dir};
 use std::hash::Hasher;
 use std::path::{Path, PathBuf};
 use super::config::Config;
+use std::convert::From;
 
 /// Struct to hold information about the repo.
 pub struct Repo {
@@ -31,6 +32,18 @@ pub struct Collection(pub String);
 impl Collection {
     fn name(&self) -> &str {
         &self.0
+    }
+}
+
+impl From<String> for Collection {
+    fn from(name: String) -> Self {
+        Collection(name)
+    }
+}
+
+impl<'a> From<&'a str> for Collection {
+    fn from(name: &'a str) -> Self {
+        Collection(name.into())
     }
 }
 
