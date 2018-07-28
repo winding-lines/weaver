@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [dependencies]
-error-chain = "0.11"
+error-chain = "0.12"
 diesel = "*"
 sys-info = "*"
 actix-web = "0.6"

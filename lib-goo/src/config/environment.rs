@@ -1,4 +1,5 @@
 use lib_error::{Result, ResultExt};
+use dirs;
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -21,7 +22,7 @@ impl Environment {
     }
 
     pub fn build(epic: Option<String>) -> Result<Environment> {
-        let home_dir = match env::home_dir() {
+        let home_dir = match dirs::home_dir() {
             Some(d) => d,
             None => return Err("cannot get home directory location".into()),
         };

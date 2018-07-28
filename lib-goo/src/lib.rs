@@ -4,6 +4,7 @@
 //! - configuration information
 //!
 extern crate chrono;
+extern crate dirs;
 #[macro_use]
 extern crate log;
 extern crate regex;

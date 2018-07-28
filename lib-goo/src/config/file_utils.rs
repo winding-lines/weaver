@@ -1,4 +1,4 @@
-use std::env;
+use dirs;
 use std::fs;
 use std::fs::File;
 use std::io::{Read, stdin, Write};
@@ -51,9 +51,8 @@ pub fn app_location() -> &'static str {
 
 /// Create if needed and then build a PathBuf to the global application folder.
 pub fn app_folder() -> Result<PathBuf> {
-    use std::env;
 
-    if let Some(home) = env::home_dir() {
+    if let Some(home) = dirs::home_dir() {
         let mut path = PathBuf::new();
         path.push(home);
         path.push(app_location());
@@ -67,7 +66,7 @@ pub fn app_folder() -> Result<PathBuf> {
 }
 
 pub fn default_database() -> Result<PathBuf> {
-    if let Some(home) = env::home_dir() {
+    if let Some(home) = dirs::home_dir() {
         let mut path = PathBuf::new();
         path.push(home);
         path.push(app_location());
