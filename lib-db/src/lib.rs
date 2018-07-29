@@ -17,20 +17,20 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-
-use ::lib_goo::config::file_utils;
 pub use db::actions2;
 pub use db::epics;
 pub use db::url_policies;
 use diesel::sqlite::SqliteConnection;
 use lib_error::*;
+use lib_goo::config::file_utils;
+use std::fs;
+use std::path::PathBuf;
 
-mod db;
 mod backends;
+mod db;
 pub mod setup;
 
 pub type Connection = SqliteConnection;
-
 
 pub struct RealStore {}
 
@@ -49,6 +49,24 @@ impl RealStore {
         Self::create_database()
     }
 
+    pub fn backup_database() -> Result<PathBuf> {
+        let path = file_utils::default_database()?;
+        let backup = file_utils::backup_for_file(file_utils::DEFAULT_DB_NAME)?;
+        fs::copy(path, backup.clone())?;
+
+        Ok(backup)
+    }
+
+    pub fn create_or_backup_database() -> Result<()> {
+        let path = file_utils::default_database()?;
+        if path.exists() {
+            Self::backup_database()?;
+
+            return Ok(());
+        };
+        Self::create_database()
+    }
+
     pub fn create_database() -> Result<()> {
         use diesel::Connection as DieselConnection;
         let path = file_utils::default_database()?;
@@ -59,8 +77,8 @@ impl RealStore {
         if path_s.is_none() {
             return Err("bad path".into());
         }
-        let connection = SqliteConnection::establish(path_s.unwrap())
-            .chain_err(|| "opening up the connection")?;
+        let connection =
+            SqliteConnection::establish(path_s.unwrap()).chain_err(|| "opening up the connection")?;
         embedded_migrations::run(&connection).chain_err(|| "running migration")
     }
 
@@ -91,7 +109,3 @@ impl RealStore {
         Ok(())
     }
 }
-
-
-
-

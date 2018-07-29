@@ -45,6 +45,8 @@ table! {
         id -> Nullable<Integer>,
         kind -> Text,
         url_expr -> Text,
+        title_match -> Nullable<Text>,
+        body_match -> Nullable<Text>,
     }
 }
 

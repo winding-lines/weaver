@@ -26,6 +26,12 @@ pub fn run() -> Result<()> {
     lib_index::init()?;
 
     match command {
+        Backup => {
+            let name = RealStore::backup_database()?;
+            println!("Backup: {}", name.to_str().unwrap());
+
+            Ok(())
+        }
         Check => {
             let mut failures = 0;
             if let Err(e) = RealStore::check() {
@@ -47,7 +53,7 @@ pub fn run() -> Result<()> {
             }
         }
         Create => {
-            RealStore::create_database_if_missing()?;
+            RealStore::create_or_backup_database()?;
             repo::Repo::setup_if_needed(&password_source)?;
             let store = RealStore::build()?;
             setup::populate_data(&store.connection()?)?;

@@ -10,7 +10,9 @@ const DESCRIPTION: &str = env!["CARGO_PKG_DESCRIPTION"];
 /// Commands returned by the parser for execution in the main loop.
 #[derive(Debug)]
 pub enum DataSubCommand {
-    /// Create the various stores
+    /// Backup the current database, to be used before running a migration, for example.
+    Backup, 
+    /// Create the various stores.
     Create,
     /// Check the various stores.
     Check,
@@ -56,6 +58,7 @@ pub fn parse() -> ConfigAndCommand {
                 .long("password")
                 .help("Prompt for password - instead of the default of taking from keyring"),
         )
+        .subcommand(SubCommand::with_name("backup").about("Create a backup of the existing database"))
         .subcommand(SubCommand::with_name("sqlite").about("Start an sqlite3 shell"))
         .subcommand(SubCommand::with_name("setup").about("Create the sqlite3 database"))
         .subcommand(
@@ -109,7 +112,9 @@ pub fn parse() -> ConfigAndCommand {
     } else {
         db::PasswordSource::Keyring
     };
-    let command = if matches.subcommand_matches("sqlite").is_some() {
+    let command = if matches.subcommand_matches("backup").is_some() {
+        DataSubCommand::Backup
+    } else if matches.subcommand_matches("sqlite").is_some() {
         DataSubCommand::Sqlite
     } else if matches.subcommand_matches("setup").is_some() {
         DataSubCommand::Create
