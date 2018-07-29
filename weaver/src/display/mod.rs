@@ -18,7 +18,6 @@ pub struct UserSelection {
 pub enum Row {
     Regular(FormattedAction),
     Recommended(FormattedAction),
-    Separator,
 }
 
 impl Default for Row {

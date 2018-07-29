@@ -35,10 +35,6 @@ impl ActionListViewItem<BasicColumn> for Row {
                     _ => None
                 },
             },
-            Row::Separator => match column {
-                BasicColumn::Name => Some("----\\ Recommended /-----".to_string()),
-                BasicColumn::Detail => None,
-            },
         }
     }
 
@@ -46,7 +42,6 @@ impl ActionListViewItem<BasicColumn> for Row {
         match self {
             Row::Recommended(_) => Some(ColorStyle::secondary()),
             Row::Regular(_) => Some(ColorStyle::primary()),
-            Row::Separator => Some(ColorStyle::secondary()),
         }
     }
 }

@@ -99,7 +99,6 @@ impl Processor {
                 self.formatted_action = match row {
                     Row::Recommended(r) => Some(r),
                     Row::Regular(r) => Some(r),
-                    Row::Separator => None,
                 };
                 let mut mine = self.output_kind.lock().unwrap();
                 mine.content = match col {
