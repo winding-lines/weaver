@@ -44,31 +44,28 @@ pub fn run(
         match user_selection.kind {
             Some(OutputKind {
                 channel: Run,
-                ref content,
             }) => {
                 if action.kind == "shell" {
-                    shell_proxy::run(action.into_shell_command(content, &env)).map(|_| ())
+                    shell_proxy::run(action.into_shell_command()).map(|_| ())
                 } else {
                     shell_proxy::run(format!("open {}", action.name)).map(|_| ())
                 }
             }
             Some(OutputKind {
                 channel: Copy,
-                ref content,
             }) => {
                 eprintln!("Copying to clipboard: {}", action.name);
                 if let Ok(mut ctx) = ClipboardContext::new() {
-                    ctx.set_contents(action.into_shell_command(content, &env))
+                    ctx.set_contents(action.into_shell_command())
                         .expect("set clipboard");
                 }
                 Ok(())
             }
             Some(OutputKind {
                 channel: Print,
-                ref content,
             }) => {
                 if action.kind == "shell" {
-                    println!("{}", action.into_shell_command(content, &env));
+                    println!("{}", action.into_shell_command());
                 } else {
                     println!("open {}", action.name);
                 }

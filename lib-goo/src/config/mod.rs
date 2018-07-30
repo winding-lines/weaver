@@ -4,11 +4,11 @@ pub mod file_utils;
 pub mod net;
 mod environment;
 mod server_config;
-pub mod content;
+mod output_kind;
 pub mod db;
 
 pub use self::environment::Environment;
-pub use self::content::{Channel, Content, OutputKind};
+pub use self::output_kind::{Channel, OutputKind};
 pub use self::server_config::ServerConfig;
 
 

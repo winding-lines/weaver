@@ -70,8 +70,7 @@ impl Processor {
         let content = self.formatted_action
             .as_ref()
             .map(|f| {
-                let data = self.output_kind.lock().unwrap();
-                f.clone().into_shell_command(&(*data).content, &self.env)
+                f.clone().into_shell_command()
             })
             .unwrap_or_else(String::new);
 
@@ -96,15 +95,16 @@ impl Processor {
         match selection {
             None => self.formatted_action = None,
             Some((row, col)) => {
-                self.formatted_action = match row {
-                    Row::Recommended(r) => Some(r),
-                    Row::Regular(r) => Some(r),
+                let mut action = match row {
+                    Row::Recommended(r) => r,
+                    Row::Regular(r) => r,
                 };
-                let mut mine = self.output_kind.lock().unwrap();
-                mine.content = match col {
-                    Column::Left => config::Content::Command,
-                    Column::Right => config::Content::PathWithCommand,
-                }
+                let location = action.location.as_ref().cloned();
+                match col {
+                    Column::Right if location.is_some() => action.name = format!("cd {} && {}", location.unwrap(), action.name),
+                    _ => (),
+                };
+                self.formatted_action = Some(action);
             }
         };
         self._update_ui();

@@ -170,8 +170,8 @@ pub fn display(
     // build the output kind UI
     let mut output_pane = LinearLayout::horizontal();
     output_pane.add_child(TextView::new(format!(
-        "<Enter> will: {} {}| <Esc> to change | Ctrl-G to jump to selection",
-        &kind.channel, &kind.content
+        "<Enter> will: {}| <Esc> to change | Ctrl-G to jump to selection",
+        &kind.channel
     )));
     setup_global_keys(&mut siv, process_tx.clone());
     layout.add_child(output_pane);

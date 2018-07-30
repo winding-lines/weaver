@@ -1,6 +1,5 @@
 //! Representes a denormalized action which can be used in the UI.
 //!
-use config;
 
 /// Reasons why an action may be recommended.
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -33,22 +32,7 @@ pub struct FormattedAction {
 }
 
 impl FormattedAction {
-    pub fn into_shell_command(
-        self,
-        content: &config::Content,
-        _env: &config::Environment,
-    ) -> String {
-        use config::Content::*;
-
-        match *content {
-            Path => self.location
-                .map(|a| format!("cd {}", a))
-                .unwrap_or_else(String::new),
-            PathWithCommand => match self.location {
-                Some(a) => format!("cd {} && {}", a, self.name),
-                None => self.name,
-            },
-            Command => self.name,
-        }
+    pub fn into_shell_command(self) -> String {
+        self.name
     }
 }

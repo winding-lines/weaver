@@ -59,19 +59,8 @@ pub fn parse() -> CommandAndConfig {
                 .short("p")
                 .help("print the selected action"))
             .group(ArgGroup::with_name("output-channel")
-                .args(&["run", "copy", "print"]))
+                .args(&["run", "copy", "print"])))
 
-            .arg(Arg::with_name("path")
-                .long("op")
-                .help("output the path"))
-            .arg(Arg::with_name("command")
-                .long("oc")
-                .help("output the command"))
-            .arg(Arg::with_name("path-with-command")
-                .long("opc")
-                .help(" output the path and the command"))
-            .group(ArgGroup::with_name("output-content")
-                .args(&["path", "command", "path-with-command"])))
 
         .subcommand(SubCommand::with_name(COMMAND_RUN)
             .about("run the flow with the given name")
@@ -119,21 +108,15 @@ fn parse_command(matches: &ArgMatches) -> Command {
         return Command::Noop;
     }
     if let Some(actions) = matches.subcommand_matches(COMMAND_ACTIONS) {
-        use lib_goo::config::{Channel, Content};
+        use lib_goo::config::{Channel};
 
-        let content = match actions.value_of("output-content") {
-            Some("path") => Content::Path,
-            Some("path-with-command") => Content::PathWithCommand,
-            Some("command") | None => Content::Command,
-            Some(_) => panic!("bad output-content"),
-        };
         let channel = match actions.value_of("output-channel") {
             Some("run") => Channel::Run,
             Some("copy") => Channel::Copy,
             Some("print") | None => Channel::Print,
             Some(_) => panic!("bad output-channel"),
         };
-        return Command::ActionHistory(OutputKind { content, channel });
+        return Command::ActionHistory(OutputKind { channel });
     }
     if let Some(run) = matches.subcommand_matches(COMMAND_CREATE) {
         let name = run.value_of("NAME").unwrap();

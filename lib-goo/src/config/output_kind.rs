@@ -1,26 +1,5 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-/// What information to output: just the command or with an additional context.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Content {
-    PathWithCommand,
-    Path,
-    Command,
-}
-
-impl Display for Content {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        use self::Content::*;
-
-        let as_str = match self {
-            PathWithCommand => "Command with Path",
-            Path => "Path",
-            Command => "Command",
-        };
-        f.write_str(as_str)
-    }
-}
-
 /// What Channel to output this information on.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Channel {
@@ -46,5 +25,4 @@ impl Display for Channel {
 #[derive(Clone, Debug)]
 pub struct OutputKind {
     pub channel: Channel,
-    pub content: Content,
 }

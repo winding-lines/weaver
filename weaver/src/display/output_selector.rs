@@ -4,7 +4,7 @@ use cursive::event::{Event, Key};
 use cursive::view::Margins;
 use cursive::views::{Dialog, LinearLayout, OnEventView, RadioGroup, TextView};
 use cursive::Cursive;
-use lib_goo::config::{Channel, Content, OutputKind};
+use lib_goo::config::{Channel, OutputKind};
 use std::cmp::PartialEq;
 use std::fmt::Display;
 
@@ -12,9 +12,6 @@ fn all_channel() -> Vec<Channel> {
     vec![Channel::Print, Channel::Run, Channel::Copy]
 }
 
-fn all_content() -> Vec<Content> {
-    vec![Content::Command, Content::PathWithCommand, Content::Path]
-}
 
 /// Create radio buttons for all the `values`, select the one matching `initial`.
 fn create_radio_group<T>(container: &mut LinearLayout, values: Vec<T>, initial: &T) -> RadioGroup<T>
@@ -38,17 +35,12 @@ where
 pub fn show_output_selection(siv: &mut Cursive, kind: &OutputKind, ch: &channel::Sender<Msg>) {
     let mut output_pane = LinearLayout::vertical();
 
-    output_pane.add_child(TextView::new("Output content:"));
-    let content_group = create_radio_group(&mut output_pane, all_content(), &kind.content);
-
-    output_pane.add_child(TextView::new("Output channel:"));
     let channel_group = create_radio_group(&mut output_pane, all_channel(), &kind.channel);
     output_pane.add_child(TextView::new("<ESC> to exit"));
 
     let esc_handler = {
         // Clone our own handles to data that is needed later.
         let my_channel = channel_group.clone();
-        let my_content = content_group.clone();
         let channel = ch.clone();
 
         // Build the actual handler and take over the above UI handles.
@@ -56,7 +48,6 @@ pub fn show_output_selection(siv: &mut Cursive, kind: &OutputKind, ch: &channel:
         move |s: &mut Cursive| {
             let kind = OutputKind {
                 channel: (&*my_channel.selection()).clone(),
-                content: (&*my_content.selection()).clone(),
             };
 
             channel.send(Msg::SelectKind(kind));
