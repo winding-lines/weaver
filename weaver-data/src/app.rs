@@ -69,18 +69,18 @@ pub fn run() -> Result<()> {
         }
         DumpUrlPolicies => {
             let store = RealStore::build()?;
-            let policies = lib_db::url_policies::fetch_all(&store.connection()?)?;
+            let policies = lib_db::store_policies::Restrictions::fetch(&store.connection()?)?;
             println!("\nLog all url accesses, with the following exceptions:");
             for p in policies.do_not_log {
-                println!("  {}", p);
+                println!("  {:?}", p);
             }
             println!("\nFull text index only the following urls:");
             for p in policies.do_index {
-                println!("  {}", p);
+                println!("  {:?}", p);
             }
             println!("\nException from the full text index list:");
             for p in policies.do_not_index {
-                println!("  {}", p);
+                println!("  {:?}", p);
             }
             Ok(())
         }

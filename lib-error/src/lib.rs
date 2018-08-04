@@ -8,6 +8,7 @@ extern crate diesel;
 #[macro_use]
 extern crate error_chain;
 extern crate reqwest;
+extern crate regex;
 extern crate sys_info;
 
 use std::convert;
@@ -22,6 +23,7 @@ error_chain! {
         SysInfo(::sys_info::Error);
         Io(::std::io::Error);
         Reqwest(::reqwest::Error);
+        Regex(::regex::Error);
     }
 }
 

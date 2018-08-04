@@ -85,3 +85,19 @@ Type `weaver --help` to get more help. Two frequent use cases are:
   in the shell command, if you have installed as above.
 - re-running a command, this is done with the `weaver actions` command
 
+
+## Content filtering
+
+If you have documents that should not show in search results create a file ~/.weaver/user-data/user-content.json, sample content
+
+```
+{
+  "restrictions": [
+    {
+      "kind": "hide",
+      "url_expr": "https://docs.google.com",
+      "title_match": "(?i)confidential"
+    }
+  ]
+}
+```

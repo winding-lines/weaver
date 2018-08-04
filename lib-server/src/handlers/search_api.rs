@@ -5,7 +5,7 @@ use app_state::AppState;
 use lib_ai::normalize;
 use lib_goo::entities::PageContent;
 use lib_index::repo::Collection;
-use lib_db::url_policies;
+use lib_db::store_policies;
 use lib_error::{Result as Wesult, ResultExt};
 use bincode;
 
@@ -23,8 +23,8 @@ fn _create((state, mut input): (State<AppState>, Json<PageContent>)) -> Wesult<P
     let connection = store.connection()?;
     input.url = normalize::normalize_url(&input.url)?.into_owned();
 
-    let url_restrictions = url_policies::fetch_all(&connection)?;
-    if !url_restrictions.should_index(&input.url) {
+    let url_restrictions = store_policies::Restrictions::fetch(&connection)?;
+    if !url_restrictions.should_index(&input) {
         return Ok(PageStatus { is_indexed: false, summary: state.indexer.summary() });
     }
 
@@ -60,7 +60,7 @@ fn search((state, query): (State<AppState>, Query<SearchQuery>)) -> String {
     indexer.search(&query.term)
         .map(|f|
             f.matches.iter()
-                .map(|d| format!("{} {}\n", d.0, d.1))
+                .map(|d| format!("{} {}\n", d.url, d.title))
                 .fold(String::new(), |mut a, n| {
                     a.push_str(&n);
                     a

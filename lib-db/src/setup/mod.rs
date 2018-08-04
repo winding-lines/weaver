@@ -1,7 +1,9 @@
 //! Populate the database with initial data.
 
 use ::Connection;
-use ::db::url_policies;
+use ::db::url_restrictions::{self, UrlRestriction};
+use lib_goo::config::file_utils;
+use serde_json as json;
 use lib_error::*;
 
 // Populate the database with the URL that should not be logged
@@ -27,7 +29,8 @@ fn do_not_log_urls(connection: &Connection) -> Result<()> {
         "\\.ebay\\.", "www\\.amazon\\.com"
     ];
     for u in sites {
-        url_policies::insert(connection, &url_policies::UrlPolicy::NoLog, u)?;
+        let ur = UrlRestriction::with_url(&url_restrictions::StorePolicy::NoLog, u);
+        url_restrictions::insert(connection, ur)?;
     }
     Ok(())
 }
@@ -48,7 +51,29 @@ fn do_index(connection: &Connection) -> Result<()> {
         "https://*.readthedocs.io/*"
     ];
     for u in sites {
-        url_policies::insert(connection, &url_policies::UrlPolicy::DoIndex, u)?;
+        let ur = UrlRestriction::with_url( &url_restrictions::StorePolicy::DoIndex, u);
+        url_restrictions::insert(connection, ur)?;
+    }
+    Ok(())
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserContent {
+    restrictions: Vec<url_restrictions::UrlRestriction>,
+}
+
+fn user_defined(connection: &Connection) -> Result<()> {
+    let mut input = file_utils::app_folder()?;
+    input.push("user-data");
+    input.push("user-content.json");
+    if input.exists() {
+        let content = file_utils::read_content(&input)?;
+        let uc:UserContent = json::from_str(&content).chain_err(|| "reading user content")?;
+        for r in uc.restrictions {
+            println!("creating user-content {:?}", r);
+            url_restrictions::insert(&connection, r)?;
+        }
     }
     Ok(())
 }
@@ -57,5 +82,6 @@ fn do_index(connection: &Connection) -> Result<()> {
 pub fn populate_data(connection: &Connection) -> Result<()> {
     do_not_log_urls(connection)?;
     do_index(connection)?;
+    user_defined(connection)?;
     Ok(())
 }

@@ -1,6 +1,6 @@
 /// Page content as it is received from the Chrome Extension and serialized in the encrypted repo.
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PageContent {
     pub url: String,
     pub title: String,

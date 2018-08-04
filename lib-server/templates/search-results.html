@@ -35,8 +35,8 @@
     </div>
     {% for i in results.matches %}
       <div class="result">
-        <h4><a href={{ i.0 }}>{{ i.1 }}</a></h4>
-        <div class="link"><a href={{ i.0 }}>{{ i.0 }}</a></div>
+        <h4><a href={{ i.url }}>{{ i.title }}</a></h4>
+        <div class="link"><a href={{ i.url }}>{{ i.url }}</a></div>
       </div>
     {% endfor %}
 

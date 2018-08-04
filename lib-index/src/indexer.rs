@@ -17,7 +17,7 @@ pub struct Indexer {
 #[derive(Serialize, Deserialize, Default)]
 pub struct Results {
     pub total: u64,
-    pub matches: Vec<(String, String)>,
+    pub matches: Vec<PageContent>,
 }
 
 fn index_path() -> Result<PathBuf> {
@@ -78,7 +78,7 @@ impl Indexer {
         Ok(())
     }
 
-    pub fn search(&self, what: &str) -> Result<Results> {
+    pub fn search(&self, what: &str, ) -> Result<Results> {
         self.index.load_searchers()
             .chain_err(|| "load searchers")?;
 
@@ -146,7 +146,11 @@ impl Indexer {
                 .unwrap_or("no id");
             let found_title = retrieved_doc.get_first(f_title).map(|a| a.text())
                 .unwrap_or("no title");
-            out.push((String::from(found_id), String::from(found_title)));
+            out.push(PageContent {
+                url: String::from(found_id),
+                title: String::from(found_title),
+                body: String::new(),
+            });
         }
         Ok(Results {
             total: searcher.num_docs(),

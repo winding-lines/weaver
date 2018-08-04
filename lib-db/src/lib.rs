@@ -19,7 +19,7 @@ extern crate serde_json;
 
 pub use db::actions2;
 pub use db::epics;
-pub use db::url_policies;
+pub use db::url_restrictions;
 use diesel::sqlite::SqliteConnection;
 use lib_error::*;
 use lib_goo::config::file_utils;
@@ -29,6 +29,7 @@ use std::path::PathBuf;
 mod backends;
 mod db;
 pub mod setup;
+pub mod store_policies;
 
 pub type Connection = SqliteConnection;
 
