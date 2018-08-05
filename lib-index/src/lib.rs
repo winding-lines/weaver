@@ -22,7 +22,6 @@ use lib_error::*;
 mod config;
 mod indexer;
 pub mod repo;
-pub use repo::Repo;
 
 /// Initialize libraries required by the stores.
 pub fn init() -> Result<()> {

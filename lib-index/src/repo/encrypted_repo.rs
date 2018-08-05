@@ -1,50 +1,27 @@
 //! Provide a repository of documents, encrypts them with a key stored in the registry.
 //! The repo supports multiple collections which translate to folders on disk.
-//! The documents are just binary blobs, it is the responsibility of the caller 
+//! The documents are just binary blobs, it is the responsibility of the caller
 //! to add some structure to them.
 
 use bincode::{deserialize, serialize};
+use config::Config;
 use keyring;
-use lib_goo::config::db::PasswordSource;
 use lib_error::*;
+use lib_goo::config::db::PasswordSource;
 use metrohash::MetroHash128;
+use repo::{Collection, Repo};
 use rpassword;
 use rust_sodium::crypto::{pwhash, secretbox};
-use std::fs::{read, read_dir, ReadDir, remove_file, write, create_dir};
+use std::fs::{create_dir, read, read_dir, remove_file, write, ReadDir};
 use std::hash::Hasher;
 use std::path::{Path, PathBuf};
-use super::config::Config;
-use std::convert::From;
 
 /// Struct to hold information about the repo.
-pub struct Repo {
+pub struct EncryptedRepo {
     /// The key used to decrypt the file.
     key: secretbox::Key,
     /// The base folder where all the encrypted files are saved.
     base_folder: PathBuf,
-}
-
-
-/// Represents a collection in the repo.
-#[derive(Debug)]
-pub struct Collection(pub String);
-
-impl Collection {
-    fn name(&self) -> &str {
-        &self.0
-    }
-}
-
-impl From<String> for Collection {
-    fn from(name: String) -> Self {
-        Collection(name)
-    }
-}
-
-impl<'a> From<&'a str> for Collection {
-    fn from(name: &'a str) -> Self {
-        Collection(name.into())
-    }
 }
 
 /// An encrypted file saved to disk.
@@ -59,31 +36,32 @@ struct DiskEntry {
 /// Used to list the files in the repo.
 pub struct RepoDir<'a> {
     read_dir: ReadDir,
-    repo: &'a Repo,
+    repo: &'a EncryptedRepo,
 }
 
 /// The entry returned by the RepoDir iterator.
 pub struct RepoEntry(Vec<u8>);
 
-impl Repo {
+impl EncryptedRepo {
     // Build the repo with information from its config and the keyring
-    pub fn build(password_source: &PasswordSource) -> Result<Repo> {
+    pub fn build(password_source: &PasswordSource) -> Result<EncryptedRepo> {
         let base_folder = Config::repo_folder()?;
         let config = Config::read_or_build()?;
         let salt = config.salt()?;
 
-        let password = Repo::get_password(password_source)?;
+        let password = Self::get_password(password_source)?;
         let mut key = secretbox::Key([0; secretbox::KEYBYTES]);
         {
             let secretbox::Key(ref mut kb) = key;
-            pwhash::derive_key(kb, password.as_bytes(), &salt,
-                               pwhash::OPSLIMIT_INTERACTIVE,
-                               pwhash::MEMLIMIT_INTERACTIVE).unwrap();
+            pwhash::derive_key(
+                kb,
+                password.as_bytes(),
+                &salt,
+                pwhash::OPSLIMIT_INTERACTIVE,
+                pwhash::MEMLIMIT_INTERACTIVE,
+            ).unwrap();
         };
-        Ok(Repo {
-            key,
-            base_folder,
-        })
+        Ok(Self { key, base_folder })
     }
 
     /// Compute the path for the given collection.
@@ -100,7 +78,10 @@ impl Repo {
                 let ring = keyring::Keyring::new("weaver", "weaver-user");
                 match ring.get_password() {
                     Err(e) => {
-                        let msg = format!("please run `weaver-data create` in order to setup the repo\n{}", e);
+                        let msg = format!(
+                            "please run `weaver-data create` in order to setup the repo\n{}",
+                            e
+                        );
                         Err(msg.into())
                     }
                     Ok(pwd) => {
@@ -113,22 +94,22 @@ impl Repo {
                 }
             }
             PasswordSource::Prompt => {
-                let new_pwd = rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
+                let new_pwd =
+                    rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
                 Ok(new_pwd)
             }
-            PasswordSource::PassIn(value) => {
-                Ok(value.clone())
-            }
+            PasswordSource::PassIn(value) => Ok(value.clone()),
         }
     }
 
     pub fn setup_if_needed(source: &PasswordSource) -> Result<()> {
-        if Repo::get_password(source).is_ok() {
+        if Self::get_password(source).is_ok() {
             return Ok(());
         }
         if source == &PasswordSource::Keyring {
             let ring = keyring::Keyring::new("weaver", "weaver-user");
-            let new_pwd = rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
+            let new_pwd =
+                rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
             ring.set_password(&new_pwd)
                 .chain_err(|| "save password in keyring")?;
             println!("Password saved in the keyring.");
@@ -136,48 +117,12 @@ impl Repo {
         Ok(())
     }
 
-
-    /// Add the file to the repository, encrypt it.
-    /// Return the handler under which it was saved.
-    pub fn add(&self, collection: &Collection, content: &[u8]) -> Result<String> {
-
-        debug!("Adding content to collection \"{}\"", collection.0);
-        // Generate nonce and encrypt
-        let nonce = secretbox::gen_nonce();
-        let ciphertext = secretbox::seal(content, &nonce, &self.key);
-
-        debug!("Build output path from hashname");
-        let mut hasher = MetroHash128::default();
-        hasher.write(&ciphertext);
-        let hash = format!("{}", hasher.finish());
-        let mut out = self.collection_path(collection);
-        if !out.exists() {
-            create_dir(&out).chain_err(|| "create collection folder")?;
-        };
-        out.push(hash.clone());
-
-        debug!("Build the disk struct");
-        let mut nonce_vec = Vec::new();
-        nonce_vec.extend_from_slice(&nonce.0);
-        let disk_entry = DiskEntry {
-            nonce: nonce_vec,
-            content: ciphertext,
-        };
-        let serialized = serialize(&disk_entry)
-            .chain_err(|| "serialize disk entry")?;
-        
-        debug!("writing to disk");
-        write(&out, &serialized)?;
-        Ok(hash)
-    }
-
     /// Delete the file from the repo.
     pub fn delete(&self, collection: &Collection, id: &str) -> Result<()> {
         let mut out = self.collection_path(collection);
         out.push(id);
         if out.exists() {
-            remove_file(&out)
-                .chain_err(|| "Error deleting file")
+            remove_file(&out).chain_err(|| "Error deleting file")
         } else {
             Err("File does not exist".into())
         }
@@ -187,7 +132,6 @@ impl Repo {
     pub fn list(&self, collection: &Collection) -> Result<RepoDir> {
         let read_dir = read_dir(&self.collection_path(collection))?;
 
-
         Ok(RepoDir {
             read_dir,
             repo: &self,
@@ -196,7 +140,6 @@ impl Repo {
 
     /// Read and decrypt the given handle.
     pub fn read(&self, collection: &Collection, id: &str) -> Result<Vec<u8>> {
-
         // Read the file
         let mut out = self.collection_path(collection);
         out.push(id);
@@ -239,9 +182,43 @@ impl Repo {
         }
         let _salt = config.unwrap().salt()?;
 
-        let _password = Repo::get_password(password_source)?;
+        let _password = Self::get_password(password_source)?;
         println!("Repo ok.");
         Ok(())
+    }
+}
+
+impl Repo for EncryptedRepo {
+    /// Add the file to the repository, encrypt it.
+    /// Return the handler under which it was saved.
+    fn add(&self, collection: &Collection, content: &[u8]) -> Result<String> {
+        debug!("Adding content to collection \"{}\"", collection.0);
+        // Generate nonce and encrypt
+        let nonce = secretbox::gen_nonce();
+        let ciphertext = secretbox::seal(content, &nonce, &self.key);
+
+        debug!("Build output path from hashname");
+        let mut hasher = MetroHash128::default();
+        hasher.write(&ciphertext);
+        let hash = format!("{}", hasher.finish());
+        let mut out = self.collection_path(collection);
+        if !out.exists() {
+            create_dir(&out).chain_err(|| "create collection folder")?;
+        };
+        out.push(hash.clone());
+
+        debug!("Build the disk struct");
+        let mut nonce_vec = Vec::new();
+        nonce_vec.extend_from_slice(&nonce.0);
+        let disk_entry = DiskEntry {
+            nonce: nonce_vec,
+            content: ciphertext,
+        };
+        let serialized = serialize(&disk_entry).chain_err(|| "serialize disk entry")?;
+
+        debug!("writing to disk");
+        write(&out, &serialized)?;
+        Ok(hash)
     }
 }
 
@@ -250,7 +227,6 @@ impl<'a> Iterator for RepoDir<'a> {
     type Item = Result<RepoEntry>;
 
     fn next(&mut self) -> Option<Result<RepoEntry>> {
-
         // Loop until we find an encrypted file or done.
         loop {
             match self.read_dir.next() {
@@ -274,5 +250,3 @@ impl RepoEntry {
         &self.0
     }
 }
-
-

@@ -6,6 +6,7 @@ use lib_goo::config::db::PasswordSource;
 use lib_goo::config::file_utils;
 use lib_goo::entities::PageContent;
 use lib_index::{self, repo, Indexer};
+use lib_index::repo::Repo;
 use std::fs::read;
 use std::path::PathBuf;
 use std::process::Command;
@@ -38,7 +39,7 @@ pub fn run() -> Result<()> {
                 println!("Failure in the sqlite store: {:?}", e);
                 failures += 1;
             }
-            if let Err(e) = repo::Repo::check(&password_source) {
+            if let Err(e) = repo::EncryptedRepo::check(&password_source) {
                 println!("Failure in the text repo: {:?}", e);
                 failures += 1;
             }
@@ -54,14 +55,14 @@ pub fn run() -> Result<()> {
         }
         Create => {
             RealStore::create_or_backup_database()?;
-            repo::Repo::setup_if_needed(&password_source)?;
+            repo::EncryptedRepo::setup_if_needed(&password_source)?;
             let store = RealStore::build()?;
             setup::populate_data(&store.connection()?)?;
             Indexer::setup_if_needed()?;
             Ok(())
         }
         Decrypt(collection, handle) => {
-            let repo = repo::Repo::build(&password_source)?;
+            let repo = repo::EncryptedRepo::build(&password_source)?;
 
             let decoded = repo.read(&collection, &handle)?;
             println!("{}", String::from_utf8(decoded).unwrap());
@@ -85,7 +86,7 @@ pub fn run() -> Result<()> {
             Ok(())
         }
         Encrypt(collection, filename) => {
-            let repo = repo::Repo::build(&password_source)?;
+            let repo = repo::EncryptedRepo::build(&password_source)?;
 
             // open source file
             let path = PathBuf::from(filename);
@@ -101,7 +102,7 @@ pub fn run() -> Result<()> {
         Noop => Ok(()),
         RebuildIndex => {
             lib_index::init()?;
-            let repo = repo::Repo::build(&password_source)?;
+            let repo = repo::EncryptedRepo::build(&password_source)?;
             Indexer::delete_all()?;
             Indexer::setup_if_needed()?;
             let indexer = Indexer::build()?;

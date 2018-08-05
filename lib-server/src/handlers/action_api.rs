@@ -10,7 +10,7 @@ use lib_error::*;
 use lib_goo::config::net;
 use lib_goo::entities::NewAction;
 use lib_index::repo::Collection;
-use lib_index::Repo;
+use lib_index::repo::Repo;
 
 // Wrap into a bson envelope and save into the repo.
 fn save_to_repo(repo: &Repo, new_action: &NewAction) -> Result<String> {

@@ -75,7 +75,7 @@ fn start(run: &ServerRun, config: &ServerConfig, password_source: &PasswordSourc
     // Initialize the stores before any (optional) forking.
     let store = Arc::new(RealStore::build()?);
     lib_index::init()?;
-    let repo = Arc::new(lib_index::Repo::build(password_source)?);
+    let repo = Arc::new(lib_index::repo::EncryptedRepo::build(password_source)?);
 
     match run {
         ServerRun::Foreground => {}

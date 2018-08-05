@@ -5,7 +5,8 @@ use app_state::AppState;
 use handlers;
 use lib_db::RealStore;
 use lib_error::*;
-use lib_index::{Indexer, Repo};
+use lib_index::repo::EncryptedRepo;
+use lib_index::Indexer;
 use pages;
 use std::sync::Arc;
 
@@ -13,7 +14,7 @@ use std::sync::Arc;
 pub struct Server {}
 
 impl Server {
-    pub fn start(addr: &str, store: Arc<RealStore>, repo: Arc<Repo>) -> Result<Server> {
+    pub fn start(addr: &str, store: Arc<RealStore>, repo: Arc<EncryptedRepo>) -> Result<Server> {
         let indexer = Arc::new(Indexer::build()?);
 
         let s = server::new(move || {

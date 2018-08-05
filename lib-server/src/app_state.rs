@@ -1,7 +1,8 @@
 use analyses::Analysis;
 use lib_db::SqlProvider;
 use lib_error::Result;
-use lib_index::{Indexer, Repo};
+use lib_index::repo::Repo;
+use lib_index::Indexer;
 use std::sync::Arc;
 use tera;
 
