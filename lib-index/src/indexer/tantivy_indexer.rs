@@ -1,6 +1,7 @@
 //! Provide an interface to the Tantivy index.
 //!
 use lib_goo::config::file_utils::app_folder;
+use ::indexer::{Indexer,Results};
 use lib_goo::entities::PageContent;
 use std::fs;
 use std::path::PathBuf;
@@ -10,15 +11,10 @@ use tantivy::query::QueryParser;
 use tantivy::schema::*;
 use lib_error::*;
 
-pub struct Indexer {
+pub struct TantivyIndexer {
     index: Index,
 }
 
-#[derive(Serialize, Deserialize, Default)]
-pub struct Results {
-    pub total: u64,
-    pub matches: Vec<PageContent>,
-}
 
 fn index_path() -> Result<PathBuf> {
     let mut path = app_folder()?;
@@ -26,22 +22,71 @@ fn index_path() -> Result<PathBuf> {
     Ok(path)
 }
 
-impl Indexer {
+impl TantivyIndexer {
 
     /// Build the application wide indexer. If the index is not setup properly this will
     /// fail and the user should call the setup function.
-    pub fn build() -> Result<Indexer> {
+    pub fn build() -> Result<Self> {
         let index_path = index_path()?;
 
         let index = Index::open_in_dir(index_path)
             .chain_err(|| "open index")?;
 
-        Ok(Indexer {
+        Ok(Self {
             index
         })
     }
 
-    pub fn add(&self, page_content: &PageContent) -> Result<(u64)> {
+
+    /// Delete all the files int the index.
+    pub fn delete_all() -> Result<()> {
+        let index_path = index_path()?;
+        if index_path.exists() {
+            fs::remove_dir_all(&index_path)?;
+        }
+        Ok(())
+    }
+
+    /// Setup the index
+    pub fn setup_if_needed() -> Result<()> {
+
+        let index_path = index_path()?;
+        if !index_path.exists() {
+            fs::create_dir(&index_path).chain_err(|| "create index folder")?;
+            let mut schema_builder = SchemaBuilder::default();
+
+            schema_builder.add_text_field("id", STRING | STORED);
+
+            schema_builder.add_text_field("title", TEXT | STORED);
+
+            schema_builder.add_text_field("body", TEXT);
+
+            let schema = schema_builder.build();
+            let _ = Index::create_in_dir(index_path.clone(), schema)
+                .chain_err(|| "create index")?;
+        }
+
+        Ok(())
+
+    }
+
+    /// Display information about the repo, returns any errors.
+    pub fn check() -> Result<()> {
+        let index_path = index_path()?;
+
+        if !index_path.exists() {
+            return Err("Index path does not exist".into());
+        }
+        let indexer = Self::build()?;
+        println!("Indexer ok {:?}.", indexer.summary());
+        Ok(())
+    }
+
+}
+
+impl Indexer for TantivyIndexer {
+
+    fn add(&self, page_content: &PageContent) -> Result<(u64)> {
         let mut index_writer = self.index
             .writer_with_num_threads(1, 10_000_000)
             .chain_err(|| "create index writer")?;
@@ -64,7 +109,7 @@ impl Indexer {
             .chain_err(|| "commit index")
     }
 
-    pub fn delete(&self, id: &str) -> Result<()> {
+    fn delete(&self, id: &str) -> Result<()> {
         let mut index_writer = self.index.writer(50_000_000)
             .chain_err(|| "create index writer")?;
 
@@ -78,7 +123,7 @@ impl Indexer {
         Ok(())
     }
 
-    pub fn search(&self, what: &str, ) -> Result<Results> {
+    fn search(&self, what: &str, ) -> Result<Results> {
         self.index.load_searchers()
             .chain_err(|| "load searchers")?;
 
@@ -158,52 +203,8 @@ impl Indexer {
         })
     }
 
-    /// Delete all the files int the index.
-    pub fn delete_all() -> Result<()> {
-        let index_path = index_path()?;
-        if index_path.exists() {
-            fs::remove_dir_all(&index_path)?;
-        }
-        Ok(())
-    }
-
-    /// Setup the index
-    pub fn setup_if_needed() -> Result<()> {
-
-        let index_path = index_path()?;
-        if !index_path.exists() {
-            fs::create_dir(&index_path).chain_err(|| "create index folder")?;
-            let mut schema_builder = SchemaBuilder::default();
-
-            schema_builder.add_text_field("id", STRING | STORED);
-
-            schema_builder.add_text_field("title", TEXT | STORED);
-
-            schema_builder.add_text_field("body", TEXT);
-
-            let schema = schema_builder.build();
-            let _ = Index::create_in_dir(index_path.clone(), schema)
-                .chain_err(|| "create index")?;
-        }
-
-        Ok(())
-
-    }
-
-    /// Display information about the repo, returns any errors.
-    pub fn check() -> Result<()> {
-        let index_path = index_path()?;
-
-        if !index_path.exists() {
-            return Err("Index path does not exist".into());
-        }
-        let indexer = Self::build()?;
-        println!("Indexer ok {:?}.", indexer.summary());
-        Ok(())
-    }
-
     /// Build a textual representation of the summary to be displayed in the web interface.
-    pub fn summary(&self) -> Option<String> {
+    fn summary(&self) -> Option<String> {
         self.search("weaver")
             .map(|r| format!("Indexed docs: {}", r.total))
             .ok()

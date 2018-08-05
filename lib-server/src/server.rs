@@ -6,7 +6,7 @@ use handlers;
 use lib_db::RealStore;
 use lib_error::*;
 use lib_index::repo::EncryptedRepo;
-use lib_index::Indexer;
+use lib_index::TantivyIndexer;
 use pages;
 use std::sync::Arc;
 
@@ -15,7 +15,7 @@ pub struct Server {}
 
 impl Server {
     pub fn start(addr: &str, store: Arc<RealStore>, repo: Arc<EncryptedRepo>) -> Result<Server> {
-        let indexer = Arc::new(Indexer::build()?);
+        let indexer = Arc::new(TantivyIndexer::build()?);
 
         let s = server::new(move || {
             vec![

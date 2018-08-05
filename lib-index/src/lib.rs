@@ -15,7 +15,7 @@ extern crate lib_error;
 extern crate lib_goo;
 extern crate tantivy;
 
-pub use indexer::Indexer;
+pub use indexer::{Indexer, TantivyIndexer};
 pub use indexer::Results;
 use lib_error::*;
 

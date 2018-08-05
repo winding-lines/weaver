@@ -5,7 +5,7 @@ use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use lib_goo::config::file_utils;
 use lib_goo::entities::PageContent;
-use lib_index::{self, repo, Indexer};
+use lib_index::{self, repo, TantivyIndexer, Indexer};
 use lib_index::repo::Repo;
 use std::fs::read;
 use std::path::PathBuf;
@@ -43,7 +43,7 @@ pub fn run() -> Result<()> {
                 println!("Failure in the text repo: {:?}", e);
                 failures += 1;
             }
-            if let Err(e) = Indexer::check() {
+            if let Err(e) = TantivyIndexer::check() {
                 println!("Failure in the indexer {:?}", e);
                 failures += 1;
             }
@@ -58,7 +58,7 @@ pub fn run() -> Result<()> {
             repo::EncryptedRepo::setup_if_needed(&password_source)?;
             let store = RealStore::build()?;
             setup::populate_data(&store.connection()?)?;
-            Indexer::setup_if_needed()?;
+            TantivyIndexer::setup_if_needed()?;
             Ok(())
         }
         Decrypt(collection, handle) => {
@@ -103,9 +103,9 @@ pub fn run() -> Result<()> {
         RebuildIndex => {
             lib_index::init()?;
             let repo = repo::EncryptedRepo::build(&password_source)?;
-            Indexer::delete_all()?;
-            Indexer::setup_if_needed()?;
-            let indexer = Indexer::build()?;
+            TantivyIndexer::delete_all()?;
+            TantivyIndexer::setup_if_needed()?;
+            let indexer = TantivyIndexer::build()?;
             for entry in repo.list(&repo::Collection(PageContent::collection_name().into()))? {
                 let decrypted = entry?;
                 let page_content = bincode::deserialize::<PageContent>(decrypted.as_slice())
