@@ -26,18 +26,20 @@ pub(crate) fn config(app: App<()>) -> App<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::test::{self, TestServer};
+    use actix_web::test::TestServer;
     use actix_web::*;
 
     #[test]
-    fn test() {
-        let mut srv = TestServer::build_with_state(|| {
-            ()
-        }).start(|app| {
+    fn test_svg() {
+        let mut srv = TestServer::build_with_state(|| ()).start(|app| {
             app.resource("/index.html", |r| r.f(svgs));
         });
 
-        let request = srv.get().uri(srv.url("/index.html")).finish().expect("request");
+        let request = srv
+            .get()
+            .uri(srv.url("/index.html"))
+            .finish()
+            .expect("request");
         let response = srv.execute(request.send()).expect("execute send");
 
         assert!(response.status().is_success());

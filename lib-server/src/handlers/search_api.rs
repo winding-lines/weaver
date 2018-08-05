@@ -83,3 +83,43 @@ pub(crate) fn config(app: App<AppState>) -> App<AppState> {
         r.method(http::Method::POST).with(create);
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::test::TestServer;
+    use actix_web::*;
+    use app_state::tests::default_test;
+
+    fn state() -> AppState {
+        let s = default_test();
+        s.indexer.add(&PageContent {
+            url: "url foo".into(),
+            title: "title bar".into(),
+            body: "body baz".into(),
+        }).expect("adding test PageContent");
+        s
+    }
+
+    #[test]
+    fn test_resource() {
+        let mut srv = TestServer::build_with_state(|| state()).start(|app| {
+            app.resource("/search", |r| {
+                r.method(http::Method::GET).with(search);
+                r.method(http::Method::POST).with(create);
+            });
+        });
+
+        let request = srv
+            .get()
+            .uri(srv.url("/search?term=1"))
+            .finish()
+            .expect("request");
+        let response = srv.execute(request.send()).expect("execute send");
+
+        assert!(response.status().is_success());
+        let bytes = srv.execute(response.body()).expect("execute body");
+        let data = String::from_utf8(bytes.to_vec()).expect("bytes");
+        assert_eq!(&data, "url foo title bar\n");
+    }
+}
