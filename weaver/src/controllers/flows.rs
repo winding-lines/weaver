@@ -65,7 +65,12 @@ pub fn active() -> Result<Vec<String>> {
 fn run_flow(flow: &Flow) -> Result<()> {
     for action in &flow.actions {
         println!("  {}", action);
-        shell_proxy::run(action).chain_err(|| "running flow action")?;
+        let exit_code = shell_proxy::run(action).chain_err(|| "running flow action")?;
+        if exit_code != 0 {
+            let msg = format!(" '{}' failed: {}", action, exit_code);
+            println!("{}", msg);
+            return Err(msg.into())
+        }
     }
     Ok(())
 }

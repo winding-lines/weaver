@@ -53,11 +53,11 @@ pub(crate) mod tests {
             Ok(1) 
         }
 
-        fn delete(&self, id: &str) -> WResult<()> {
+        fn delete(&self, _id: &str) -> WResult<()> {
             self.pages.borrow_mut().clear();
             Ok(())
         }
-        fn search(&self, what: &str) -> WResult<Results> {
+        fn search(&self, _what: &str) -> WResult<Results> {
             Ok(Results {
                 total: 45,
                 matches: self.pages.borrow().clone(),

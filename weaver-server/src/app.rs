@@ -1,35 +1,35 @@
 //! Main function of the weaver server.
 //!
-use ::cli::{CommandAndConfig, parse, ServerSubCommand};
 use chrono::prelude::*;
 use cli::ServerRun;
-use daemonize::Daemonize;
-use lib_goo::config::{file_utils, ServerConfig};
+use cli::{parse, CommandAndConfig, ServerSubCommand};
+use daemonize::{self, Daemonize};
+use lib_db::RealStore;
+use lib_error::*;
 use lib_goo::config::db::PasswordSource;
+use lib_goo::config::{file_utils, ServerConfig};
+use lib_index;
+use lib_server;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use lib_db::RealStore;
-use lib_error::*;
-use lib_index;
-use lib_server;
-
+use std::{thread, time};
 
 pub fn run() -> Result<()> {
     use self::ServerSubCommand::*;
 
-    let CommandAndConfig { command, server_config, password_source } = parse();
+    let CommandAndConfig {
+        command,
+        server_config,
+        password_source,
+    } = parse();
     debug!("Executing cli command {:?}", command);
     match command {
-        Noop => {
-            Ok(())
-        }
+        Noop => Ok(()),
         ServerSubCommand::Start(ref mode) => {
             start(mode, &server_config, &password_source).map(|_| ())
         }
-        ServerSubCommand::Check => {
-            server_config.check()
-        }
+        ServerSubCommand::Check => server_config.check(),
     }
 }
 
@@ -69,9 +69,12 @@ fn rename_files(server_folder: &Path, extension: &str, timestamp: &str) -> Resul
     }
 }
 
-
 /// Start a server and use a `Router` to dispatch requests
-fn start(run: &ServerRun, config: &ServerConfig, password_source: &PasswordSource) -> Result<Server> {
+fn start(
+    run: &ServerRun,
+    config: &ServerConfig,
+    password_source: &PasswordSource,
+) -> Result<Server> {
     // Initialize the stores before any (optional) forking.
     let store = Arc::new(RealStore::build()?);
     lib_index::init()?;
@@ -79,20 +82,36 @@ fn start(run: &ServerRun, config: &ServerConfig, password_source: &PasswordSourc
 
     match run {
         ServerRun::Foreground => {}
-        ServerRun::Daemonize => {
+        ServerRun::Daemonize(retries) => {
             let pid_file_ = pid_file()?;
             let server_folder_ = server_folder()?;
             let timestamp = Utc::now().format("%Y-%m-%d_%H_%M_%S").to_string();
             rename_files(&server_folder_, "out", &timestamp)?;
             rename_files(&server_folder_, "err", &timestamp)?;
-            let daemonize = Daemonize::new()
-                .pid_file(pid_file_) // Every method except `new` and `start`
-                .chown_pid_file(true)      // is optional, see `Daemonize` documentation
-                .working_directory(&server_folder_) // for default behaviour.
-                .redirect_dir(Some(server_folder_))
-                .umask(0o022);    // Set umask, `0o027` by default.
-            daemonize.start()
-                .chain_err(|| "start in daemon mode")?;
+            let retries = retries.unwrap_or(1);
+            let mut last_status = Err(daemonize::DaemonizeError::Fork);
+            for _i in 0..retries {
+                let daemonize = Daemonize::new()
+                    .pid_file(pid_file_.clone()) 
+                    .chown_pid_file(true)      
+                    .working_directory(&server_folder_.clone()) 
+                    .redirect_dir(Some(server_folder_.clone()))
+                    .umask(0o022); 
+
+                last_status = daemonize.start();
+                if last_status.is_ok() {
+                    break;
+                }
+                let retry_sleep = 5;
+                println!(
+                    "... failed {:?}, retrying in {} seconds",
+                    last_status, retry_sleep
+                );
+                thread::sleep(time::Duration::from_secs(retry_sleep));
+            }
+            if last_status.is_err() {
+                return Err(format!("daemon start {:?}", last_status).into());
+            }
             println!("Started in daemon mode");
         }
     }
@@ -101,5 +120,3 @@ fn start(run: &ServerRun, config: &ServerConfig, password_source: &PasswordSourc
 
     Ok(Server)
 }
-
-
