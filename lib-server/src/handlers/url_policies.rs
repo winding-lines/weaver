@@ -24,9 +24,8 @@ fn build_urls(all: &[store_policies::DocumentMatcher]) -> Vec<String> {
 /// Fetch the URL policies from the database.
 /// Do not return the do_not_index entries since this may be a privacy issue.
 fn fetch(state: State<AppState>) -> HttpResponse {
-    let store = &*state.store;
 
-    match store
+    match state.sql
         .connection()
         .and_then(|c| store_policies::Restrictions::fetch(&c))
     {
@@ -58,11 +57,11 @@ pub struct UrlRestriction {
 ///  - save in the db
 ///  - remove any entry from the text search index.
 fn create((state, input): (State<AppState>, Json<UrlRestriction>)) -> Result<String> {
-    let store = &*state.store;
+    let connection = state.sql.connection()?;
     let policy = input.kind.parse::<url_restrictions::StorePolicy>()?;
     debug!("marked private {}", input.url);
     url_restrictions::insert(
-        &store.connection()?,
+        &connection,
         url_restrictions::UrlRestriction::with_url(&policy, &input.url),
     )?;
 

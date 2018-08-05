@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [dependencies]
-actix-web = "0.6"
+actix-web = "0.7"
 bytes = "0.4"
 inflections = "1.1"
 log = "0.4"

@@ -24,6 +24,7 @@ impl<'a> From<&'a UrlRestriction> for DocumentMatcher {
 }
 
 impl DocumentMatcher {
+    #[allow(dead_code)]
     fn with_url(url: &str) -> WResult<DocumentMatcher> {
         let url = Regex::new(url)?;
         Ok(DocumentMatcher {

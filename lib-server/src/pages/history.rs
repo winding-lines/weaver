@@ -13,8 +13,7 @@ fn handle(
     let mut ctx = build_context(&state.analyses);
     ctx.add("term", &" ".to_owned());
 
-    let store = &*state.store;
-    let connection = store.connection()?;
+    let connection = state.sql.connection()?;
     let pagination = Pagination {
         start: Some(0),
         length: Some(200),

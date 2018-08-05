@@ -4,7 +4,7 @@ use actix_web::{http, App, HttpResponse, Json, Path, Query, State};
 use app_state::AppState;
 use bson::{self, Bson};
 use lib_ai::recommender;
-use lib_db::{actions2, RealStore};
+use lib_db::{actions2, Connection};
 use lib_error::Result as Wesult;
 use lib_error::*;
 use lib_goo::config::net;
@@ -34,14 +34,13 @@ fn create((state, new_action): (State<AppState>, Json<NewAction>)) -> Wesult<Str
     save_to_repo(repo, new_action)?;
 
     debug!("Saving to db");
-    let store = &*state.store;
-    actions2::insert(&store.connection()?, new_action).map(|d| format!("{}", d))
+    actions2::insert(&state.sql.connection()?, new_action).map(|d| format!("{}", d))
 }
 
 /// Returns a list of actions, no pagination..
 fn fetch(state: State<AppState>) -> HttpResponse {
-    let store = &*state.store;
-    match &store
+    match state
+        .sql
         .connection()
         .and_then(|c| actions2::fetch_all(&c, &net::Pagination::default()))
     {
@@ -57,10 +56,9 @@ fn fetch(state: State<AppState>) -> HttpResponse {
 const MAX_RECS: usize = 500;
 
 fn build_recommendations(
-    store: &RealStore,
+    connection: &Connection,
     query: &net::RecommendationQuery,
 ) -> Result<net::PaginatedActions> {
-    let connection = store.connection()?;
     let mut historical = actions2::fetch_all(&connection, &net::Pagination::default())?;
     let mut recommended = recommender::recommend(&historical);
 
@@ -79,8 +77,11 @@ fn build_recommendations(
 fn recommendations(
     (state, input): (State<AppState>, Query<net::RecommendationQuery>),
 ) -> HttpResponse {
-    let store = &*state.store;
-    match build_recommendations(store, &input) {
+    match state
+        .sql
+        .connection()
+        .and_then(|c| build_recommendations(&c, &input))
+    {
         Ok(paginated) => HttpResponse::Ok().json(paginated),
         Err(e) => {
             error!("recommendations_api error {:?}", e);
@@ -92,10 +93,10 @@ fn recommendations(
 /// Pagination enabled fetch.
 /// Returns actions together with pagination meta data.
 fn paginated_fetch((state, input): (State<AppState>, Query<net::Pagination>)) -> HttpResponse {
-    let store = &*state.store;
     let pagination = &*input;
     debug!("Entering paginated_fetch {:?}", pagination);
-    match &store
+    match state
+        .sql
         .connection()
         .and_then(|c| actions2::fetch_all(&c, pagination).map(|all| (c, all)))
         .and_then(|(c, all)| actions2::count(&c).map(|total| (all, total)))
@@ -103,7 +104,7 @@ fn paginated_fetch((state, input): (State<AppState>, Query<net::Pagination>)) ->
         Ok((entries, total)) => {
             let out = net::PaginatedActions {
                 entries: entries.to_vec(),
-                total: *total,
+                total: total,
             };
             HttpResponse::Ok().json(out)
         }
@@ -118,8 +119,7 @@ fn paginated_fetch((state, input): (State<AppState>, Query<net::Pagination>)) ->
 fn set_annotation(
     (state, input, path): (State<AppState>, Json<net::Annotation>, Path<u64>),
 ) -> Wesult<String> {
-    let store = &*state.store;
-    actions2::set_annotation(&store.connection()?, *path, &input.annotation)
+    actions2::set_annotation(&state.sql.connection()?, *path, &input.annotation)
         .map(|d| format!("{}", d))
 }
 

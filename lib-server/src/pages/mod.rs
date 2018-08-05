@@ -8,7 +8,7 @@ use ::analyses::*;
 
 mod history;
 mod search_form;
-mod static_assets;
+pub mod static_assets;
 mod canned;
 
 const INLINE_CSS: &str = include_str!("../../templates/inline.css");
@@ -59,6 +59,5 @@ pub(crate) fn config(app: App<AppState>) -> App<AppState> {
     let should_log = is_first_run();
     let app = canned::config(app, should_log);
     let app = search_form::config(app);
-    let app = static_assets::config(app);
     history::config(app)
 }

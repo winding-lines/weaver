@@ -37,6 +37,10 @@ pub struct RealStore {}
 
 embed_migrations!("../migrations");
 
+pub trait SqlProvider {
+   fn connection(&self) -> Result<Connection>;
+}
+
 impl RealStore {
     pub fn build() -> Result<RealStore> {
         Ok(RealStore {})
@@ -83,7 +87,19 @@ impl RealStore {
         embedded_migrations::run(&connection).chain_err(|| "running migration")
     }
 
-    pub fn connection(&self) -> Result<Connection> {
+    // Display information about the store, returns any errors.
+    pub fn check() -> Result<()> {
+        let path = file_utils::default_database()?;
+        if !path.exists() {
+            return Err("database file does not exists".into());
+        }
+        println!("Store ok.");
+        Ok(())
+    }
+}
+
+impl SqlProvider for RealStore {
+    fn connection(&self) -> Result<Connection> {
         use diesel::Connection as DieselConnection;
         let path = file_utils::default_database()?;
         if !path.exists() {
@@ -100,13 +116,5 @@ impl RealStore {
         Ok(connection)
     }
 
-    // Display information about the store, returns any errors.
-    pub fn check() -> Result<()> {
-        let path = file_utils::default_database()?;
-        if !path.exists() {
-            return Err("database file does not exists".into());
-        }
-        println!("Store ok.");
-        Ok(())
-    }
+
 }

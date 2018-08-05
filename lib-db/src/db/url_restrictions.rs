@@ -110,7 +110,6 @@ pub fn fetch_all(connection: &Connection) -> WResult<Vec<UrlRestriction>> {
 mod tests {
     use super::*;
     use diesel;
-    use lib_goo::config::net::*;
 
     embed_migrations!("../migrations");
 

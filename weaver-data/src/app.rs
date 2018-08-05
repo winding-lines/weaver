@@ -1,6 +1,6 @@
 use bincode;
 use cli::{parse, ConfigAndCommand, DataSubCommand};
-use lib_db::{self, setup, RealStore};
+use lib_db::{self, setup, RealStore, SqlProvider};
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use lib_goo::config::file_utils;

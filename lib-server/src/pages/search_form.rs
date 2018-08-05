@@ -18,7 +18,7 @@ fn handle(
         let mut results = indexer.search(term).unwrap_or_else(|_| Results::default());
 
         // Process the hidden output
-        let connection = state.store.connection()?;
+        let connection = state.sql.connection()?;
         let restrictions = store_policies::Restrictions::fetch(&connection)?;
         for mut result in results.matches.iter_mut() {
             if !restrictions.should_display(result) {
