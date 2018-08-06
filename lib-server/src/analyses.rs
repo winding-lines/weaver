@@ -49,5 +49,6 @@ pub fn get_analysis(file: &str) -> Result<String> {
 fn analyses_folder() -> Result<PathBuf> {
     let mut path = file_utils::app_folder()?;
     path.push("analyses");
+    path.push("html");
     Ok(path)
 }
