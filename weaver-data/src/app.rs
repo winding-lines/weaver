@@ -1,6 +1,6 @@
 use bincode;
 use cli::{parse, ConfigAndCommand, DataSubCommand};
-use lib_db::{self, setup, RealStore, SqlProvider};
+use lib_db::{self, setup, RealStore, SqlProvider, topics};
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use lib_goo::config::file_utils;
@@ -45,6 +45,10 @@ pub fn run() -> Result<()> {
             }
             if let Err(e) = TantivyIndexer::check() {
                 println!("Failure in the indexer {:?}", e);
+                failures += 1;
+            }
+            if let Err(e) = topics::TopicStore::check() {
+                println!("Failure in the topic store {:?}", e);
                 failures += 1;
             }
             if failures > 0 {
