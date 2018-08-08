@@ -19,7 +19,6 @@ pub use indexer::{Indexer, TantivyIndexer};
 pub use indexer::Results;
 use lib_error::*;
 
-mod config;
 mod indexer;
 pub mod repo;
 

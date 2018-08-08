@@ -4,7 +4,7 @@
 //! to add some structure to them.
 
 use bincode::{deserialize, serialize};
-use config::Config;
+use super::config::Config;
 use keyring;
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;

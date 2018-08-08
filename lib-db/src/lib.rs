@@ -94,7 +94,7 @@ impl SqlStore {
         if !path.exists() {
             return Err("database file does not exists".into());
         }
-        println!("Store ok.");
+        println!("SqlStore ok.");
         Ok(())
     }
 }
