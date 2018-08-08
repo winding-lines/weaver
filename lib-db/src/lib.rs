@@ -34,7 +34,7 @@ pub mod topics;
 
 pub type Connection = SqliteConnection;
 
-pub struct RealStore {}
+pub struct SqlStore {}
 
 embed_migrations!("../migrations");
 
@@ -42,9 +42,9 @@ pub trait SqlProvider {
    fn connection(&self) -> Result<Connection>;
 }
 
-impl RealStore {
-    pub fn build() -> Result<RealStore> {
-        Ok(RealStore {})
+impl SqlStore {
+    pub fn build() -> Result<SqlStore> {
+        Ok(SqlStore {})
     }
 
     pub fn create_database_if_missing() -> Result<()> {
@@ -99,7 +99,7 @@ impl RealStore {
     }
 }
 
-impl SqlProvider for RealStore {
+impl SqlProvider for SqlStore {
     fn connection(&self) -> Result<Connection> {
         use diesel::Connection as DieselConnection;
         let path = file_utils::default_database()?;

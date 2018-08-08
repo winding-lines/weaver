@@ -1,6 +1,6 @@
 use bincode;
 use cli::{parse, ConfigAndCommand, DataSubCommand};
-use lib_db::{self, setup, RealStore, SqlProvider, topics};
+use lib_db::{self, setup, SqlStore, SqlProvider, topics};
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use lib_goo::config::file_utils;
@@ -28,14 +28,14 @@ pub fn run() -> Result<()> {
 
     match command {
         Backup => {
-            let name = RealStore::backup_database()?;
+            let name = SqlStore::backup_database()?;
             println!("Backup: {}", name.to_str().unwrap());
 
             Ok(())
         }
         Check => {
             let mut failures = 0;
-            if let Err(e) = RealStore::check() {
+            if let Err(e) = SqlStore::check() {
                 println!("Failure in the sqlite store: {:?}", e);
                 failures += 1;
             }
@@ -58,9 +58,9 @@ pub fn run() -> Result<()> {
             }
         }
         Create => {
-            RealStore::create_or_backup_database()?;
+            SqlStore::create_or_backup_database()?;
             repo::EncryptedRepo::setup_if_needed(&password_source)?;
-            let store = RealStore::build()?;
+            let store = SqlStore::build()?;
             setup::populate_data(&store.connection()?)?;
             TantivyIndexer::setup_if_needed()?;
             Ok(())
@@ -73,7 +73,7 @@ pub fn run() -> Result<()> {
             Ok(())
         }
         DumpUrlPolicies => {
-            let store = RealStore::build()?;
+            let store = SqlStore::build()?;
             let policies = lib_db::store_policies::Restrictions::fetch(&store.connection()?)?;
             println!("\nLog all url accesses, with the following exceptions:");
             for p in policies.do_not_log {

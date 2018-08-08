@@ -4,7 +4,7 @@ use chrono::prelude::*;
 use cli::ServerRun;
 use cli::{parse, CommandAndConfig, ServerSubCommand};
 use daemonize::{self, Daemonize};
-use lib_db::RealStore;
+use lib_db::SqlStore;
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use lib_goo::config::{file_utils, ServerConfig};
@@ -76,7 +76,7 @@ fn start(
     password_source: &PasswordSource,
 ) -> Result<Server> {
     // Initialize the stores before any (optional) forking.
-    let store = Arc::new(RealStore::build()?);
+    let store = Arc::new(SqlStore::build()?);
     lib_index::init()?;
     let repo = Arc::new(lib_index::repo::EncryptedRepo::build(password_source)?);
 
