@@ -9,14 +9,14 @@ pub struct DocTopics {
 
 #[derive(Debug,Deserialize)]
 pub struct Topic {
-    words: Vec<TopicWord>,
+    pub words: Vec<TopicWord>,
 }
 
 // For each topic give the words and the expectation of the given words.
 #[derive(Debug,Deserialize)]
 pub struct TopicWord {
-    w: String,
-    e: f32
+    pub w: String,
+    pub e: f32
 }
 
 // For each document map the url to the most relevant topics

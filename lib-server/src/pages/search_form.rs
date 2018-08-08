@@ -48,10 +48,17 @@ fn handle(
                 &result.title
             };
             let topics = if let Some(ref actual_store) = topic_store {
-                if let Some(topics) = actual_store.topics_for_url(&result.url) {
+                if let Some(rel_topics) = actual_store.topics_for_url(&result.url) {
                     let mut out = String::new();
-                    for t in topics  {
-                        out.push_str(&format!(" {} ({:.4}) ", t.t, t.p));
+                    for rt in rel_topics {
+                        let topic = actual_store.topic_at_ndx(rt.t - 1);
+                        let desc = topic
+                            .words
+                            .iter()
+                            .map(|w| w.w.as_str())
+                            .collect::<Vec<&str>>()
+                            .join(" ");
+                        out.push_str(&format!(" {} ({:.4}) [{}]", rt.t, rt.p, desc));
                     }
                     Some(out)
                 } else {
@@ -63,7 +70,7 @@ fn handle(
             let data = Data {
                 title,
                 url: &result.url,
-                topics
+                topics,
             };
             datum.matches.push(data);
         }
