@@ -51,7 +51,7 @@ fn handle(
                 if let Some(rel_topics) = actual_store.topics_for_url(&result.url) {
                     let mut out = String::new();
                     for rt in rel_topics {
-                        let topic = actual_store.topic_at_ndx(rt.t - 1);
+                        let topic = actual_store.topic_at_ndx(rt.t);
                         let desc = topic
                             .words
                             .iter()
