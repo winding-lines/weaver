@@ -41,6 +41,8 @@ pub fn build_context(canned: &Option<Vec<Analysis>>) -> tera::Context {
     let mut ctx = tera::Context::new();
     if let Some(canned) = canned {
         ctx.add("analyses", canned);
+    } else {
+        ctx.add("analyses", &(Vec::new() as Vec<Analysis>));
     }
     ctx.add("inline_css", INLINE_CSS);
     ctx

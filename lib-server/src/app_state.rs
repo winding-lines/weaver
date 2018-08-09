@@ -25,32 +25,34 @@ pub(crate) mod tests {
     use lib_index::repo::Collection;
     use lib_index::repo::Repo;
     use lib_index::{Indexer, Results};
+    use pages;
+    use std::cell::RefCell;
     use std::sync::Arc;
-     use std::cell::RefCell;
 
     struct FailingSqlProvider;
 
     impl SqlProvider for FailingSqlProvider {
         fn connection(&self) -> WResult<Connection> {
-            return Err("testing".into());
+            return Err("sqlprovider not implemented for testing".into());
         }
     }
 
     struct TestIndexer {
-        pages: RefCell<Vec<PageContent>>
+        pages: RefCell<Vec<PageContent>>,
     }
 
     impl TestIndexer {
         fn new() -> Self {
-            Self { pages: RefCell::new(Vec::new())}
+            Self {
+                pages: RefCell::new(Vec::new()),
+            }
         }
     }
 
     impl Indexer for TestIndexer {
-
         fn add(&self, page_content: &PageContent) -> WResult<(u64)> {
             self.pages.borrow_mut().push(page_content.clone());
-            Ok(1) 
+            Ok(1)
         }
 
         fn delete(&self, _id: &str) -> WResult<()> {
@@ -82,7 +84,7 @@ pub(crate) mod tests {
             indexer: Arc::new(TestIndexer::new()),
             repo: Arc::new(TestRepo),
             sql: Arc::new(FailingSqlProvider),
-            template: Err("template testing".into()),
+            template: pages::build_tera(),
         }
     }
 }

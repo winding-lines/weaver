@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 use inflections::Inflect;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Analysis {
     pub name: String,
     pub file: String,

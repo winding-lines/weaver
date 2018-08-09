@@ -1,45 +1,71 @@
-{% extends "base.html" %}
-{% block title %}{{ term }} - Weaver Search{% endblock title %}
-{% block head %}
-  <style>
-    .summary {
-      margin-top: 3px;
-    }
+{% extends "base.html" %} {% block title %}{{ term }} - Weaver Search{% endblock title %} {% block head %}
+<style>
+  .summary {
+    margin-top: 3px;
+  }
 
-    .result h4 {
-      margin-bottom: 3px;
-    }
+  .result h4 {
+    margin-bottom: 3px;
+    width: 60%;
+  }
 
-    .link {
-      display: block;
-      width: 500px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+  .link {
+    display: block;
+    width: 500px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-    .result a:link, .result a:visited {
-      text-decoration: none;
-    }
-  </style>
-{%  endblock head %}
-{% block content %}
+  .result a:link,
+  .result a:visited {
+    text-decoration: none;
+  }
 
-  <div class="search-block">
-    <form>
-      <input type="text" name="term" value="{{ term }}"/>
-      <input type="submit" name="Search"/>
-    </form>
-    <div class="summary">
-      Found {{ results.matches | length }} matches for {{ term }}, total documents {{ results.total }}.
-    </div>
-    {% for i in results.matches %}
-      <div class="result">
-        <h4><a href={{ i.url }}>{{ i.title }}</a></h4>
-        <div class="link"><a href={{ i.url }}>{{ i.url }}</a></div>
-        <div>{{i.topics}}</div>
-      </div>
-    {% endfor %}
+  .topics td {
+    border-width: 0px; 
+  }
 
+  .topics {
+    position: fixed;
+    top: 5px;
+    right: 5px;
+    font-size: small;
+  }
+
+</style>
+{% endblock head %} {% block content %}
+
+<div class="search-block">
+  <form>
+    <input type="text" name="term" value="{{ term }}" />
+    <input type="submit" name="Search" />
+  </form>
+  <div class="summary">
+    Found {{ results.matches | length }} matches for {{ term }}, total documents {{ results.total }}.
   </div>
+  <div style="display: flex">
+    <div style="flex-direction: column">
+      {% for i in results.matches %}
+      <div class="result">
+        <h4>
+          <a href={{ i.url }}>{{ i.title }}</a>
+        </h4>
+        <div class="link">
+          <a href={{ i.url }}>{{ i.url }}</a>
+        </div>
+        <div>{%for t in i.topic_ids%} ({{t.t}}) {{t.p | round(method="ceil", precision=3)}} | {% endfor %}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="topics">
+      <table>
+        <tr><th>Id</th><th>Docs</th><th>words</th></tr>
+        {% for i in results.topics %}
+        <tr><td>({{i.id}})</td><td> {{i.count}}</td><td>{{i.display}}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
 {% endblock content %}

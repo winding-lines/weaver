@@ -74,8 +74,15 @@
                 "-p",
                 "lib-server",
                 "-p",
-                "lib-db"
+                "lib-db",
+                "--",
+                "--nocapture"
             ],
+            "options": {
+                "env": {
+                    "WEAVER": "debug"
+                }
+            },
             "problemMatcher": [
                 "$rustc"
             ]
