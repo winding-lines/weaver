@@ -27,3 +27,4 @@ mod app_state;
 mod handlers;
 mod pages;
 mod server;
+mod template_engine;

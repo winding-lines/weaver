@@ -1,10 +1,10 @@
-use super::build_context;
-use actix_web::{error, App, Error, HttpResponse, Query, State};
+use actix_web::{App, Error, HttpResponse, Query, State};
 use app_state::AppState;
 use lib_db::{store_policies, topics};
 use lib_goo::entities::lda;
 use lib_index::Results;
 use std::collections::HashMap;
+use template_engine::build_context;
 
 // One search entry view as used by the template.
 #[derive(Serialize)]
@@ -116,13 +116,11 @@ fn _handle(
 
         ctx.add("term", &term.to_owned());
         ctx.add("results", &datum);
-        template.render("search-results", &ctx)
+        template.render("search-results.html", &ctx)
     } else {
         ctx.add("term", &" ".to_owned());
-        template.render("search-form", &ctx)
-    };
-    let rendered = rendered
-        .map_err(|e| error::ErrorInternalServerError(format!("Template rendering {:?}", e)))?;
+        template.render("search-form.html", &ctx)
+    }?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 

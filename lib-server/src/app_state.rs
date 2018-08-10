@@ -4,7 +4,7 @@ use lib_error::Result;
 use lib_index::repo::Repo;
 use lib_index::Indexer;
 use std::sync::Arc;
-use tera;
+use template_engine::TemplateEngine;
 
 /// Store per request state.
 pub(crate) struct AppState {
@@ -12,7 +12,7 @@ pub(crate) struct AppState {
     pub indexer: Arc<Indexer>,
     pub repo: Arc<Repo>,
     pub sql: Arc<SqlProvider>,
-    pub template: Result<tera::Tera>,
+    pub template: Result<TemplateEngine>,
 }
 
 // Define a helper environment for tests.
@@ -25,7 +25,6 @@ pub(crate) mod tests {
     use lib_index::repo::Collection;
     use lib_index::repo::Repo;
     use lib_index::{Indexer, Results};
-    use pages;
     use std::cell::RefCell;
     use std::sync::Arc;
 
@@ -84,7 +83,7 @@ pub(crate) mod tests {
             indexer: Arc::new(TestIndexer::new()),
             repo: Arc::new(TestRepo),
             sql: Arc::new(FailingSqlProvider),
-            template: pages::build_tera(),
+            template: TemplateEngine::build(),
         }
     }
 }

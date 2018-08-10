@@ -1,4 +1,4 @@
-use super::build_context;
+use template_engine::build_context;
 /// Handle the pre-build analyses content.
 ///
 use actix_web::{error, App, Error, HttpRequest, HttpResponse, State};
@@ -13,10 +13,7 @@ fn handle((req, state): (HttpRequest<AppState>, State<AppState>)) -> Result<Http
             let mut ctx = build_context(&state.analyses);
             ctx.add("report", to);
             ctx.add("content", &content);
-            let rendered = template.render("canned.raw", &ctx);
-            let rendered = rendered.map_err(|e| {
-                error::ErrorInternalServerError(format!("Template rendering {:?}", e))
-            })?;
+            let rendered = template.render("canned.raw", &ctx)?;
             Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
         }
         None => Err(error::ErrorInternalServerError("bad name".to_owned())),
