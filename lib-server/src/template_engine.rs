@@ -2,7 +2,7 @@ use actix_web::{error, Error};
 use analyses::*;
 use lib_error::{Result as Wesult, ResultExt};
 use lib_goo::config::file_utils;
-use std::cell::RefCell;
+use std::sync::Mutex;
 use tera;
 use walkdir::WalkDir;
 
@@ -10,7 +10,7 @@ const INLINE_CSS: &str = include_str!("../templates/inline.css");
 
 /// Template engine providing reload functionality and more integrated error
 /// loading on top of the tera engine.
-pub struct TemplateEngine(RefCell<tera::Tera>);
+pub struct TemplateEngine(Mutex<tera::Tera>);
 
 impl TemplateEngine {
     /// Initialize the Tera template system.
@@ -37,12 +37,13 @@ impl TemplateEngine {
             ("history.html", include_str!("../templates/history.html")),
         ]).chain_err(|| "template error")?;
 
-        Ok(TemplateEngine(RefCell::new(tera)))
+        Ok(TemplateEngine(Mutex::new(tera)))
     }
 
     /// Reload the template files, only in dev mode
-    pub fn reload(&self) -> Wesult<()> {
+    pub fn reload(&self) -> Wesult<String> {
         use std::path::Path;
+        let mut processed = Vec::new();
 
         for entry in WalkDir::new(Path::new("lib-server/templates")) {
             let entry = entry.chain_err(|| "listing templates")?;
@@ -53,17 +54,19 @@ impl TemplateEngine {
                         && (name.ends_with(".html") || name.ends_with(".raw"))
                     {
                         let content = file_utils::read_content(&path)?;
-                        self.0.borrow_mut().add_raw_template(name, &content).chain_err(|| "adding template")?;
+                        self.0.lock().unwrap().add_raw_template(name, &content).chain_err(|| "adding template")?;
+                        processed.push(name.to_owned());
                     }
                 }
             }
         }
-        Ok(())
+        Ok(processed.join(" "))
     }
 
     // Pass-through the render function to the underlying engine.
     pub fn render(&self, name: &str, ctx: &tera::Context) -> Result<String, Error> {
-        self.0.borrow().render(name, ctx).map_err(|e| {
+        let lock = self.0.lock().map_err(|_e| error::ErrorInternalServerError("cannot lock the rendering engine"))?;
+        lock.render(name, ctx).map_err(|e| {
             error::ErrorInternalServerError(format!(
                 "Failed rendering {} with error: {:?}",
                 name, e

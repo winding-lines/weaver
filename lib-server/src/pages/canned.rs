@@ -9,7 +9,7 @@ fn handle((req, state): (HttpRequest<AppState>, State<AppState>)) -> Result<Http
     match req.match_info().get("name") {
         Some(to) => {
             let content = get_analysis(to)?;
-            let template = state.template.as_ref()?;
+            let template = &state.template;
             let mut ctx = build_context(&state.analyses);
             ctx.add("report", to);
             ctx.add("content", &content);

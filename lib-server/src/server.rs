@@ -17,6 +17,7 @@ pub struct Server {}
 impl Server {
     pub fn start(addr: &str, store: Arc<SqlStore>, repo: Arc<EncryptedRepo>) -> Result<Server> {
         let indexer = Arc::new(TantivyIndexer::build()?);
+        let template = Arc::new(TemplateEngine::build()?);
 
         let s = server::new(move || {
             vec![
@@ -29,19 +30,18 @@ impl Server {
                     sql: store.clone(),
                     indexer: indexer.clone(),
                     repo: repo.clone(),
-                    template: TemplateEngine::build(),
+                    template: template.clone(),
                     analyses: load_analyses().ok()
                 })
                     .prefix("/api/")
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
-                    // Add the API entry points.
                     .configure(handlers::config)
                     .boxed(),
                 App::with_state(AppState {
                     sql: store.clone(),
                     indexer: indexer.clone(),
                     repo: repo.clone(),
-                    template: TemplateEngine::build(),
+                    template: template.clone(),
                     analyses: load_analyses().ok()
                 })
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))

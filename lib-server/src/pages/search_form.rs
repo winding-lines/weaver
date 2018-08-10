@@ -62,7 +62,7 @@ fn display_topic(topic: &lda::Topic) -> String {
 fn _handle(
     (state, query): (State<AppState>, Query<HashMap<String, String>>),
 ) -> Result<HttpResponse, Error> {
-    let template = state.template.as_ref()?;
+    let template = &state.template;
     let mut ctx = build_context(&state.analyses);
     let rendered = if let Some(term) = query.get("term") {
         let indexer = &*state.indexer;

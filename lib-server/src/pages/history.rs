@@ -9,7 +9,7 @@ use template_engine::build_context;
 fn handle(
     (state, _query): (State<AppState>, Query<HashMap<String, String>>),
 ) -> Result<HttpResponse, Error> {
-    let template = state.template.as_ref()?;
+    let template = &state.template;
     let mut ctx = build_context(&state.analyses);
     ctx.add("term", &" ".to_owned());
 

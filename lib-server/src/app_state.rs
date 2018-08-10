@@ -1,6 +1,5 @@
 use analyses::Analysis;
 use lib_db::SqlProvider;
-use lib_error::Result;
 use lib_index::repo::Repo;
 use lib_index::Indexer;
 use std::sync::Arc;
@@ -12,7 +11,7 @@ pub(crate) struct AppState {
     pub indexer: Arc<Indexer>,
     pub repo: Arc<Repo>,
     pub sql: Arc<SqlProvider>,
-    pub template: Result<TemplateEngine>,
+    pub template: Arc<TemplateEngine>,
 }
 
 // Define a helper environment for tests.
@@ -83,7 +82,7 @@ pub(crate) mod tests {
             indexer: Arc::new(TestIndexer::new()),
             repo: Arc::new(TestRepo),
             sql: Arc::new(FailingSqlProvider),
-            template: TemplateEngine::build(),
+            template: Arc::new(TemplateEngine::build().unwrap()),
         }
     }
 }
