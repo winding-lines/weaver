@@ -33,6 +33,30 @@
     font-size: small;
   }
 
+  .topics table {
+    border-collapse: collapse;
+  }
+
+  .topics td {
+    padding: 0px;
+  }
+
+  .topics td {
+    text-align: center;
+  }
+
+  .topics td:nth-child(3) {
+    text-align: left;
+  }
+
+  .topics tr.most-rel {
+    background-color: #ccc;
+  }
+
+  .topics tr.rel {
+    background-color: #eee;
+  }
+
 </style>
 {% endblock head %} {% block content %}
 
@@ -45,9 +69,9 @@
     Found {{ results.matches | length }} matches for {{ term }}, total documents {{ results.total }}.
   </div>
   <div style="display: flex">
-    <div style="flex-direction: column">
+    <div style="flex-direction: column" id="search-results">
       {% for i in results.matches %}
-      <div class="result">
+      <div class="result" data-topic-links="{%for t in i.topic_ids%}{{t.t}},{%endfor%}">
         <h4>
           <a href={{ i.url }}>{{ i.title }}</a>
         </h4>
@@ -60,12 +84,55 @@
     </div>
     <div class="topics">
       <table>
-        <tr><th>Id</th><th>Docs</th><th>words</th></tr>
+        <tr><th>Id</th><th>Docs</th><th>Words</th></tr>
         {% for i in results.topics %}
-        <tr><td>({{i.id}})</td><td> {{i.count}}</td><td>{{i.display}}</td></tr>
+        <tr id="topic-{{i.id}}"><td>({{i.id}})</td><td> {{i.count}}</td><td>{{i.display}}</td></tr>
         {% endfor %}
       </table>
     </div>
   </div>
 </div>
+<script>
+  let activeTopics;
+
+  function makeTopicsInactive(className) {
+      let activeEls = document.getElementsByClassName(className);
+      for (let i=0; i<activeEls.length; i++) {
+        let el = activeEls[i];
+        if(el.tagName == 'TR') {
+          el.classList.remove(className);
+        }
+      }
+  }
+
+  function makeTopicsActive(ids) {
+      for( let i=0;i<ids.length;i++) {
+        let id = ids[i];
+        let topicEl = id && document.getElementById("topic-" + id);
+        if (topicEl) {
+            topicEl.classList.add(i == 0 ? 'most-rel': 'rel');
+        }
+      }
+  }
+
+  document.getElementById("search-results").addEventListener("mouseover", function( event ) {
+    let el = event.target;
+    while( el && !el.dataset.topicLinks) {
+      el = el.parent;
+    }
+    if (!el) {
+      return;
+    }
+    if(el.dataset.topicLinks) {
+      if(activeTopics == el.dataset.topicLinks) {
+        return;
+      }
+      activeTopics = el.dataset.topicLinks;
+      makeTopicsInactive("most-rel");
+      makeTopicsInactive("rel");
+      let ids = activeTopics.split(",");
+      makeTopicsActive(ids);
+    }
+  })
+</script>
 {% endblock content %}
