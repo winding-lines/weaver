@@ -1,5 +1,5 @@
 use lib_error::Result;
-use lib_goo::config::net::{self, ACTIONS_BASE, ANNOTATIONS, EPICS};
+use lib_goo::config::net::{self, ANNOTATIONS, EPICS};
 use lib_goo::entities::{Epic, FormattedAction, NewAction};
 use reqwest;
 use lib_goo::config::Destination;
@@ -9,13 +9,6 @@ fn rpc_addr(destination: &Destination) -> &str {
     match destination {
         Destination::Remote(ref a) => a,
     }
-}
-
-/// API request to fetch the unpaginated history of actions.
-pub fn history(destination: &Destination) -> Result<Vec<FormattedAction>> {
-    reqwest::get(&format!("http://{}{}", rpc_addr(destination), ACTIONS_BASE))?
-        .json::<Vec<FormattedAction>>()
-        .map_err(|e| e.into())
 }
 
 /// Build the query string for recommendations.

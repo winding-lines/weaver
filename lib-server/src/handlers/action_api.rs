@@ -37,21 +37,6 @@ fn create((state, new_action): (State<AppState>, Json<NewAction>)) -> Wesult<Str
     actions2::insert(&state.sql.connection()?, new_action).map(|d| format!("{}", d))
 }
 
-/// Returns a list of actions, no pagination..
-fn fetch(state: State<AppState>) -> HttpResponse {
-    match state
-        .sql
-        .connection()
-        .and_then(|c| actions2::fetch_all(&c, &net::Pagination::default()))
-    {
-        Ok(all) => HttpResponse::Ok().json(all),
-        Err(e) => {
-            error!("actions_api error {:?}", e);
-            HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).finish()
-        }
-    }
-}
-
 /// Maximum number of recommendations to return.
 const MAX_RECS: usize = 500;
 
@@ -84,8 +69,9 @@ fn recommendations(
     {
         Ok(paginated) => HttpResponse::Ok().json(paginated),
         Err(e) => {
-            error!("recommendations_api error {:?}", e);
-            HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).finish()
+            let msg = format!("recommendations_api error {:?}", e);
+            error!("{}", msg);
+            HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).body(msg)
         }
     }
 }
@@ -109,8 +95,9 @@ fn paginated_fetch((state, input): (State<AppState>, Query<net::Pagination>)) ->
             HttpResponse::Ok().json(out)
         }
         Err(e) => {
-            error!("actions_api error {:?}", e);
-            HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).finish()
+            let msg = format!("actions_api error {:?}", e);
+            error!("{}", msg);
+            HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).body(msg)
         }
     }
 }
@@ -141,15 +128,6 @@ pub(crate) fn config(app: App<AppState>, should_log: bool) -> App<AppState> {
     }
     let app = app.resource(&recs, |r| r.method(http::Method::GET).with(recommendations));
 
-    // legacy actions
-    if should_log {
-        debug!("registering {}", net::ACTIONS_BASE);
-    }
-    let app = app.resource(net::ACTIONS_BASE, |r| {
-        r.method(http::Method::GET).with(fetch);
-        r.method(http::Method::POST).with(create);
-    });
-
     // annotation setter
     let ann = format!("{}/{{id}}{}", net::ACTIONS2_BASE, net::ANNOTATIONS);
     if should_log {
@@ -158,4 +136,51 @@ pub(crate) fn config(app: App<AppState>, should_log: bool) -> App<AppState> {
     app.resource(&ann, |r| {
         r.method(http::Method::POST).with(set_annotation);
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::test::TestServer;
+    use actix_web::*;
+    use app_state::tests::default_test;
+    use lib_db::SqlStoreInMemory;
+    use lib_goo::entities::PageContent;
+    use std::sync::Arc;
+
+    fn state() -> AppState {
+        let mut s = default_test();
+        s.indexer
+            .add(&PageContent {
+                url: "url foo".into(),
+                title: "title bar".into(),
+                body: "body baz".into(),
+            })
+            .expect("adding test PageContent");
+        s.sql = Arc::new(SqlStoreInMemory);
+        s
+    }
+
+    #[test]
+    fn test_paginated_search() {
+        let mut srv = TestServer::build_with_state(|| state()).start(|app| {
+            app.resource(net::ACTIONS2_BASE, |r| {
+                r.method(http::Method::GET).with(paginated_fetch);
+                r.method(http::Method::POST).with(create);
+            });
+        });
+
+        let request = srv
+            .get()
+            .uri(srv.url(net::ACTIONS2_BASE))
+            .finish()
+            .expect("request");
+        let response = srv.execute(request.send()).expect("execute send");
+        let bytes = srv.execute(response.body()).expect("execute body");
+        let data = String::from_utf8(bytes.to_vec()).expect("bytes");
+
+        // println!("response {:?} {}", response, data);
+        assert!(response.status().is_success());
+        assert_eq!(&data, "{\"entries\":[],\"total\":0}");
+    }
 }
