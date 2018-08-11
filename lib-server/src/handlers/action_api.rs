@@ -144,20 +144,19 @@ mod tests {
     use actix_web::test::TestServer;
     use actix_web::*;
     use app_state::tests::default_test;
-    use lib_db::SqlStoreInMemory;
-    use lib_goo::entities::PageContent;
+    use lib_db::actions2;
+    use lib_db::test_helpers::SqlStoreInMemory;
+    use lib_goo::entities::NewAction;
     use std::sync::Arc;
 
     fn state() -> AppState {
         let mut s = default_test();
-        s.indexer
-            .add(&PageContent {
-                url: "url foo".into(),
-                title: "title bar".into(),
-                body: "body baz".into(),
-            })
-            .expect("adding test PageContent");
         s.sql = Arc::new(SqlStoreInMemory);
+        let one = NewAction {
+            command: "foo".into(),
+            ..NewAction::default()
+        };
+        actions2::insert(&s.sql.connection().unwrap(), &one).expect("insert test new action");
         s
     }
 

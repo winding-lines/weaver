@@ -1,6 +1,6 @@
 use lib_error::Result;
 use lib_goo::config::net::{self, ANNOTATIONS, EPICS};
-use lib_goo::entities::{Epic, FormattedAction, NewAction};
+use lib_goo::entities::{Epic, NewAction};
 use reqwest;
 use lib_goo::config::Destination;
 

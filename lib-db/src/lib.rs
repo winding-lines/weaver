@@ -31,6 +31,7 @@ mod db;
 pub mod setup;
 pub mod store_policies;
 pub mod topics;
+pub mod test_helpers;
 
 pub type Connection = SqliteConnection;
 
@@ -39,7 +40,7 @@ pub struct SqlStore {}
 embed_migrations!("../migrations");
 
 pub trait SqlProvider {
-   fn connection(&self) -> Result<Connection>;
+    fn connection(&self) -> Result<Connection>;
 }
 
 impl SqlStore {
@@ -114,22 +115,6 @@ impl SqlProvider for SqlStore {
         debug!("opening database {} ", &db_url);
         let connection = SqliteConnection::establish(&db_url)
             .chain_err(|| format!("Cannot open database {}", db_url))?;
-        Ok(connection)
-    }
-
-
-}
-
-pub struct SqlStoreInMemory;
-
-impl SqlProvider for SqlStoreInMemory {
-
-    fn connection(&self) -> Result<Connection> {
-        use diesel::sqlite::SqliteConnection;
-        use diesel::Connection as DieselConnection;
-
-        let connection = SqliteConnection::establish(":memory:").expect("in memory database");
-        embedded_migrations::run(&connection).expect("create tables");
         Ok(connection)
     }
 }

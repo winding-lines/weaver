@@ -109,22 +109,12 @@ pub fn fetch_all(connection: &Connection) -> WResult<Vec<UrlRestriction>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use diesel;
-
-    embed_migrations!("../migrations");
-
-    fn connection_with_tables() -> diesel::sqlite::SqliteConnection {
-        use diesel::sqlite::SqliteConnection;
-        use diesel::Connection as DieselConnection;
-
-        let connection = SqliteConnection::establish(":memory:").expect("in memory database");
-        embedded_migrations::run(&connection).expect("create tables");
-        connection
-    }
+    use test_helpers::SqlStoreInMemory;
+    use SqlProvider;
 
     #[test]
     fn test_only_url() {
-        let connection = connection_with_tables();
+        let connection = SqlStoreInMemory.connection().expect("connection");
 
         let gen = || UrlRestriction {
             kind: NO_INDEX.into(),
@@ -143,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_url_and_title() {
-        let connection = connection_with_tables();
+        let connection = SqlStoreInMemory.connection().expect("connection");
 
         let gen = || UrlRestriction {
             kind: NO_INDEX.into(),

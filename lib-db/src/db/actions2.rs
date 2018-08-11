@@ -58,7 +58,9 @@ pub fn fetch_all(connection: &Connection, pagination: &Pagination) -> Result<Vec
         .left_join(epics::table);
 
     // Note: in sqlite3 you cannot pass offset without limit.
-    let joined = joined.limit(pagination.length.unwrap_or(-1)).offset(pagination.start.unwrap_or(0));
+    let joined = joined
+        .limit(pagination.length.unwrap_or(-1))
+        .offset(pagination.start.unwrap_or(0));
     let paginated: QueryResult<_> = match pagination.length {
         Some(l) => joined
             .limit(l as i64)
@@ -66,9 +68,12 @@ pub fn fetch_all(connection: &Connection, pagination: &Pagination) -> Result<Vec
         _ => joined.load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection),
     };
 
-    let loaded = paginated.chain_err(
-        || format!("paginated load of actions2 {:?}", diesel::debug_query::<Backend, _>(&joined)),
-    )?;
+    let loaded = paginated.chain_err(|| {
+        format!(
+            "paginated load of actions2 {:?}",
+            diesel::debug_query::<Backend, _>(&joined)
+        )
+    })?;
     let mut out = Vec::new();
     for (action2, command, location, epic) in loaded {
         let formatted = FormattedAction {
@@ -153,39 +158,16 @@ pub fn set_annotation(connection: &Connection, id: u64, annotation: &str) -> Res
 
 #[cfg(test)]
 mod tests {
-    use diesel;
+    use SqlProvider;
     use lib_goo::config::net::*;
     use lib_goo::entities::NewAction;
-
-    embed_migrations!("../migrations");
-
-    fn connection_with_tables() -> diesel::sqlite::SqliteConnection {
-        use diesel::sqlite::SqliteConnection;
-        use diesel::Connection as DieselConnection;
-
-        let connection = SqliteConnection::establish(":memory:").expect("in memory database");
-        embedded_migrations::run(&connection).expect("create tables");
-        connection
-    }
-
-    fn new_action() -> NewAction {
-        NewAction {
-            executed: String::new(),
-            kind: String::new(),
-            command: String::new(),
-            location: None,
-            epic: None,
-            host: String::new(),
-            parent_id: None,
-            status_code: None,
-        }
-    }
+    use test_helpers::SqlStoreInMemory;
 
     #[test]
     fn test_insert_and_fetch() {
-        let connection = connection_with_tables();
+        let connection = SqlStoreInMemory.connection().expect("test connection");
 
-        let res = super::insert(&connection, &new_action());
+        let res = super::insert(&connection, &NewAction::default());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
 
         let all = super::fetch_all(&connection, &Pagination::default());
@@ -197,9 +179,9 @@ mod tests {
 
     #[test]
     fn test_insert_and_count() {
-        let connection = connection_with_tables();
+        let connection = SqlStoreInMemory.connection().expect("test connection");
 
-        let res = super::insert(&connection, &new_action());
+        let res = super::insert(&connection, &NewAction::default());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
 
         let count = super::count(&connection).unwrap();
@@ -209,9 +191,9 @@ mod tests {
 
     #[test]
     fn test_set_annotation() {
-        let connection = connection_with_tables();
+        let connection = SqlStoreInMemory.connection().expect("test connection");
 
-        let res = super::insert(&connection, &new_action());
+        let res = super::insert(&connection, &NewAction::default());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
 
         let update = super::set_annotation(&connection, 1, "ha-not-ate");

@@ -141,7 +141,7 @@ mod tests {
     use actix_web::test::TestServer;
     use actix_web::*;
     use app_state::tests::default_test;
-    use lib_db::SqlStoreInMemory;
+    use lib_db::test_helpers::SqlStoreInMemory;
     use std::sync::Arc;
 
     use lib_goo::entities::PageContent;

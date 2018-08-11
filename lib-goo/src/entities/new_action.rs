@@ -7,7 +7,7 @@ use libc::getppid;
 use sys_info;
 
 /// Data structure to create a new action.
-#[derive(Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewAction {
     /// Time when the command was executed.
