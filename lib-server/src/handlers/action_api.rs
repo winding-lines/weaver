@@ -11,6 +11,7 @@ use lib_goo::config::net;
 use lib_goo::entities::NewAction;
 use lib_index::repo::Collection;
 use lib_index::repo::Repo;
+use std::cmp;
 
 // Wrap into a bson envelope and save into the repo.
 fn save_to_repo(repo: &Repo, new_action: &NewAction) -> Result<String> {
@@ -50,8 +51,10 @@ fn build_recommendations(
     // Fill with historical information.
     let max_recs = query.length.unwrap_or(MAX_RECS as i64);
     historical.reverse();
-    let fill = ((max_recs as i64) - (recommended.len() as i64)) as usize;
-    recommended.extend_from_slice(&historical[0..fill]);
+    let fill = cmp::min(historical.len(), ((max_recs as i64) - (recommended.len() as i64)) as usize);
+    if fill>0 {
+        recommended.extend_from_slice(&historical[0..fill]);
+    }
     let count = actions2::count(&connection)?;
     Ok(net::PaginatedActions {
         entries: recommended,
@@ -149,6 +152,7 @@ mod tests {
     use lib_goo::entities::NewAction;
     use std::sync::Arc;
 
+    // The AppState to use during the tests.
     fn state() -> AppState {
         let mut s = default_test();
         s.sql = Arc::new(SqlStoreInMemory);
@@ -180,6 +184,27 @@ mod tests {
 
         // println!("response {:?} {}", response, data);
         assert!(response.status().is_success());
+        assert_eq!(&data, "{\"entries\":[],\"total\":0}");
+    }
+
+    #[test]
+    fn test_recommendations() {
+        let mut srv = TestServer::build_with_state(|| state()).start(|app| {
+            app.resource("/test", |r| r.method(http::Method::GET).with(recommendations));
+        });
+
+        let request = srv
+            .get()
+            .uri(srv.url("/test"))
+            .finish()
+            .expect("request");
+        let response = srv.execute(request.send()).expect("execute send");
+        assert!(response.status().is_success());
+
+        let bytes = srv.execute(response.body()).expect("execute body");
+        let data = String::from_utf8(bytes.to_vec()).expect("bytes");
+
+        // println!("response {:?} {}", response, data);
         assert_eq!(&data, "{\"entries\":[],\"total\":0}");
     }
 }
