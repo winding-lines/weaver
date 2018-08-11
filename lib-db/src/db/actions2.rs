@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_insert_and_fetch() {
-        let connection = SqlStoreInMemory.connection().expect("test connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
 
         let res = super::insert(&connection, &NewAction::default());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
@@ -179,7 +179,7 @@ mod tests {
 
     #[test]
     fn test_insert_and_count() {
-        let connection = SqlStoreInMemory.connection().expect("test connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
 
         let res = super::insert(&connection, &NewAction::default());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn test_set_annotation() {
-        let connection = SqlStoreInMemory.connection().expect("test connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
 
         let res = super::insert(&connection, &NewAction::default());
         assert!(res.is_ok(), format!("insert failed {:?}", res));

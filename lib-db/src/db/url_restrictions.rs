@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn test_only_url() {
-        let connection = SqlStoreInMemory.connection().expect("connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
 
         let gen = || UrlRestriction {
             kind: NO_INDEX.into(),
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_url_and_title() {
-        let connection = SqlStoreInMemory.connection().expect("connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
 
         let gen = || UrlRestriction {
             kind: NO_INDEX.into(),

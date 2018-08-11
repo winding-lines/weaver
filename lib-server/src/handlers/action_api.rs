@@ -51,8 +51,11 @@ fn build_recommendations(
     // Fill with historical information.
     let max_recs = query.length.unwrap_or(MAX_RECS as i64);
     historical.reverse();
-    let fill = cmp::min(historical.len(), ((max_recs as i64) - (recommended.len() as i64)) as usize);
-    if fill>0 {
+    let fill = cmp::min(
+        historical.len(),
+        ((max_recs as i64) - (recommended.len() as i64)) as usize,
+    );
+    if fill > 0 {
         recommended.extend_from_slice(&historical[0..fill]);
     }
     let count = actions2::count(&connection)?;
@@ -151,16 +154,19 @@ mod tests {
     use lib_db::test_helpers::SqlStoreInMemory;
     use lib_goo::entities::NewAction;
     use std::sync::Arc;
+    use serde_json as json;
 
     // The AppState to use during the tests.
     fn state() -> AppState {
         let mut s = default_test();
-        s.sql = Arc::new(SqlStoreInMemory);
-        let one = NewAction {
-            command: "foo".into(),
-            ..NewAction::default()
-        };
-        actions2::insert(&s.sql.connection().unwrap(), &one).expect("insert test new action");
+        s.sql = Arc::new(SqlStoreInMemory::build(|connection| {
+            let one = NewAction {
+                command: "foo".into(),
+                ..NewAction::default()
+            };
+            actions2::insert(&connection, &one)?;
+            Ok(())
+        }));
         s
     }
 
@@ -180,31 +186,33 @@ mod tests {
             .expect("request");
         let response = srv.execute(request.send()).expect("execute send");
         let bytes = srv.execute(response.body()).expect("execute body");
-        let data = String::from_utf8(bytes.to_vec()).expect("bytes");
 
         // println!("response {:?} {}", response, data);
         assert!(response.status().is_success());
-        assert_eq!(&data, "{\"entries\":[],\"total\":0}");
+        let out: net::PaginatedActions = json::from_slice(&bytes[..]).expect("json decode");
+        assert_eq!(out.total, 1);
+        assert_eq!(out.entries.len(), 1);
+        assert_eq!(&out.entries[0].name, "foo");
     }
 
     #[test]
     fn test_recommendations() {
         let mut srv = TestServer::build_with_state(|| state()).start(|app| {
-            app.resource("/test", |r| r.method(http::Method::GET).with(recommendations));
+            app.resource("/test", |r| {
+                r.method(http::Method::GET).with(recommendations)
+            });
         });
 
-        let request = srv
-            .get()
-            .uri(srv.url("/test"))
-            .finish()
-            .expect("request");
+        let request = srv.get().uri(srv.url("/test")).finish().expect("request");
         let response = srv.execute(request.send()).expect("execute send");
-        assert!(response.status().is_success());
+        // assert!(response.status().is_success());
 
         let bytes = srv.execute(response.body()).expect("execute body");
-        let data = String::from_utf8(bytes.to_vec()).expect("bytes");
-
+        // let data = String::from_utf8(bytes.to_vec()).expect("bytes");
         // println!("response {:?} {}", response, data);
-        assert_eq!(&data, "{\"entries\":[],\"total\":0}");
+        let out: net::PaginatedActions = json::from_slice(&bytes[..]).expect("json decode");
+        assert_eq!(out.total, 1);
+        assert_eq!(out.entries.len(), 2);
+        assert_eq!(&out.entries[0].name, "foo");
     }
 }

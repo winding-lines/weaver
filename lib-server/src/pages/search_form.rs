@@ -155,7 +155,7 @@ mod tests {
                 body: "body baz".into(),
             })
             .expect("adding test PageContent");
-        s.sql = Arc::new(SqlStoreInMemory);
+        s.sql = Arc::new(SqlStoreInMemory::build(|_| Ok(())));
         s
     }
 
