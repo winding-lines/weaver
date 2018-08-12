@@ -48,32 +48,28 @@ pub fn count(connection: &Connection) -> Result<usize> {
     Ok(first as usize)
 }
 
-type Backend = diesel::sqlite::Sqlite;
-
 /// Fetch all actions as FormattedActions, use the pagination settings for the range. If present
-pub fn fetch_all(connection: &Connection, pagination: &Pagination) -> Result<Vec<FormattedAction>> {
-    let joined = actions2::table
+pub fn fetch(
+    connection: &Connection,
+    search: Option<&str>,
+    pagination: &Pagination,
+) -> Result<Vec<FormattedAction>> {
+    let mut joined = actions2::table
         .inner_join(commands::table)
         .left_join(locations::table)
-        .left_join(epics::table);
+        .left_join(epics::table)
+        .into_boxed();
 
-    // Note: in sqlite3 you cannot pass offset without limit.
-    let joined = joined
-        .limit(pagination.length.unwrap_or(-1))
-        .offset(pagination.start.unwrap_or(0));
-    let paginated: QueryResult<_> = match pagination.length {
-        Some(l) => joined
-            .limit(l as i64)
-            .load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection),
-        _ => joined.load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection),
+    // Apply an optional filter
+    if let Some(txt) = search {
+        joined = joined.filter(commands::dsl::command.like(format!("%{}%",txt)));
     };
 
-    let loaded = paginated.chain_err(|| {
-        format!(
-            "paginated load of actions2 {:?}",
-            diesel::debug_query::<Backend, _>(&joined)
-        )
-    })?;
+    // Note: in sqlite3 you cannot pass offset without limit.
+    let loaded = joined
+        .limit(pagination.length.unwrap_or(-1))
+        .offset(pagination.start.unwrap_or(0))
+        .load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection)?;
     let mut out = Vec::new();
     for (action2, command, location, epic) in loaded {
         let formatted = FormattedAction {
@@ -158,19 +154,21 @@ pub fn set_annotation(connection: &Connection, id: u64, annotation: &str) -> Res
 
 #[cfg(test)]
 mod tests {
-    use SqlProvider;
     use lib_goo::config::net::*;
     use lib_goo::entities::NewAction;
     use test_helpers::SqlStoreInMemory;
+    use SqlProvider;
 
     #[test]
     fn test_insert_and_fetch() {
-        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(()))
+            .connection()
+            .expect("test connection");
 
         let res = super::insert(&connection, &NewAction::default());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
 
-        let all = super::fetch_all(&connection, &Pagination::default());
+        let all = super::fetch(&connection, None, &Pagination::default());
         assert!(res.is_ok(), format!("fetch_all failed {:?}", res));
 
         let actions = all.unwrap();
@@ -179,7 +177,9 @@ mod tests {
 
     #[test]
     fn test_insert_and_count() {
-        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(()))
+            .connection()
+            .expect("test connection");
 
         let res = super::insert(&connection, &NewAction::default());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
@@ -191,7 +191,9 @@ mod tests {
 
     #[test]
     fn test_set_annotation() {
-        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(()))
+            .connection()
+            .expect("test connection");
 
         let res = super::insert(&connection, &NewAction::default());
         assert!(res.is_ok(), format!("insert failed {:?}", res));
@@ -199,12 +201,32 @@ mod tests {
         let update = super::set_annotation(&connection, 1, "ha-not-ate");
         assert!(update.is_ok(), format!("update failed {:?}", update));
 
-        let all = super::fetch_all(&connection, &Pagination::default());
+        let all = super::fetch(&connection, None, &Pagination::default());
         assert!(res.is_ok(), format!("fetch_all failed {:?}", res));
 
         assert_eq!(
             all.unwrap().get(0).unwrap().annotation,
             Some(String::from("ha-not-ate"))
         );
+    }
+
+    fn new_action(name: &str) -> NewAction {
+        NewAction {
+            command: name.into(),
+            ..NewAction::default()
+        }
+    }
+
+    #[test]
+    fn test_search() {
+        let connection = SqlStoreInMemory::build(|_| Ok(()))
+            .connection()
+            .expect("test connection");
+        for i in vec!["foo", "bar", "baz"] {
+            super::insert(&connection, &new_action(i)).expect("insert");
+        }
+        let all = super::fetch(&connection, Some("ba"), &Pagination::default()).expect("fetch");
+        assert_eq!(all.len(), 2);
+        assert_eq!(all.iter().map(|a| a.name.as_str()).collect::<Vec<&str>>(), vec!["bar", "baz"]);
     }
 }

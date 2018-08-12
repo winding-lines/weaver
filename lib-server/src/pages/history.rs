@@ -1,6 +1,6 @@
 use actix_web::{App, Error, HttpResponse, Query, State};
 use app_state::AppState;
-use lib_db::actions2::{self, fetch_all};
+use lib_db::actions2;
 use lib_goo::config::net::{PaginatedActions, Pagination};
 use std::collections::HashMap;
 use template_engine::build_context;
@@ -18,7 +18,7 @@ fn handle(
         start: Some(0),
         length: Some(200),
     };
-    let fetched = fetch_all(&connection, &pagination)?;
+    let fetched = actions2::fetch(&connection, None, &pagination)?;
     let mut results = PaginatedActions {
         entries: fetched,
         total: actions2::count(&connection)?,

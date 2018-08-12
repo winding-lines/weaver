@@ -1,6 +1,5 @@
 use super::processor::{Column, Msg};
 use super::Row;
-/// The table view for the history.
 use crossbeam_channel as channel;
 use cursive::align::HAlign;
 use cursive::theme::ColorStyle;
@@ -14,6 +13,7 @@ pub enum BasicColumn {
     Detail,
 }
 
+/// The table view for the history.
 impl ActionListViewItem<BasicColumn> for Row {
     fn to_column(&self, column: BasicColumn, is_focussed: bool) -> Option<String> {
         match *self {

@@ -18,9 +18,11 @@ pub(crate) struct AppState {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+    use lib_db::actions2;
+    use lib_db::test_helpers::SqlStoreInMemory;
     use lib_db::{Connection, SqlProvider};
     use lib_error::Result as WResult;
-    use lib_goo::entities::PageContent;
+    use lib_goo::entities::{NewAction, PageContent};
     use lib_index::repo::Collection;
     use lib_index::repo::Repo;
     use lib_index::{Indexer, Results};
@@ -83,6 +85,30 @@ pub(crate) mod tests {
             repo: Arc::new(TestRepo),
             sql: Arc::new(FailingSqlProvider),
             template: Arc::new(TemplateEngine::build().unwrap()),
+        }
+    }
+
+    /// Structure to use when populating the State with sql entities. This is
+    /// required because the in memory database disappears when the connection is
+    /// closed.
+    pub(crate) struct StateWithActions(pub Arc<Vec<String>>);
+
+    impl StateWithActions {
+        // The AppState to use during the tests.
+        pub fn state(&self) -> AppState {
+            let mut s = default_test();
+            let actions = self.0.clone();
+            s.sql = Arc::new(SqlStoreInMemory::build(move |connection| {
+                for a in actions.iter() {
+                    let one = NewAction {
+                        command: a.to_string(),
+                        ..NewAction::default()
+                    };
+                    actions2::insert(&connection, &one)?;
+                }
+                Ok(())
+            }));
+            s
         }
     }
 }

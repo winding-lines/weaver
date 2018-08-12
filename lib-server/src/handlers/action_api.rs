@@ -45,7 +45,11 @@ fn build_recommendations(
     connection: &Connection,
     query: &net::RecommendationQuery,
 ) -> Result<net::PaginatedActions> {
-    let mut historical = actions2::fetch_all(&connection, &net::Pagination::default())?;
+    let mut historical = actions2::fetch(
+        &connection,
+        query.term.as_ref().map(|a| &**a),
+        &net::Pagination::default(),
+    )?;
     let mut recommended = recommender::recommend(&historical);
 
     // Fill with historical information.
@@ -90,7 +94,7 @@ fn paginated_fetch((state, input): (State<AppState>, Query<net::Pagination>)) ->
     match state
         .sql
         .connection()
-        .and_then(|c| actions2::fetch_all(&c, pagination).map(|all| (c, all)))
+        .and_then(|c| actions2::fetch(&c, None, pagination).map(|all| (c, all)))
         .and_then(|(c, all)| actions2::count(&c).map(|total| (all, total)))
     {
         Ok((entries, total)) => {
@@ -149,30 +153,14 @@ mod tests {
     use super::*;
     use actix_web::test::TestServer;
     use actix_web::*;
-    use app_state::tests::default_test;
-    use lib_db::actions2;
-    use lib_db::test_helpers::SqlStoreInMemory;
-    use lib_goo::entities::NewAction;
-    use std::sync::Arc;
+    use app_state::tests::StateWithActions;
     use serde_json as json;
-
-    // The AppState to use during the tests.
-    fn state() -> AppState {
-        let mut s = default_test();
-        s.sql = Arc::new(SqlStoreInMemory::build(|connection| {
-            let one = NewAction {
-                command: "foo".into(),
-                ..NewAction::default()
-            };
-            actions2::insert(&connection, &one)?;
-            Ok(())
-        }));
-        s
-    }
+    use std::sync::Arc;
 
     #[test]
     fn test_paginated_search() {
-        let mut srv = TestServer::build_with_state(|| state()).start(|app| {
+        let actions = StateWithActions(Arc::new(vec!["foo".to_string()]));
+        let mut srv = TestServer::build_with_state(move || actions.state()).start(|app| {
             app.resource(net::ACTIONS2_BASE, |r| {
                 r.method(http::Method::GET).with(paginated_fetch);
                 r.method(http::Method::POST).with(create);
@@ -197,7 +185,8 @@ mod tests {
 
     #[test]
     fn test_recommendations() {
-        let mut srv = TestServer::build_with_state(|| state()).start(|app| {
+        let actions = StateWithActions(Arc::new(vec!["foo".to_string()]));
+        let mut srv = TestServer::build_with_state(move || actions.state()).start(|app| {
             app.resource("/test", |r| {
                 r.method(http::Method::GET).with(recommendations)
             });
@@ -205,14 +194,43 @@ mod tests {
 
         let request = srv.get().uri(srv.url("/test")).finish().expect("request");
         let response = srv.execute(request.send()).expect("execute send");
-        // assert!(response.status().is_success());
+        assert!(response.status().is_success());
 
         let bytes = srv.execute(response.body()).expect("execute body");
         // let data = String::from_utf8(bytes.to_vec()).expect("bytes");
         // println!("response {:?} {}", response, data);
         let out: net::PaginatedActions = json::from_slice(&bytes[..]).expect("json decode");
         assert_eq!(out.total, 1);
+
+        // we return both the historical and recommendation
         assert_eq!(out.entries.len(), 2);
         assert_eq!(&out.entries[0].name, "foo");
     }
+
+    #[test]
+    fn test_recommendations_with_search_term() {
+        let actions = StateWithActions(Arc::new(vec!["foo".to_string(), "bar".to_string()]));
+        let mut srv = TestServer::build_with_state(move || actions.state()).start(|app| {
+            app.resource("/test", |r| {
+                r.method(http::Method::GET).with(recommendations)
+            });
+        });
+
+        let request = srv
+            .get()
+            .uri(srv.url("/test?term=bar"))
+            .finish()
+            .expect("request");
+        let response = srv.execute(request.send()).expect("execute send");
+        assert!(response.status().is_success());
+
+        let bytes = srv.execute(response.body()).expect("execute body");
+        // let data = String::from_utf8(bytes.to_vec()).expect("bytes");
+        // println!("response {:?} {}", response, data);
+        let out: net::PaginatedActions = json::from_slice(&bytes[..]).expect("json decode");
+        assert_eq!(out.total, 2);
+        assert_eq!(out.entries.len(), 2);
+        assert_eq!(&out.entries[0].name, "bar");
+    }
 }
+
