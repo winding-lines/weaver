@@ -8,9 +8,7 @@
     "cp target/debug/weaver-data ~/.cargo/bin",
     "weaver-server check",
     "kill  `cat ~/.weaver/server/server.pid`",
-    "sleep 1",
-    "weaver-server start --retry 4",
-    "sleep 1",
+    "weaver-server start --retry 10",
     "weaver-server check"
   ]
 }
