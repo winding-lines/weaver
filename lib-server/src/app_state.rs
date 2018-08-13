@@ -1,5 +1,5 @@
 use analyses::Analysis;
-use lib_db::SqlProvider;
+use lib_db::{SqlProvider, topics};
 use lib_index::repo::Repo;
 use lib_index::Indexer;
 use std::sync::Arc;
@@ -12,6 +12,7 @@ pub(crate) struct AppState {
     pub repo: Arc<Repo>,
     pub sql: Arc<SqlProvider>,
     pub template: Arc<TemplateEngine>,
+    pub topic_store: Arc<Option<topics::TopicStore>>,
 }
 
 // Define a helper environment for tests.
@@ -85,6 +86,7 @@ pub(crate) mod tests {
             repo: Arc::new(TestRepo),
             sql: Arc::new(FailingSqlProvider),
             template: Arc::new(TemplateEngine::build().unwrap()),
+            topic_store: Arc::new(None),
         }
     }
 

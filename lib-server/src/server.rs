@@ -3,7 +3,7 @@ use actix_web::{server, App};
 use analyses::load_analyses;
 use app_state::AppState;
 use handlers;
-use lib_db::SqlStore;
+use lib_db::{SqlStore, topics};
 use lib_error::*;
 use lib_index::repo::EncryptedRepo;
 use lib_index::TantivyIndexer;
@@ -18,6 +18,7 @@ impl Server {
     pub fn start(addr: &str, store: Arc<SqlStore>, repo: Arc<EncryptedRepo>) -> Result<Server> {
         let indexer = Arc::new(TantivyIndexer::build()?);
         let template = Arc::new(TemplateEngine::build()?);
+        let topic_store = Arc::new(topics::TopicStore::load()?);
 
         let s = server::new(move || {
             vec![
@@ -32,6 +33,7 @@ impl Server {
                     repo: repo.clone(),
                     template: template.clone(),
                     analyses: load_analyses().ok(),
+                    topic_store: topic_store.clone(),
                 }).prefix("/api/")
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     .configure(handlers::config)
@@ -41,7 +43,8 @@ impl Server {
                     indexer: indexer.clone(),
                     repo: repo.clone(),
                     template: template.clone(),
-                    analyses: load_analyses().ok()
+                    analyses: load_analyses().ok(),
+                    topic_store: topic_store.clone(),
                 })
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     // Add the API entry points.

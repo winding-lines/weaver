@@ -54,6 +54,7 @@ fn create(data: (State<AppState>, Json<PageContent>)) -> HttpResponse {
     }
 }
 
+// Query parameters coming from the client
 #[derive(Deserialize)]
 struct SearchQuery {
     term: String,

@@ -1,6 +1,6 @@
 use actix_web::{App, Error, HttpResponse, Query, State};
 use app_state::AppState;
-use lib_db::{store_policies, topics};
+use lib_db::store_policies;
 use lib_goo::entities::lda;
 use lib_index::Results;
 use std::collections::HashMap;
@@ -63,6 +63,7 @@ fn _handle(
     (state, query): (State<AppState>, Query<HashMap<String, String>>),
 ) -> Result<HttpResponse, Error> {
     let template = &state.template;
+    let topic_store = &*state.topic_store;
     let mut ctx = build_context(&state.analyses);
     let rendered = if let Some(term) = query.get("term") {
         let indexer = &*state.indexer;
@@ -73,7 +74,6 @@ fn _handle(
         // Process the hidden output and topics
         let connection = state.sql.connection()?;
         let restrictions = store_policies::Restrictions::fetch(&connection)?;
-        let topic_store = topics::TopicStore::load()?;
 
         let hidden_title = String::from("********");
         let mut datum = Datum {
