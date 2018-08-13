@@ -1,5 +1,6 @@
 use super::processor::{self, Msg};
-use super::{history_view, Row, UserSelection};
+use super::{history_view, UserSelection};
+use api::Row;
 use crossbeam_channel as channel;
 use cursive::event::{Event, Key};
 use cursive::theme::{Color, PaletteColor, Theme};
@@ -8,7 +9,6 @@ use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
 use cursive::Cursive;
 use lib_error::*;
 use lib_goo::config::{Destination, Environment, OutputKind};
-use lib_goo::entities::FormattedAction;
 use lib_goo::filtered_vec::FilteredVec;
 use std::sync::Arc;
 
@@ -32,6 +32,7 @@ fn send(tx: &channel::Sender<Msg>, msg: Msg) {
     tx.send(msg);
 }
 
+// Create the Edit view used for the filtering UI.
 fn create_filter_edit(tx: channel::Sender<Msg>) -> EditView {
     let tx2 = tx.clone();
     EditView::new()
@@ -43,6 +44,7 @@ fn create_filter_edit(tx: channel::Sender<Msg>) -> EditView {
         })
 }
 
+// Create the Edit view used for for the editing the command to run.
 fn create_command_edit(tx: channel::Sender<Msg>) -> EditView {
     EditView::new().on_submit(move |_: &mut Cursive, content: &str| {
         let message = Msg::CommandSubmit(Some(String::from(content)));
@@ -79,15 +81,15 @@ fn setup_global_keys(siv: &mut Cursive, ch: channel::Sender<Msg>) {
 
 /// Display the UI which allows the user to exlore and select one of the options.
 pub fn display(
-    actions: Vec<FormattedAction>,
+    rows: Vec<Row>,
     kind: &OutputKind,
     env: Arc<Environment>,
     destination: &Destination,
 ) -> Result<UserSelection> {
     debug!(
         "Entering main screen with {} actions, first one {:?}",
-        actions.len(),
-        actions.first()
+        rows.len(),
+        rows.first()
     );
     // initialize cursive
     let mut siv = create_cursive();
@@ -107,8 +109,9 @@ pub fn display(
     let (submit_tx, submit_rx) = channel::bounded(10);
 
     // Build the main components: table and processor.
-    let rows = Row::build(actions);
     let table = FilteredVec::new(rows, history_height);
+
+    // save the intial view, needed it during UI initialization
     let initial = table.filter(None)?;
 
     let processor_thread = processor::ProcessorThread {

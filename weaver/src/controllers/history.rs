@@ -1,10 +1,9 @@
 use super::shell_proxy;
+use api::fetch_recommendations;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use display;
 use lib_error::*;
-use lib_goo::config::{net, Destination, Environment, OutputKind};
-use lib_rpc::client as rpc_client;
-use std::path::Path;
+use lib_goo::config::{Destination, Environment, OutputKind};
 use std::sync::Arc;
 
 pub fn run(
@@ -14,26 +13,7 @@ pub fn run(
 ) -> Result<()> {
     use lib_goo::config::Channel::*;
 
-    let net::PaginatedActions {
-        entries: mut actions,
-        total: _total,
-    } = rpc_client::recommendations(
-        &destination,
-        &net::RecommendationQuery {
-            start: Some(0),
-            length: Some(500),
-            term: None,
-        },
-    )?;
-    // rebase the command folders on the current work dir. This simplifies the UI interpretation.
-    for mut a in actions.iter_mut() {
-        if let Some(mut l) = a.location.as_mut() {
-            let rebased = env.rebase(Path::new(&l).into())?;
-            *l = Environment::encode_path(&rebased);
-        }
-    }
-    // Put the most relevant and recent entries at the bottom.
-    actions.reverse();
+    let actions = fetch_recommendations(None, &destination, env)?;
 
     // Run the main UI loop.
     let user_selection =
@@ -42,18 +22,14 @@ pub fn run(
     // Dispatch based on the selection.
     if let Some(action) = user_selection.action {
         match user_selection.kind {
-            Some(OutputKind {
-                channel: Run,
-            }) => {
+            Some(OutputKind { channel: Run }) => {
                 if action.kind == "shell" {
                     shell_proxy::run(action.into_shell_command()).map(|_| ())
                 } else {
                     shell_proxy::run(format!("open {}", action.name)).map(|_| ())
                 }
             }
-            Some(OutputKind {
-                channel: Copy,
-            }) => {
+            Some(OutputKind { channel: Copy }) => {
                 eprintln!("Copying to clipboard: {}", action.name);
                 if let Ok(mut ctx) = ClipboardContext::new() {
                     ctx.set_contents(action.into_shell_command())
@@ -61,9 +37,7 @@ pub fn run(
                 }
                 Ok(())
             }
-            Some(OutputKind {
-                channel: Print,
-            }) => {
+            Some(OutputKind { channel: Print }) => {
                 if action.kind == "shell" {
                     println!("{}", action.into_shell_command());
                 } else {

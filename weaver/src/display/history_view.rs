@@ -1,5 +1,5 @@
 use super::processor::{Column, Msg};
-use super::Row;
+use api::Row;
 use crossbeam_channel as channel;
 use cursive::align::HAlign;
 use cursive::theme::ColorStyle;
@@ -31,8 +31,8 @@ impl ActionListViewItem<BasicColumn> for Row {
                     RecommendReason::CorrelatedMostRecent(_age) => Some("most recent".into()),
                     RecommendReason::CorrelatedMostFrequent(repeat) => {
                         Some(format!("most frequent {}", repeat))
-                    },
-                    _ => None
+                    }
+                    _ => None,
                 },
             },
         }
@@ -57,13 +57,12 @@ pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TV
         })
         .column(BasicColumn::Detail, |c| c.align(HAlign::Right));
 
-    debug!("Entering create_view with {} entries", initial.len());
     // Select the current entry when 'enter' is pressed, then end the application.
     {
         let view_tx = processor_tx.clone();
         view.set_on_submit(
             move |siv: &mut Cursive, _row: usize, _column: usize, _index: usize| {
-                view_tx.send(Msg::TableSubmit());
+                view_tx.send(Msg::TableSubmit);
 
                 siv.quit();
             },

@@ -1,6 +1,6 @@
 use super::output_selector;
-use super::Row;
 use super::{history_view, UserSelection};
+use api::{fetch_recommendations, Row};
 use crossbeam_channel as channel;
 use cursive::views::EditView;
 use cursive::{CbFunc as CursiveCbFunc, Cursive};
@@ -25,7 +25,7 @@ pub enum Msg {
 
     // Events from the table
     Selection(Option<(Row, Column)>),
-    TableSubmit(),
+    TableSubmit,
 
     // Events from the filter edit view
     Filter(String),
@@ -67,11 +67,10 @@ struct Processor {
 impl Processor {
     fn _update_ui(&mut self) {
         // Build the content to display.
-        let content = self.formatted_action
+        let content = self
+            .formatted_action
             .as_ref()
-            .map(|f| {
-                f.clone().into_shell_command()
-            })
+            .map(|f| f.clone().into_shell_command())
             .unwrap_or_else(String::new);
 
         // Update the UI
@@ -101,7 +100,9 @@ impl Processor {
                 };
                 let location = action.location.as_ref().cloned();
                 match col {
-                    Column::Right if location.is_some() => action.name = format!("cd {} && {}", location.unwrap(), action.name),
+                    Column::Right if location.is_some() => {
+                        action.name = format!("cd {} && {}", location.unwrap(), action.name)
+                    }
                     _ => (),
                 };
                 self.formatted_action = Some(action);
@@ -112,7 +113,10 @@ impl Processor {
 
     /// Display a one line error message in the UI.
     fn show_error(&mut self, message: String) {
-        self.formatted_action = Some(FormattedAction {name: message, ..FormattedAction::default()});
+        self.formatted_action = Some(FormattedAction {
+            name: message,
+            ..FormattedAction::default()
+        });
         self._update_ui();
     }
 
@@ -136,6 +140,14 @@ impl Processor {
     fn filter(&mut self, f: Option<&str>, selected_row: Option<usize>) {
         debug!("Received filter message {:?}", f);
         let tx = self.self_tx.clone();
+        let fresh = match fetch_recommendations(f.map(String::from), &self.destination, &self.env) {
+            Ok(fresh) => fresh,
+            Err(_e) => {
+                self.show_error("BAD RECS API".into());
+                return;
+            }
+        };
+        self.table.set_content(fresh);
         let content = match self.table.filter(f) {
             Ok(content) => content,
             Err(_e) => {
@@ -256,6 +268,9 @@ impl ProcessorThread {
                 search_string: None,
             };
 
+            // do the initial display
+            processor.filter(None, None);
+
             // Process messages until done.
             loop {
                 match self.rx.recv() {
@@ -264,7 +279,7 @@ impl ProcessorThread {
                         processor.select_row_and_col(selection);
                     }
 
-                    Some(Msg::TableSubmit()) => {
+                    Some(Msg::TableSubmit) => {
                         debug!("Exiting in TableSubmit");
                     }
 

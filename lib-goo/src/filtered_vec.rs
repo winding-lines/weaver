@@ -86,6 +86,10 @@ impl<T: FilteredItem + Clone + Default> FilteredVec<T> {
         None
     }
 
+    pub fn set_content(&mut self, fresh: Vec<T>) {
+        self.content = fresh;
+    }
+
     /// Build a vector with the entries that match this filter.
     /// For None returns a new vector.
     pub fn filter(&self, filter: Option<&str>) -> Result<Vec<T>> {
