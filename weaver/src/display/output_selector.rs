@@ -12,7 +12,6 @@ fn all_channel() -> Vec<Channel> {
     vec![Channel::Print, Channel::Run, Channel::Copy]
 }
 
-
 /// Create radio buttons for all the `values`, select the one matching `initial`.
 fn create_radio_group<T>(container: &mut LinearLayout, values: Vec<T>, initial: &T) -> RadioGroup<T>
 where

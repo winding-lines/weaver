@@ -1,8 +1,8 @@
 use lib_error::*;
 use std::convert::From;
 
-mod encrypted_repo;
 mod config;
+mod encrypted_repo;
 pub use self::encrypted_repo::EncryptedRepo;
 
 /// Represents a collection in the repo.

@@ -11,7 +11,7 @@ const DESCRIPTION: &str = env!["CARGO_PKG_DESCRIPTION"];
 #[derive(Debug)]
 pub enum DataSubCommand {
     /// Backup the current database, to be used before running a migration, for example.
-    Backup, 
+    Backup,
     /// Create the various stores.
     Create,
     /// Check the various stores.
@@ -58,7 +58,9 @@ pub fn parse() -> ConfigAndCommand {
                 .long("password")
                 .help("Prompt for password - instead of the default of taking from keyring"),
         )
-        .subcommand(SubCommand::with_name("backup").about("Create a backup of the existing database"))
+        .subcommand(
+            SubCommand::with_name("backup").about("Create a backup of the existing database"),
+        )
         .subcommand(SubCommand::with_name("sqlite").about("Start an sqlite3 shell"))
         .subcommand(SubCommand::with_name("setup").about("Create the sqlite3 database"))
         .subcommand(

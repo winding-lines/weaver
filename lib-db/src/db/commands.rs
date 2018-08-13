@@ -1,8 +1,8 @@
-use ::backends::schema::commands;
-use ::Connection;
+use backends::schema::commands;
 use diesel;
 use diesel::prelude::*;
 use lib_error::{Result, ResultExt};
+use Connection;
 
 /// Fetch the id for the given epic, if present.
 pub fn fetch_id(connection: &Connection, kind: &str, command: &str) -> Result<Option<i32>> {
@@ -21,13 +21,16 @@ pub fn fetch_or_create_id(connection: &Connection, kind: &str, command: &str) ->
         Some(existing) => Ok(existing),
         None => {
             diesel::insert_into(commands::table)
-                .values((commands::dsl::command.eq(command), commands::dsl::kind.eq(kind)))
+                .values((
+                    commands::dsl::command.eq(command),
+                    commands::dsl::kind.eq(kind),
+                ))
                 .execute(connection)
                 .chain_err(|| "insert into commands")?;
             match fetch_id(connection, kind, command) {
                 Err(e) => Err(e),
                 Ok(Some(id)) => Ok(id),
-                Ok(None) => Err("did not get id after inserting location".into())
+                Ok(None) => Err("did not get id after inserting location".into()),
             }
         }
     }

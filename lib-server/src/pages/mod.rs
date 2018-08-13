@@ -3,15 +3,14 @@
 use actix_web::App;
 use app_state::AppState;
 
+mod canned;
 mod history;
 mod search_form;
 pub mod static_assets;
-mod canned;
-
 
 /// Count the number of times the configuration code is ran.
 fn is_first_run() -> bool {
-    use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+    use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
     static RUN: AtomicUsize = ATOMIC_USIZE_INIT;
     let run = RUN.fetch_add(1, Ordering::SeqCst);
     run == 1

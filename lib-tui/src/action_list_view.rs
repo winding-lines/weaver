@@ -385,9 +385,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
                 } else {
                     Effect::Simple
                 };
-                printer.with_style(effect, |printer| {
-                    column.draw_row(printer, value.as_str())
-                });
+                printer.with_style(effect, |printer| column.draw_row(printer, value.as_str()));
             }
         });
     }
@@ -441,10 +439,10 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
         let column_count = self.columns.len();
 
         // Split up all columns into sized / unsized groups
-        let (mut sized, mut usized): (Vec<&mut TableColumn<H>>, Vec<&mut TableColumn<H>>) =
-            self.columns
-                .iter_mut()
-                .partition(|c| c.requested_width.is_some());
+        let (mut sized, mut usized): (Vec<&mut TableColumn<H>>, Vec<&mut TableColumn<H>>) = self
+            .columns
+            .iter_mut()
+            .partition(|c| c.requested_width.is_some());
 
         // Subtract one for the seperators between our columns (that's column_count - 1)
         let mut available_width = size.x.saturating_sub(column_count.saturating_sub(1) * 3);

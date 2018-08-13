@@ -1,6 +1,6 @@
-use serde_json as json;
 use super::epic::Epic;
 use lib_error::*;
+use serde_json as json;
 
 /// All the Milestones that Weaver knows about.
 #[derive(Deserialize, Serialize, Debug)]
@@ -27,8 +27,7 @@ impl Default for Weaver {
 
 impl Weaver {
     pub fn load_from_string(contents: &str) -> Result<Weaver> {
-        let weaver: Weaver = json::from_str(&contents)
-            .chain_err(|| "parsing main weaver state")?;
+        let weaver: Weaver = json::from_str(&contents).chain_err(|| "parsing main weaver state")?;
         Ok(weaver)
     }
 
@@ -36,4 +35,3 @@ impl Weaver {
         json::to_string_pretty(self).chain_err(|| "encoding weaver in json")
     }
 }
-

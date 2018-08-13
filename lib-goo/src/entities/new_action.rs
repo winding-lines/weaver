@@ -29,13 +29,16 @@ pub struct NewAction {
 }
 
 impl NewAction {
-    pub fn build_from_shell(command: &str, exit_code: Option<i32>, env: &Environment) -> Result<NewAction> {
+    pub fn build_from_shell(
+        command: &str,
+        exit_code: Option<i32>,
+        env: &Environment,
+    ) -> Result<NewAction> {
         let host = sys_info::hostname()?;
         let location = env.rebase_on_home(env.cwd.clone())?;
         let location = Some(Environment::encode_path(&location));
         let executed = now();
-        let ppid = format!("{}", unsafe {getppid()});
-    
+        let ppid = format!("{}", unsafe { getppid() });
 
         Ok(NewAction {
             executed,
@@ -45,7 +48,7 @@ impl NewAction {
             epic: env.epic().map(String::from),
             host,
             parent_id: Some(ppid),
-            status_code: exit_code.map(|a| format!("{}",a)),
+            status_code: exit_code.map(|a| format!("{}", a)),
         })
     }
 

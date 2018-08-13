@@ -1,7 +1,7 @@
-use lib_goo::config::file_utils;
 use super::weaver::Weaver;
-use std::time::SystemTime;
 use lib_error::{Result, ResultExt};
+use lib_goo::config::file_utils;
+use std::time::SystemTime;
 
 #[derive(Default)]
 pub(crate) struct JsonStore {
@@ -28,19 +28,19 @@ impl JsonStore {
         }
 
         // Check the last modified time, exit if no changes.
-        let file_modified =
-            Some(path.metadata()
+        let file_modified = Some(
+            path.metadata()
                 .chain_err(|| "metadata in fresh")?
                 .modified()
-                .chain_err(|| "modified check in fresh")?);
+                .chain_err(|| "modified check in fresh")?,
+        );
         if file_modified == self.modified {
             return Ok(());
         }
 
         debug!("loading config {:?}", &path);
 
-        let content = file_utils::read_content(&path)
-            .chain_err(|| "loading weaver config")?;
+        let content = file_utils::read_content(&path).chain_err(|| "loading weaver config")?;
         let content = Weaver::load_from_string(&content)?;
         self.content = content;
         self.modified = file_modified;
@@ -54,11 +54,12 @@ impl JsonStore {
         path.push("weaver.json");
         let content = self.content.to_str()?;
         file_utils::write_content(&path, &content)?;
-        self.modified = Some(path.metadata()
-            .chain_err(|| "reading metadata in save")?
-            .modified()
-            .chain_err(|| "modified time in save")?);
+        self.modified = Some(
+            path.metadata()
+                .chain_err(|| "reading metadata in save")?
+                .modified()
+                .chain_err(|| "modified time in save")?,
+        );
         Ok(())
     }
 }
-

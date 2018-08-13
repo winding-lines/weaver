@@ -33,7 +33,13 @@ mod tests {
     #[test]
     fn test_normalize() {
         assert_eq!(normalize_url("https://foo/bar").unwrap(), "https://foo/bar");
-        assert_eq!(normalize_url("https://foo/bar#head?a").unwrap(), "https://foo/bar");
-        assert_eq!(normalize_url("https://foo/bar?a").unwrap(), "https://foo/bar");
+        assert_eq!(
+            normalize_url("https://foo/bar#head?a").unwrap(),
+            "https://foo/bar"
+        );
+        assert_eq!(
+            normalize_url("https://foo/bar?a").unwrap(),
+            "https://foo/bar"
+        );
     }
 }

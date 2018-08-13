@@ -3,8 +3,8 @@
 //! The documents are just binary blobs, it is the responsibility of the caller
 //! to add some structure to them.
 
-use bincode::{deserialize, serialize};
 use super::config::Config;
+use bincode::{deserialize, serialize};
 use keyring;
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;

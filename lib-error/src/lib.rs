@@ -7,12 +7,11 @@ extern crate actix_web;
 extern crate diesel;
 #[macro_use]
 extern crate error_chain;
-extern crate reqwest;
 extern crate regex;
+extern crate reqwest;
 extern crate sys_info;
 
 use std::convert;
-
 
 // `error_chain!` creates.
 
@@ -27,16 +26,14 @@ error_chain! {
     }
 }
 
-impl <'a> convert::From<&'a Error> for actix_web::Error {
+impl<'a> convert::From<&'a Error> for actix_web::Error {
     fn from(werror: &Error) -> Self {
         actix_web::error::ErrorInternalServerError(werror.description().to_string())
     }
 }
-
 
 impl convert::From<Error> for actix_web::Error {
     fn from(werror: Error) -> Self {
         actix_web::error::ErrorInternalServerError(werror.description().to_string())
     }
 }
-

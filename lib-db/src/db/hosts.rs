@@ -1,8 +1,8 @@
-use ::backends::schema::hosts;
-use ::Connection;
+use backends::schema::hosts;
 use diesel;
 use diesel::prelude::*;
 use lib_error::*;
+use Connection;
 
 // Fetch the id for the given host, if present.
 pub fn fetch_id(connection: &Connection, host: &str) -> Result<Option<i32>> {
@@ -26,7 +26,7 @@ pub fn fetch_or_create_id(connection: &Connection, host: &str) -> Result<i32> {
             match fetch_id(connection, host) {
                 Err(e) => Err(e),
                 Ok(Some(id)) => Ok(id),
-                Ok(None) => Err("did not get id after inserting location".into())
+                Ok(None) => Err("did not get id after inserting location".into()),
             }
         }
     }

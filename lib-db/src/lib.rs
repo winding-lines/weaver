@@ -30,8 +30,8 @@ mod backends;
 mod db;
 pub mod setup;
 pub mod store_policies;
-pub mod topics;
 pub mod test_helpers;
+pub mod topics;
 
 pub type Connection = SqliteConnection;
 

@@ -3,7 +3,6 @@
 use super::json_store;
 use lib_error::*;
 
-
 /// Save this epic name in the local storage,
 /// does not change the current store.
 pub fn save_epic(name: String) -> Result<()> {
@@ -12,11 +11,9 @@ pub fn save_epic(name: String) -> Result<()> {
     store.save()
 }
 
-
 /// Return the active epic.
 pub fn epic() -> Result<Option<String>> {
     let store = json_store::JsonStore::init()?;
     // let _ = self.json_store.fresh()?;
     Ok(store.content.active_epic.clone())
 }
-

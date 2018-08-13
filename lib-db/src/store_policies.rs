@@ -34,7 +34,6 @@ impl DocumentMatcher {
         })
     }
 
-
     // Matches a document if all of non optional pieces are matching.
     fn matches(&self, page_content: &PageContent) -> bool {
         let url_m = self.url.as_ref().map(|r| r.is_match(&page_content.url));
@@ -45,7 +44,10 @@ impl DocumentMatcher {
     }
 
     fn matches_any(page_content: &PageContent, restrictions: &[DocumentMatcher]) -> bool {
-        restrictions.iter().find(|r| r.matches(page_content)).is_some()
+        restrictions
+            .iter()
+            .find(|r| r.matches(page_content))
+            .is_some()
     }
 }
 
@@ -181,7 +183,7 @@ mod tests {
             hidden: vec![dm],
             ..Restrictions::default()
         };
-        
+
         // Should match when both url and title are provided.
         let pc = PageContent {
             url: "https://foo".into(),

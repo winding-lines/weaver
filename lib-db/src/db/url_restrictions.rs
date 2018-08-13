@@ -114,7 +114,9 @@ mod tests {
 
     #[test]
     fn test_only_url() {
-        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(()))
+            .connection()
+            .expect("test connection");
 
         let gen = || UrlRestriction {
             kind: NO_INDEX.into(),
@@ -133,7 +135,9 @@ mod tests {
 
     #[test]
     fn test_url_and_title() {
-        let connection = SqlStoreInMemory::build(|_| Ok(())).connection().expect("test connection");
+        let connection = SqlStoreInMemory::build(|_| Ok(()))
+            .connection()
+            .expect("test connection");
 
         let gen = || UrlRestriction {
             kind: NO_INDEX.into(),
@@ -149,7 +153,6 @@ mod tests {
         // same data should only be inserted once
         insert(&connection, gen()).unwrap();
         assert_eq!(1, all.len());
-
 
         // fetching only url should not return anything
         let url = UrlRestriction {

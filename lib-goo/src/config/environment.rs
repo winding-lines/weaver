@@ -1,5 +1,5 @@
-use lib_error::{Result, ResultExt};
 use dirs;
+use lib_error::{Result, ResultExt};
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -41,7 +41,11 @@ impl Environment {
     }
 
     /// If path is inside the base then replace the base prefix with the given replacement.
-    pub(crate) fn normalize_base_dir(path: PathBuf, base: &Path, replacement: &str) -> Result<PathBuf> {
+    pub(crate) fn normalize_base_dir(
+        path: PathBuf,
+        base: &Path,
+        replacement: &str,
+    ) -> Result<PathBuf> {
         if path.starts_with(base) {
             let relative = path.strip_prefix(base).chain_err(|| "strip prefix")?;
             let mut out = PathBuf::new();
@@ -56,7 +60,7 @@ impl Environment {
     }
 
     /// Check if this path is already rebased on the home folder.
-    pub(crate) fn is_rebased_on_home(path:&Path) -> bool {
+    pub(crate) fn is_rebased_on_home(path: &Path) -> bool {
         match path.components().next() {
             Some(a) => a.as_os_str() == "~",
             None => false,
@@ -85,7 +89,6 @@ impl Environment {
         } else {
             Ok(path)
         }
-
     }
 
     /// Rebase just on home, this is suitable to save in the database.
@@ -116,9 +119,11 @@ mod tests {
 
     #[test]
     fn normalize_tilde_in_sub_folder() {
-        let normalized =
-            Environment::normalize_base_dir(Path::new("~/haha/one").into(), Path::new("~/haha"), ".")
-                .unwrap();
+        let normalized = Environment::normalize_base_dir(
+            Path::new("~/haha/one").into(),
+            Path::new("~/haha"),
+            ".",
+        ).unwrap();
         assert_eq!("./one", normalized.to_str().unwrap());
     }
 
@@ -144,7 +149,7 @@ mod tests {
             cwd: cwd,
             epic: None,
             home_dir,
-            cwd_rebased
+            cwd_rebased,
         }
     }
 

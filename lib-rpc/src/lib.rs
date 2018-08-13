@@ -2,9 +2,9 @@
 
 #[macro_use]
 extern crate log;
+extern crate lib_error;
+extern crate lib_goo;
 extern crate reqwest;
 extern crate serde;
-extern crate lib_goo;
-extern crate lib_error;
 
 pub mod client;

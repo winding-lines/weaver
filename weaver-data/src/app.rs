@@ -1,16 +1,15 @@
 use bincode;
 use cli::{parse, ConfigAndCommand, DataSubCommand};
-use lib_db::{self, setup, SqlStore, SqlProvider, topics};
+use lib_db::{self, setup, topics, SqlProvider, SqlStore};
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use lib_goo::config::file_utils;
 use lib_goo::entities::PageContent;
-use lib_index::{self, repo, TantivyIndexer, Indexer};
 use lib_index::repo::Repo;
+use lib_index::{self, repo, Indexer, TantivyIndexer};
 use std::fs::read;
 use std::path::PathBuf;
 use std::process::Command;
-
 
 /// Main dispatch function;
 pub fn run() -> Result<()> {

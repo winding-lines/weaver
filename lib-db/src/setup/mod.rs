@@ -1,32 +1,53 @@
 //! Populate the database with initial data.
 
-use ::Connection;
-use ::db::url_restrictions::{self, UrlRestriction};
+use db::url_restrictions::{self, UrlRestriction};
+use lib_error::*;
 use lib_goo::config::file_utils;
 use serde_json as json;
-use lib_error::*;
+use Connection;
 
 // Populate the database with the URL that should not be logged
 fn do_not_log_urls(connection: &Connection) -> Result<()> {
     let sites = vec![
         // social
-        "linkedin\\.com", "snapchat\\.com", "facebook\\.com",
-        "qz\\.com", "reddit\\.com", "twitter\\.com", "\\Wt\\.co\\W",
+        "linkedin\\.com",
+        "snapchat\\.com",
+        "facebook\\.com",
+        "qz\\.com",
+        "reddit\\.com",
+        "twitter\\.com",
+        "\\Wt\\.co\\W",
         // news
-        "\\Wnews\\.", "forbes\\.com", "electrek\\.com", "macrumours\\.com",
-        "\\Wnytimes\\.com", "\\Wnpr\\.org", "\\Wzdnet\\.com", "ycombinator\\.com", "\\Wcbc.ca",
+        "\\Wnews\\.",
+        "forbes\\.com",
+        "electrek\\.com",
+        "macrumours\\.com",
+        "\\Wnytimes\\.com",
+        "\\Wnpr\\.org",
+        "\\Wzdnet\\.com",
+        "ycombinator\\.com",
+        "\\Wcbc.ca",
         // travel
-        "expedia\\.com", "getthere\\.net",
+        "expedia\\.com",
+        "getthere\\.net",
         // financial"
-        "paypal\\.", "wellsfargo\\.", "citibank\\.", "chase\\.",
+        "paypal\\.",
+        "wellsfargo\\.",
+        "citibank\\.",
+        "chase\\.",
         // auth
-        "ServiceLogin", "okta\\.com", "oauth2", "\\Wlogin\\.",
+        "ServiceLogin",
+        "okta\\.com",
+        "oauth2",
+        "\\Wlogin\\.",
         // content
-        "imgur\\.", "gfycat\\.",
+        "imgur\\.",
+        "gfycat\\.",
         // comm
         "bluejeans\\.com",
         // commerce
-        "\\.ebay\\.", "www\\.amazon\\.com"
+        "\\.ebay\\.",
+        "www\\.amazon\\.com",
     ];
     for u in sites {
         let ur = UrlRestriction::with_url(&url_restrictions::StorePolicy::NoLog, u);
@@ -48,10 +69,10 @@ fn do_index(connection: &Connection) -> Result<()> {
         "https://developer.chrome.com/*",
         "https://*.stackoverflow.com/*",
         "https://*.css-tricks.com/*",
-        "https://*.readthedocs.io/*"
+        "https://*.readthedocs.io/*",
     ];
     for u in sites {
-        let ur = UrlRestriction::with_url( &url_restrictions::StorePolicy::DoIndex, u);
+        let ur = UrlRestriction::with_url(&url_restrictions::StorePolicy::DoIndex, u);
         url_restrictions::insert(connection, ur)?;
     }
     Ok(())
@@ -69,7 +90,7 @@ fn user_defined(connection: &Connection) -> Result<()> {
     input.push("user-content.json");
     if input.exists() {
         let content = file_utils::read_content(&input)?;
-        let uc:UserContent = json::from_str(&content).chain_err(|| "reading user content")?;
+        let uc: UserContent = json::from_str(&content).chain_err(|| "reading user content")?;
         for r in uc.restrictions {
             println!("creating user-content {:?}", r);
             url_restrictions::insert(&connection, r)?;

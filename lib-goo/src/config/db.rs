@@ -8,4 +8,3 @@ pub enum PasswordSource {
     /// Pass in
     PassIn(String),
 }
-

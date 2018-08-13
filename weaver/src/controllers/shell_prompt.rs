@@ -2,7 +2,7 @@ use lib_error::*;
 use lib_goo::config::Destination;
 use lib_goo::config::{file_utils, Environment};
 use lib_goo::entities::NewAction;
-use lib_rpc::{client as rpc_client};
+use lib_rpc::client as rpc_client;
 use std::env;
 use std::io::{self, Write};
 

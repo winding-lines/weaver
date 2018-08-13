@@ -11,7 +11,6 @@ pub struct TopicStore {
 }
 
 impl TopicStore {
-
     // Return the topic list for a given url.
     pub fn topics_for_url(&self, url: &str) -> Option<&[RelTopic]> {
         self.doc2topic.get(url).as_ref().map(|a| a.as_slice())

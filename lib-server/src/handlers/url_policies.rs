@@ -24,8 +24,8 @@ fn build_urls(all: &[store_policies::DocumentMatcher]) -> Vec<String> {
 /// Fetch the URL policies from the database.
 /// Do not return the do_not_index entries since this may be a privacy issue.
 fn fetch(state: State<AppState>) -> HttpResponse {
-
-    match state.sql
+    match state
+        .sql
         .connection()
         .and_then(|c| store_policies::Restrictions::fetch(&c))
     {

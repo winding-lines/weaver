@@ -54,7 +54,11 @@ impl TemplateEngine {
                         && (name.ends_with(".html") || name.ends_with(".raw"))
                     {
                         let content = file_utils::read_content(&path)?;
-                        self.0.lock().unwrap().add_raw_template(name, &content).chain_err(|| "adding template")?;
+                        self.0
+                            .lock()
+                            .unwrap()
+                            .add_raw_template(name, &content)
+                            .chain_err(|| "adding template")?;
                         processed.push(name.to_owned());
                     }
                 }
@@ -65,7 +69,10 @@ impl TemplateEngine {
 
     // Pass-through the render function to the underlying engine.
     pub fn render(&self, name: &str, ctx: &tera::Context) -> Result<String, Error> {
-        let lock = self.0.lock().map_err(|_e| error::ErrorInternalServerError("cannot lock the rendering engine"))?;
+        let lock = self
+            .0
+            .lock()
+            .map_err(|_e| error::ErrorInternalServerError("cannot lock the rendering engine"))?;
         lock.render(name, ctx).map_err(|e| {
             error::ErrorInternalServerError(format!(
                 "Failed rendering {} with error: {:?}",

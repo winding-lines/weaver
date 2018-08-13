@@ -4,7 +4,10 @@ use std::ffi::{OsStr, OsString};
 /// need to quote special characters next.
 #[allow(unused)]
 pub fn to_shell_command<T>(args: T) -> OsString
-    where T: IntoIterator, T::Item: AsRef<OsStr> {
+where
+    T: IntoIterator,
+    T::Item: AsRef<OsStr>,
+{
     let mut out = OsString::new();
     for a in args {
         out.push(a);

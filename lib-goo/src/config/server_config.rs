@@ -1,14 +1,12 @@
-/// Ports and other information about the server.
-
-use std::net::{TcpListener, ToSocketAddrs};
 use lib_error::*;
+/// Ports and other information about the server.
+use std::net::{TcpListener, ToSocketAddrs};
 
 pub const ACTIX_ADDRESS: &str = "127.0.0.1:8466";
 
 pub struct ServerConfig {
     pub actix_address: String,
 }
-
 
 impl Default for ServerConfig {
     fn default() -> Self {
@@ -46,10 +44,11 @@ fn is_listening(http_addr: &str) -> bool {
             false
         }
         Err(_) => {
-            debug!("Error binding to {}, assume the server is running.", http_addr);
+            debug!(
+                "Error binding to {}, assume the server is running.",
+                http_addr
+            );
             true
         }
     }
 }
-
-

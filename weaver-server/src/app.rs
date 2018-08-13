@@ -92,11 +92,11 @@ fn start(
             let mut last_status = Err(daemonize::DaemonizeError::Fork);
             for _i in 0..retries {
                 let daemonize = Daemonize::new()
-                    .pid_file(pid_file_.clone()) 
-                    .chown_pid_file(true)      
-                    .working_directory(&server_folder_.clone()) 
+                    .pid_file(pid_file_.clone())
+                    .chown_pid_file(true)
+                    .working_directory(&server_folder_.clone())
                     .redirect_dir(Some(server_folder_.clone()))
-                    .umask(0o022); 
+                    .umask(0o022);
 
                 last_status = daemonize.start();
                 if last_status.is_ok() {

@@ -36,6 +36,7 @@ extern crate lib_goo;
 extern crate lib_rpc;
 extern crate lib_tui;
 
+mod api;
 mod cli;
 mod controllers;
 mod display;

@@ -93,11 +93,13 @@ mod tests {
 
     fn state() -> AppState {
         let s = default_test();
-        s.indexer.add(&PageContent {
-            url: "url foo".into(),
-            title: "title bar".into(),
-            body: "body baz".into(),
-        }).expect("adding test PageContent");
+        s.indexer
+            .add(&PageContent {
+                url: "url foo".into(),
+                title: "title bar".into(),
+                body: "body baz".into(),
+            })
+            .expect("adding test PageContent");
         s
     }
 

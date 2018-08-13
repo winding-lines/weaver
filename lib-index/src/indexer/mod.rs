@@ -1,5 +1,5 @@
-use lib_goo::entities::PageContent;
 use lib_error::*;
+use lib_goo::entities::PageContent;
 
 mod tantivy_indexer;
 
@@ -13,9 +13,8 @@ pub struct Results {
 
 /// Public/light interface to the indexer.
 pub trait Indexer {
-
     fn add(&self, page_content: &PageContent) -> Result<(u64)>;
     fn delete(&self, id: &str) -> Result<()>;
-    fn search(&self, what: &str, ) -> Result<Results>;
+    fn search(&self, what: &str) -> Result<Results>;
     fn summary(&self) -> Option<String>;
 }

@@ -31,9 +31,8 @@ impl Server {
                     indexer: indexer.clone(),
                     repo: repo.clone(),
                     template: template.clone(),
-                    analyses: load_analyses().ok()
-                })
-                    .prefix("/api/")
+                    analyses: load_analyses().ok(),
+                }).prefix("/api/")
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     .configure(handlers::config)
                     .boxed(),

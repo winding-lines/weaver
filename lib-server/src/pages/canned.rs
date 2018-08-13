@@ -1,9 +1,9 @@
-use template_engine::build_context;
 /// Handle the pre-build analyses content.
 ///
 use actix_web::{error, App, Error, HttpRequest, HttpResponse, State};
 use analyses::get_analysis;
 use app_state::AppState;
+use template_engine::build_context;
 
 fn handle((req, state): (HttpRequest<AppState>, State<AppState>)) -> Result<HttpResponse, Error> {
     match req.match_info().get("name") {

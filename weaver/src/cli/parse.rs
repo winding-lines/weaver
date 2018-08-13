@@ -31,7 +31,6 @@ const COMMAND_PROMPT: &str = "prompt";
 
 /// Parse a Command from the command line options.
 pub fn parse() -> CommandAndConfig {
-
     let matches = App::new(APP_NAME)
         .version(VERSION)
         .about(DESCRIPTION)
@@ -108,7 +107,7 @@ fn parse_command(matches: &ArgMatches) -> Command {
         return Command::Noop;
     }
     if let Some(actions) = matches.subcommand_matches(COMMAND_ACTIONS) {
-        use lib_goo::config::{Channel};
+        use lib_goo::config::Channel;
 
         let channel = match actions.value_of("output-channel") {
             Some("run") => Channel::Run,

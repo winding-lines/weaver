@@ -1,11 +1,11 @@
 // Critical information about the current repo that is saved on disk.
 // Obviously the password (or equivalent) should not be part of this struct.
 use bincode;
-use std::fs::{read, write, create_dir};
-use std::path::{Path, PathBuf};
-use lib_goo::config::file_utils::app_folder;
-use rust_sodium::crypto::pwhash::{gen_salt,Salt};
 use lib_error::*;
+use lib_goo::config::file_utils::app_folder;
+use rust_sodium::crypto::pwhash::{gen_salt, Salt};
+use std::fs::{create_dir, read, write};
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Config {
@@ -13,8 +13,6 @@ pub(crate) struct Config {
 }
 
 impl Config {
-
-
     // Read the Repo configuration from the default location, if it's present.
     pub fn read() -> Result<Option<Config>> {
         let path = Config::config_path()?;
@@ -41,9 +39,7 @@ impl Config {
                 salt_raw.extend_from_slice(&salt.0);
 
                 // Create the config and save it to disk.
-                let config = Config {
-                    salt_raw,
-                };
+                let config = Config { salt_raw };
                 config.write()?;
 
                 Ok(config)
@@ -73,15 +69,15 @@ impl Config {
             match Self::read() {
                 Ok(Some(existing)) => {
                     if existing.salt_raw != self.salt_raw {
-                        return Err("cannot overwrite existing repo config".into())
+                        return Err("cannot overwrite existing repo config".into());
                     }
-                },
+                }
                 Err(e) => return Err(e),
-                _ => {},
+                _ => {}
             }
         }
-        let bin = bincode::serialize(self)
-            .chain_err(|| "bincode serialization error for repo config")?;
+        let bin =
+            bincode::serialize(self).chain_err(|| "bincode serialization error for repo config")?;
         write(&path, bin).chain_err(|| "write repo config")
     }
 
@@ -90,16 +86,15 @@ impl Config {
         let mut base_folder = app_folder()?;
         base_folder.push("text-repo");
         if !base_folder.exists() {
-           create_dir(&base_folder)?;
+            create_dir(&base_folder)?;
         }
         Ok(base_folder)
     }
 
     pub fn salt(&self) -> Result<Salt> {
-       match Salt::from_slice(&self.salt_raw[..]) {
-           Some(s) => Ok(s),
-           None => Err("cannot construct password salt".into()),
-       }
+        match Salt::from_slice(&self.salt_raw[..]) {
+            Some(s) => Ok(s),
+            None => Err("cannot construct password salt".into()),
+        }
     }
 }
-

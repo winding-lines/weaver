@@ -3,14 +3,14 @@ use app_state::AppState;
 
 mod action_api;
 mod search_api;
-mod url;
 mod summary;
-mod url_policies;
 mod system;
+mod url;
+mod url_policies;
 
 /// Count the number of times the configuration code is ran.
 fn is_first_run() -> bool {
-    use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+    use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
     static RUN: AtomicUsize = ATOMIC_USIZE_INIT;
     let run = RUN.fetch_add(1, Ordering::SeqCst);
     run == 1

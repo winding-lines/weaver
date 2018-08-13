@@ -13,5 +13,5 @@ pub struct Epic {
     name: String,
     start_time: String,
     end_time: String,
-    flows: Vec<FlowState>
+    flows: Vec<FlowState>,
 }

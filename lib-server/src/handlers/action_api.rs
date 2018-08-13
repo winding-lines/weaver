@@ -233,4 +233,3 @@ mod tests {
         assert_eq!(&out.entries[0].name, "bar");
     }
 }
-

@@ -1,8 +1,8 @@
+use inflections::Inflect;
 use lib_error::*;
 use lib_goo::config::file_utils;
 use std::path::PathBuf;
 use walkdir::WalkDir;
-use inflections::Inflect;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Analysis {
@@ -14,7 +14,6 @@ pub struct Analysis {
 /// Load the pre-computed analyses in the given folder.
 /// Each html file is assumed to contain an analysis.
 pub fn load_analyses() -> Result<Vec<Analysis>> {
-
     // The base folder for analyses
     let path = analyses_folder()?;
 
@@ -27,7 +26,7 @@ pub fn load_analyses() -> Result<Vec<Analysis>> {
             if let Some(file) = os_name.to_str() {
                 if entry.file_type().is_file() && file.ends_with(".html") {
                     let len = file.len();
-                    let name = file[.. len-5].to_title_case();
+                    let name = file[..len - 5].to_title_case();
                     out.push(Analysis {
                         name: name.into(),
                         file: file.into(),

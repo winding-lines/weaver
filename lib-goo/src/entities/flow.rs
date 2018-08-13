@@ -1,9 +1,9 @@
 //! Experimental entity to represent a sequence of actions.
 //!
+use lib_error::*;
 use serde_json as json;
 use std::fs::File;
 use std::io::prelude::*;
-use lib_error::*;
 
 /// To be implemented by Preconditions.
 trait Matcher {
@@ -29,18 +29,17 @@ impl Matcher for FileContent {
     }
 }
 
-
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub enum Precondition {
     #[serde(rename = "file_content")]
-    FileContent(FileContent)
+    FileContent(FileContent),
 }
 
 /// Pass through the Matcher to all the variants.
 impl Matcher for Precondition {
     fn matches(&self) -> bool {
         match self {
-            Precondition::FileContent(ref fc) => fc.matches()
+            Precondition::FileContent(ref fc) => fc.matches(),
         }
     }
 }
@@ -54,8 +53,7 @@ pub struct Flow {
 
 impl Flow {
     pub fn load_from_string(contents: &str) -> Result<Flow> {
-        let script: Flow = json::from_str(&contents)
-            .chain_err(|| "parsing flow")?;
+        let script: Flow = json::from_str(&contents).chain_err(|| "parsing flow")?;
         Ok(script)
     }
 
@@ -98,13 +96,14 @@ mod tests {
         assert!(res.is_ok(), format!("unexpected error {:?}", res));
         let flow = res.unwrap();
         assert_eq!(flow.name, "foo");
-        let expected_pre = vec![
-            Precondition::FileContent(FileContent {
-                path: String::from(".env"),
-                contains: String::from("DATABASE_URL"),
-            })
-        ];
+        let expected_pre = vec![Precondition::FileContent(FileContent {
+            path: String::from(".env"),
+            contains: String::from("DATABASE_URL"),
+        })];
         assert_eq!(flow.preconditions.as_slice(), expected_pre.as_slice());
-        assert_eq!(flow.actions.as_slice(), vec![String::from("diesel setup")].as_slice());
+        assert_eq!(
+            flow.actions.as_slice(),
+            vec![String::from("diesel setup")].as_slice()
+        );
     }
 }

@@ -1,11 +1,11 @@
-use ::cli;
-use std::fs;
-use std::path::{Path, PathBuf};
 use super::shell_proxy;
-use walkdir::WalkDir;
+use cli;
+use lib_error::*;
 use lib_goo::config::file_utils::{app_folder, read_content, write_content};
 use lib_goo::entities::flow::Flow;
-use lib_error::*;
+use std::fs;
+use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
 /// Return the global or local folder for flows.
 fn flows_folder(global: bool) -> Result<PathBuf> {
@@ -48,7 +48,6 @@ pub fn load() -> Result<Vec<Flow>> {
     Ok(out)
 }
 
-
 /// From all the Flows recommend the ones which are active for the current state,
 /// i.e. their preconditions match.
 pub fn active() -> Result<Vec<String>> {
@@ -69,7 +68,7 @@ fn run_flow(flow: &Flow) -> Result<()> {
         if exit_code != 0 {
             let msg = format!(" '{}' failed: {}", action, exit_code);
             println!("{}", msg);
-            return Err(msg.into())
+            return Err(msg.into());
         }
     }
     Ok(())
@@ -77,7 +76,9 @@ fn run_flow(flow: &Flow) -> Result<()> {
 
 /// Run the actions in the Flow with the given name.
 pub fn run<T>(name: T) -> Result<()>
-    where T: AsRef<str> {
+where
+    T: AsRef<str>,
+{
     for flow in &load()? {
         if flow.name.as_str().eq(name.as_ref()) {
             return run_flow(flow);
@@ -102,8 +103,7 @@ pub fn create(name: String, global: bool, actions: Vec<String>) -> Result<()> {
 
 /// Recommend a list of Flows for the current user.
 pub fn recommend() -> Result<()> {
-    let active = active()
-        .chain_err(|| "getting active flows")?;
+    let active = active().chain_err(|| "getting active flows")?;
 
     let mut displayed = 0;
     for name in &active {

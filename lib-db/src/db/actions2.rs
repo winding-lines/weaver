@@ -62,7 +62,7 @@ pub fn fetch(
 
     // Apply an optional filter
     if let Some(txt) = search {
-        joined = joined.filter(commands::dsl::command.like(format!("%{}%",txt)));
+        joined = joined.filter(commands::dsl::command.like(format!("%{}%", txt)));
     };
 
     // Note: in sqlite3 you cannot pass offset without limit.
@@ -227,6 +227,9 @@ mod tests {
         }
         let all = super::fetch(&connection, Some("ba"), &Pagination::default()).expect("fetch");
         assert_eq!(all.len(), 2);
-        assert_eq!(all.iter().map(|a| a.name.as_str()).collect::<Vec<&str>>(), vec!["bar", "baz"]);
+        assert_eq!(
+            all.iter().map(|a| a.name.as_str()).collect::<Vec<&str>>(),
+            vec!["bar", "baz"]
+        );
     }
 }
