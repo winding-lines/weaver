@@ -1,10 +1,10 @@
 //! Entity used when logging a new action. Could be collapsed with FormattedAction.
 
-use chrono::prelude::*;
 use config::Environment;
 use lib_error::Result;
 use libc::getppid;
 use sys_info;
+use ::date::now;
 
 /// Data structure to create a new action.
 #[derive(Default, Deserialize, Serialize)]
@@ -76,9 +76,4 @@ impl NewAction {
     pub fn version() -> &'static str {
         "1.0"
     }
-}
-
-fn now() -> String {
-    let utc: DateTime<Utc> = Utc::now();
-    utc.to_rfc3339()
 }

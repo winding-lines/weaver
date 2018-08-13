@@ -54,6 +54,7 @@ pub fn fetch(
     search: Option<&str>,
     pagination: &Pagination,
 ) -> Result<Vec<FormattedAction>> {
+    // setup the table joins, need to use into_boxed() to handle conditional code.
     let mut joined = actions2::table
         .inner_join(commands::table)
         .left_join(locations::table)
@@ -103,6 +104,18 @@ pub fn last_url(connection: &Connection) -> Result<Option<(String, String)>> {
             location.map(|l| l.location).unwrap_or_else(String::new),
         )
     }))
+}
+
+// Return the last access time for the given command
+pub fn last_access(connection: &Connection, command: &str) -> Result<Option<String>> {
+    let entries = actions2::dsl::actions2
+        .inner_join(commands::dsl::commands)
+        .select(actions2::dsl::executed)
+        .filter(commands::dsl::command.eq(command))
+        .order(actions2::dsl::id.desc())
+        .limit(1)
+        .load::<(String)>(connection)?;
+    Ok(entries.first().cloned())
 }
 
 /// Insert a new action in the database.
@@ -156,6 +169,7 @@ pub fn set_annotation(connection: &Connection, id: u64, annotation: &str) -> Res
 mod tests {
     use lib_goo::config::net::*;
     use lib_goo::entities::NewAction;
+    use lib_goo::date::now;
     use test_helpers::SqlStoreInMemory;
     use SqlProvider;
 
@@ -231,5 +245,24 @@ mod tests {
             all.iter().map(|a| a.name.as_str()).collect::<Vec<&str>>(),
             vec!["bar", "baz"]
         );
+    }
+
+    #[test]
+    fn test_last_access() {
+        let connection = SqlStoreInMemory::build(|_| Ok(()))
+            .connection()
+            .expect("test connection");
+        let time = now();
+        let url = "http://foo/last_access";
+        let action = NewAction {
+            command: url.into(),
+            executed: time.clone().into(),
+            ..NewAction::default()
+        };
+        super::insert(&connection, &action).expect("insert");
+        let fetched = super::last_access(&connection, url)
+            .expect("last_access")
+            .unwrap();
+        assert_eq!(fetched, time);
     }
 }

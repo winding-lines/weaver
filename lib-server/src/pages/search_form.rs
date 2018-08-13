@@ -1,19 +1,22 @@
 use actix_web::{App, Error, HttpResponse, Query, State};
 use app_state::AppState;
-use lib_db::store_policies;
+use lib_db::{actions2, store_policies};
+use lib_goo::date;
 use lib_goo::entities::lda;
 use lib_index::Results;
 use std::collections::HashMap;
 use template_engine::build_context;
 
-// One search entry view as used by the template.
+// One search entry as used by the template.
 #[derive(Serialize)]
 struct Data<'a> {
     title: &'a str,
     url: &'a str,
+    last_access: String,
     topic_ids: Vec<&'a lda::RelTopic>,
 }
 
+// One topic entry as used by the template.
 #[derive(Serialize)]
 struct TopicInfo {
     id: usize,
@@ -103,9 +106,15 @@ fn _handle(
             } else {
                 Vec::new()
             };
+            let last_access = actions2::last_access(&connection, &result.url)
+                .unwrap()
+                .as_ref()
+                .map(|d| date::pretty_diff(date::age(d).unwrap_or(-1)))
+                .unwrap_or_default();
             let data = Data {
                 title,
                 url: &result.url,
+                last_access,
                 topic_ids,
             };
             datum.matches.push(data);

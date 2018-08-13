@@ -78,7 +78,7 @@
         <div class="link">
           <a href={{ i.url }}>{{ i.url }}</a>
         </div>
-        <div>{%for t in i.topic_ids%} ({{t.t}}) {{t.p | round(method="ceil", precision=3)}} | {% endfor %}</div>
+        <div>{{i.last_access}} - {%for t in i.topic_ids%} ({{t.t}}) {{t.p | round(method="ceil", precision=3)}} | {% endfor %}</div>
       </div>
       {% endfor %}
     </div>
