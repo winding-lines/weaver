@@ -28,5 +28,7 @@ pub(crate) fn config_obsolete(app: App<AppState>) -> App<AppState> {
 /// Configure all the handlers in the app.
 /// This is used to migrate to the new /api prefix.
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
-    system::config(app)
+    let should_log = is_first_run();
+    let app = system::config(app);
+    action_api::config(app, should_log)
 }

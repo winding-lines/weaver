@@ -2,6 +2,7 @@
 //!
 use entities::FormattedAction;
 
+pub const API_BASE: &str = "/api";
 pub const ACTIONS2_BASE: &str = "/v2/actions";
 pub const ANNOTATIONS: &str = "/annotations";
 pub const RECOMMENDATIONS: &str = "/recommendations";

@@ -40,8 +40,9 @@ pub fn recommendations(
     params: &net::RecommendationQuery,
 ) -> Result<net::PaginatedActions> {
     let url = format!(
-        "http://{}{}{}?{}",
+        "http://{}{}{}{}?{}",
         rpc_addr(destination),
+        net::API_BASE,
         net::ACTIONS2_BASE,
         net::RECOMMENDATIONS,
         build_query_string(params)
@@ -61,8 +62,9 @@ pub fn add(destination: &Destination, req: &NewAction) -> Result<u64> {
     let client = reqwest::Client::new();
     client
         .post(&format!(
-            "http://{}{}",
+            "http://{}{}{}",
             rpc_addr(destination),
+            net::API_BASE,
             net::ACTIONS2_BASE
         ))
         .json(req)
@@ -78,8 +80,9 @@ pub fn set_annotation(destination: &Destination, id: u64, content: &str) -> Resu
     let client = reqwest::Client::new();
     client
         .post(&format!(
-            "http://{}/{}/{}{}",
+            "http://{}{}/{}/{}{}",
             rpc_addr(destination),
+            net::API_BASE,
             net::ACTIONS2_BASE,
             id,
             ANNOTATIONS
