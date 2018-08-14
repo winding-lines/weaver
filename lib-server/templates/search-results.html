@@ -17,6 +17,7 @@
     text-overflow: ellipsis;
   }
 
+
   .result a:link,
   .result a:visited {
     text-decoration: none;
@@ -47,6 +48,10 @@
 
   .topics td:nth-child(3) {
     text-align: left;
+  }
+
+  #search-results .active {
+    background-color: #ccc;
   }
 
   .topics tr.most-rel {
@@ -82,7 +87,7 @@
       </div>
       {% endfor %}
     </div>
-    <div class="topics">
+    <div class="topics" id="topics">
       <table>
         <tr><th>Id</th><th>Docs</th><th>Words</th></tr>
         {% for i in results.topics %}
@@ -95,14 +100,13 @@
 <script>
   let activeTopics;
 
-  function makeTopicsInactive(className) {
-      let activeEls = document.getElementsByClassName(className);
-      for (let i=0; i<activeEls.length; i++) {
-        let el = activeEls[i];
-        if(el.tagName == 'TR') {
-          el.classList.remove(className);
-        }
-      }
+  function removeChildrenClass(parentId, className) {
+    let parentEl = document.getElementById(parentId);
+    let activeEls = document.getElementsByClassName(className);
+    for (let i=0; i<activeEls.length; i++) {
+      let el = activeEls[i];
+      el.classList.remove(className);
+    }
   }
 
   function makeTopicsActive(ids) {
@@ -118,7 +122,7 @@
   document.getElementById("search-results").addEventListener("mouseover", function( event ) {
     let el = event.target;
     while( el && !el.dataset.topicLinks) {
-      el = el.parent;
+      el = el.parentElement;
     }
     if (!el) {
       return;
@@ -127,9 +131,14 @@
       if(activeTopics == el.dataset.topicLinks) {
         return;
       }
+      // update the active class for search results
+      removeChildrenClass("search-results", "active");
+      el.classList.add("active");
+
+      // update the active classes for topics
       activeTopics = el.dataset.topicLinks;
-      makeTopicsInactive("most-rel");
-      makeTopicsInactive("rel");
+      removeChildrenClass("topics", "most-rel");
+      removeChildrenClass("topics", "rel");
       let ids = activeTopics.split(",");
       makeTopicsActive(ids);
     }
