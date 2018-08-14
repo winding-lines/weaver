@@ -24,7 +24,7 @@
   }
 
   .topics td {
-    border-width: 0px; 
+    border-width: 0px;
   }
 
   .topics {
@@ -54,6 +54,10 @@
     background-color: #ccc;
   }
 
+  #search-results .collapsed {
+    display: none;
+  }
+
   .topics tr.most-rel {
     background-color: #ccc;
   }
@@ -61,7 +65,6 @@
   .topics tr.rel {
     background-color: #eee;
   }
-
 </style>
 {% endblock head %} {% block content %}
 
@@ -83,15 +86,24 @@
         <div class="link">
           <a href={{ i.url }}>{{ i.url }}</a>
         </div>
-        <div>{{i.last_access}} - {%for t in i.topic_ids%} ({{t.t}}) {{t.p | round(method="ceil", precision=3)}} | {% endfor %}</div>
+        <div>{{i.last_access}} - {%for t in i.topic_ids%} ({{t.t}}) {{t.p | round(method="ceil", precision=3)}} | {% endfor
+          %}</div>
       </div>
       {% endfor %}
     </div>
     <div class="topics" id="topics">
       <table>
-        <tr><th>Id</th><th>Docs</th><th>Words</th></tr>
+        <tr>
+          <th>Id</th>
+          <th>Docs</th>
+          <th>Words</th>
+        </tr>
         {% for i in results.topics %}
-        <tr id="topic-{{i.id}}"><td>({{i.id}})</td><td> {{i.count}}</td><td>{{i.display}}</td></tr>
+        <tr id="topic-{{i.id}}">
+          <td>({{i.id}})</td>
+          <td>{{i.count}}<input type="checkbox"></td>
+          <td>{{i.display}}</td>
+        </tr>
         {% endfor %}
       </table>
     </div>
@@ -103,32 +115,32 @@
   function removeChildrenClass(parentId, className) {
     let parentEl = document.getElementById(parentId);
     let activeEls = document.getElementsByClassName(className);
-    for (let i=0; i<activeEls.length; i++) {
+    for (let i = 0; i < activeEls.length; i++) {
       let el = activeEls[i];
       el.classList.remove(className);
     }
   }
 
   function makeTopicsActive(ids) {
-      for( let i=0;i<ids.length;i++) {
-        let id = ids[i];
-        let topicEl = id && document.getElementById("topic-" + id);
-        if (topicEl) {
-            topicEl.classList.add(i == 0 ? 'most-rel': 'rel');
-        }
+    for (let i = 0; i < ids.length; i++) {
+      let id = ids[i];
+      let topicEl = id && document.getElementById("topic-" + id);
+      if (topicEl) {
+        topicEl.classList.add(i == 0 ? 'most-rel' : 'rel');
       }
+    }
   }
 
-  document.getElementById("search-results").addEventListener("mouseover", function( event ) {
+  function searchResultsMouseOver(event) {
     let el = event.target;
-    while( el && !el.dataset.topicLinks) {
+    while (el && !el.dataset.topicLinks) {
       el = el.parentElement;
     }
     if (!el) {
       return;
     }
-    if(el.dataset.topicLinks) {
-      if(activeTopics == el.dataset.topicLinks) {
+    if (el.dataset.topicLinks) {
+      if (activeTopics == el.dataset.topicLinks) {
         return;
       }
       // update the active class for search results
@@ -142,6 +154,59 @@
       let ids = activeTopics.split(",");
       makeTopicsActive(ids);
     }
-  })
-</script>
-{% endblock content %}
+  }
+
+  // Return the topic id associated with the current element, or any of its parents.
+  function getMainTopicId(el) {
+    while(el && !el.id) {
+      el = el.parentElement;
+    }
+    return(el.id && el.id.startsWith("topic-") && el.id.substring(6));
+  }
+
+  // Get the list of selected topic ids.
+  function getSelectedTopicIds() {
+    let topicCheckboxes = document.getElementById("topics").getElementsByTagName("INPUT");
+    let out = [];
+    for (let i=0; i<topicCheckboxes.length; i++) {
+      let el = topicCheckboxes[i];
+      if (el && el.type == "checkbox") {
+        if(el.checked) {
+          out.push(getMainTopicId(el));
+        }
+      }
+    }
+    return out;
+  }
+
+  // Handle a change in any of the topic checkboxes.
+  function topicSelected(event) {
+    let el = event.target;
+    removeChildrenClass("search-results", "collapsed")
+    removeChildrenClass("search-results", "active");
+    removeChildrenClass("topics", "most-rel");
+    removeChildrenClass("topics", "rel");
+    let selected = getSelectedTopicIds();
+    if (selected.length) {
+      let results = document.getElementById("search-results").children;
+      for (let i=0; i<results.length; i++) {
+        let entry = results[i];
+        let ids = entry.dataset.topicLinks;
+        ids = ids && ids.split(",");
+        if(!ids) {
+          continue;
+        }
+        let missing = selected.filter(o => !ids.includes(o));
+        if(missing.length) {
+          entry.classList.add("collapsed");
+        }
+      }
+    }
+  }
+
+  document.getElementById("search-results").addEventListener("mouseover", searchResultsMouseOver)
+  let topicInputs = document.getElementById("topics").getElementsByTagName("input");
+  for (let i=0; i<topicInputs.length; i++) {
+    topicInputs[i].addEventListener("click", topicSelected);
+  }
+</script> {% endblock content %}
