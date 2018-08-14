@@ -181,9 +181,6 @@ pub fn display(
 
     siv.add_layer(layout.min_size((screen.x, screen.y)));
 
-    // Do the initial display;
-    process_tx.send(Msg::Filter(String::from("")));
-
     siv.focus_id("filter").expect("set focus on filter");
 
     siv.run();

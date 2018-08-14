@@ -45,12 +45,16 @@ fn build_recommendations(
     connection: &Connection,
     query: &net::RecommendationQuery,
 ) -> Result<net::PaginatedActions> {
+    let pagination =  net::Pagination {
+        length: query.length,
+        start: query.start,
+    };
     let mut historical = actions2::fetch(
         &connection,
         query.term.as_ref().map(|a| &**a),
-        &net::Pagination::default(),
+        &pagination,
     )?;
-    let mut recommended = recommender::recommend(&historical);
+    let mut recommended = recommender::recommend(&historical, &query.term);
 
     // Fill with historical information.
     let max_recs = query.length.unwrap_or(MAX_RECS as i64);
@@ -229,7 +233,7 @@ mod tests {
         // println!("response {:?} {}", response, data);
         let out: net::PaginatedActions = json::from_slice(&bytes[..]).expect("json decode");
         assert_eq!(out.total, 2);
-        assert_eq!(out.entries.len(), 2);
+        assert_eq!(out.entries.len(), 1);
         assert_eq!(&out.entries[0].name, "bar");
     }
 }

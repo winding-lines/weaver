@@ -34,8 +34,13 @@ fn to_recommended_frequent(action: &FormattedAction, name: String, repeat: u32) 
 // - Find the earlier instances of the last command and return the most recent
 //   and most frequent commands.
 
-pub fn recommend(history: &[FormattedAction]) -> Vec<FormattedAction> {
+pub fn recommend(history: &[FormattedAction], term: &Option<String>) -> Vec<FormattedAction> {
     let mut out = Vec::new();
+
+    // do not make recommendations for searches.
+    if term.is_some() {
+        return out;
+    }
     if history.is_empty() {
         return out;
     }
