@@ -3,7 +3,7 @@
 use actix_web::{http, App, HttpResponse, Json, Path, Query, State};
 use app_state::AppState;
 use bson::{self, Bson};
-use lib_ai::recommender;
+use lib_ai::{compact, recommender};
 use lib_db::{actions2, Connection};
 use lib_error::Result as Wesult;
 use lib_error::*;
@@ -54,7 +54,9 @@ fn build_recommendations(
         query.term.as_ref().map(|a| &**a),
         &pagination,
     )?;
+    let cycles = compact::extract_cycles(&historical);
     let mut recommended = recommender::recommend(&historical, &query.term);
+    compact::decycle(&mut historical, &cycles);
 
     // Fill with historical information.
     let max_recs = query.length.unwrap_or(MAX_RECS as i64);
@@ -70,6 +72,7 @@ fn build_recommendations(
     Ok(net::PaginatedActions {
         entries: recommended,
         total: count,
+        cycles,
     })
 }
 
@@ -105,6 +108,7 @@ fn paginated_fetch((state, input): (State<AppState>, Query<net::Pagination>)) ->
             let out = net::PaginatedActions {
                 entries: entries.to_vec(),
                 total: total,
+                cycles: Vec::new(),
             };
             HttpResponse::Ok().json(out)
         }

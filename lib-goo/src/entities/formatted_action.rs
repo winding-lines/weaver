@@ -36,3 +36,15 @@ impl FormattedAction {
         self.name
     }
 }
+
+// Structure to represent repeats in the list of actions.
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize)]
+pub struct Cycle {
+    // Synthetic ID for this cyle, not persistent.
+    pub id: usize,
+    // Sequence of the most recent IDs that repeat. Note that one action id
+    // can belong to multiple cycles.
+    pub sequence: Vec<usize>,
+    // Starting points where this sequence repeats.
+    pub anchors: Vec<usize>,
+}

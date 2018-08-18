@@ -10,3 +10,4 @@ extern crate chrono;
 
 pub mod normalize;
 pub mod recommender;
+pub mod compact;

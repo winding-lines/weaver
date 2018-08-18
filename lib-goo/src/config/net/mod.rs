@@ -1,6 +1,6 @@
 //! Url building constants and data structures used over the wire.
 //!
-use entities::FormattedAction;
+use entities::{Cycle, FormattedAction};
 
 pub const API_BASE: &str = "/api";
 pub const ACTIONS2_BASE: &str = "/v2/actions";
@@ -28,6 +28,7 @@ pub struct Pagination {
 pub struct PaginatedActions {
     pub entries: Vec<FormattedAction>,
     pub total: usize,
+    pub cycles: Vec<Cycle>,
 }
 
 /// Request parameters to fetch recommendations.

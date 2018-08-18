@@ -54,11 +54,12 @@ pub fn fetch_recommendations(
     let net::PaginatedActions {
         entries: mut actions,
         total: _total,
+        cycles: _cycles,
     } = rpc_client::recommendations(
         &destination,
         &net::RecommendationQuery {
-            start: Some(0),
-            length: Some(500),
+            start: None,
+            length: None,
             term,
         },
     )?;

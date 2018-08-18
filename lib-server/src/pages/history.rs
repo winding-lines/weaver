@@ -22,6 +22,7 @@ fn handle(
     let mut results = PaginatedActions {
         entries: fetched,
         total: actions2::count(&connection)?,
+        cycles: Vec::new(),
     };
     results.entries.reverse();
     ctx.add("results", &results);
@@ -46,6 +47,7 @@ mod tests {
         let results = PaginatedActions {
             total: 14,
             entries: vec![FormattedAction::default()],
+            cycles: Vec::new(),
         };
         ctx.add("results", &results);
         ctx.add("inline_css", "<!-- css -->");

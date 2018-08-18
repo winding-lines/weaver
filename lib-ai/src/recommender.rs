@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn no_recommendations_for_empty_history() {
-        let r = recommend(&Vec::new());
+        let r = recommend(&Vec::new(), &None);
         assert!(r.is_empty());
     }
 
@@ -103,7 +103,7 @@ mod tests {
             name: "foo".into(),
             ..FormattedAction::default()
         }];
-        let r = recommend(&history);
+        let r = recommend(&history, &None);
         assert_eq!(&r.first().unwrap().name, "foo");
     }
 
@@ -116,7 +116,7 @@ mod tests {
                 ..FormattedAction::default()
             })
             .collect();
-        let r = recommend(&history);
+        let r = recommend(&history, &None);
         assert_eq!(r.len(), 1);
         assert_eq!(&r.first().unwrap().name, "bar");
     }
@@ -130,7 +130,7 @@ mod tests {
                 ..FormattedAction::default()
             })
             .collect();
-        let r = recommend(&history);
+        let r = recommend(&history, &None);
         assert_eq!(r.len(), 2);
         assert_eq!(&r.first().unwrap().name, "bar");
         assert_eq!(&r[1].name, "baz");
