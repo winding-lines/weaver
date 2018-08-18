@@ -1,38 +1,15 @@
-use lib_error::Result;
+use lib_error::*;
 use lib_goo::config::net::{self, ANNOTATIONS, EPICS};
 use lib_goo::config::Destination;
 use lib_goo::entities::{Epic, NewAction};
 use reqwest;
+use serde_urlencoded;
 
 /// Extract the rpc address from the Destination.
 fn rpc_addr(destination: &Destination) -> &str {
     match destination {
         Destination::Remote(ref a) => a,
     }
-}
-
-/// Build the query string for recommendations.
-/// TODO: use crate to get proper escaping.
-fn build_query_string(params: &net::RecommendationQuery) -> String {
-    let mut query_string = String::new();
-
-    if let Some(start) = params.start {
-        query_string.push_str(&format!("start={}", start));
-    }
-    if let Some(length) = params.length {
-        if !query_string.is_empty() {
-            query_string.push('&');
-        }
-        query_string.push_str(&format!("length={}", length));
-    }
-    if let Some(ref term) = params.term {
-        if !query_string.is_empty() {
-            query_string.push('&');
-        }
-        query_string.push_str(&format!("term={}", term));
-    }
-
-    query_string
 }
 
 pub fn recommendations(
@@ -45,7 +22,7 @@ pub fn recommendations(
         net::API_BASE,
         net::ACTIONS2_BASE,
         net::RECOMMENDATIONS,
-        build_query_string(params)
+        serde_urlencoded::to_string(params).chain_err(|| "generate recommendation url")?
     );
     debug!("Downloading recommendations from {}", url);
     let client = reqwest::Client::new();

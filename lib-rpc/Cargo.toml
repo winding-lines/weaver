@@ -5,12 +5,13 @@ description = "Implement rpc between weaver client and server"
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [dependencies]
+log = "*"
 reqwest = "0.8"
 serde = "*"
 serde_derive = "*"
 serde_json = "*"
+serde_urlencoded = "0.5.1"
+
 lib-error = {path = "../lib-error"}
 lib-goo = {path = "../lib-goo"}
-log = "*"
-
 
