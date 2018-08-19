@@ -222,17 +222,17 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     }
 
     /// Selects the row at the specified index.
-    pub fn set_selected_row(&mut self, row_index: usize) {
+    pub fn set_selected(&mut self, row_index: usize, column_index: usize) {
         self.focus = row_index;
-        self.focus_column = 0;
+        self.focus_column = column_index;
         self.scrollbase.scroll_to(row_index);
     }
 
     /// Selects the row at the specified index.
     ///
     /// Chainable variant.
-    pub fn selected_row(self, row_index: usize) -> Self {
-        self.with(|t| t.set_selected_row(row_index))
+    pub fn selected(self, row_index: usize, column_index: usize) -> Self {
+        self.with(|t| t.set_selected(row_index, column_index))
     }
 
     /// Sets the contained items of the table.
@@ -242,7 +242,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     pub fn set_items(&mut self, items: Vec<T>) {
         self.items = items;
 
-        self.set_selected_row(0);
+        self.set_selected(0, 0);
     }
 
     /// Sets the contained items of the table.
@@ -347,7 +347,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     pub fn take_items(&mut self) -> Vec<T> {
         self.scrollbase
             .set_heights(self.last_size.y.saturating_sub(HEIGHT_SUB), 0);
-        self.set_selected_row(0);
+        self.set_selected(0, 0);
         self.items.drain(0..).collect()
     }
 }
@@ -392,12 +392,12 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
     fn focus_up(&mut self, n: usize) {
         self.focus -= cmp::min(self.focus, n);
-        self.focus_column = 0;
+        // self.focus_column = 0;
     }
 
     fn focus_down(&mut self, n: usize) {
         self.focus = cmp::min(self.focus + n, self.items.len() - 1);
-        self.focus_column = 0;
+        // self.focus_column = 0;
     }
 }
 

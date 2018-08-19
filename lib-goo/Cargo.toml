@@ -6,7 +6,7 @@ authors = ["Marius Seritan <git@winding-lines.com>"]
 
 
 [dependencies]
-chrono = "0.4"
+chrono = {version="0.4", features = ["serde"]}
 dirs = "1.0"
 libc = "0.2"
 log = "0.4"

@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use lib_error::*;
 use lib_goo::config::net::Pagination;
 use lib_goo::entities::{FormattedAction, NewAction, RecommendReason};
+use lib_goo::date;
 use Connection;
 
 #[derive(Queryable)]
@@ -73,6 +74,7 @@ pub fn fetch(
         .load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection)?;
     let mut out = Vec::new();
     for (action2, command, location, epic) in loaded {
+        let when = date::Date::parse(&action2.executed).ok();
         let formatted = FormattedAction {
             annotation: action2.annotation,
             id: action2.id.unwrap_or(0) as usize,
@@ -81,6 +83,7 @@ pub fn fetch(
             name: command.command,
             location: location.map(|l| l.location),
             reason: RecommendReason::default(),
+            when,
         };
         out.push(formatted);
     }

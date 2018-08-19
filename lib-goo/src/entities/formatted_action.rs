@@ -1,5 +1,6 @@
 //! Representes a denormalized action which can be used in the UI.
 //!
+use date::Date;
 
 /// Reasons why an action may be recommended.
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -29,6 +30,7 @@ pub struct FormattedAction {
     pub location: Option<String>,
     /// The reason why this action is being recommended.
     pub reason: RecommendReason,
+    pub when: Option<Date>,
 }
 
 impl FormattedAction {

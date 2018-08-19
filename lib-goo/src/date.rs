@@ -2,6 +2,22 @@
 use chrono::prelude::*;
 use lib_error::*;
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Date(DateTime<FixedOffset>);
+
+impl Date {
+    pub fn parse(rfc3339_date: &str) -> Result<Date> {
+        let inner = DateTime::parse_from_rfc3339(rfc3339_date).map_err(
+            |_| "date parse error"
+        )?;
+        Ok(Date(inner))
+    }
+
+    pub fn age(&self) -> i64 {
+        let utc: DateTime<Utc> = Utc::now();
+        (utc - self.0.with_timezone(&Utc)).num_seconds()
+    }
+}
 
 /// Age in seconds
 pub fn age(rfc3339_date: &str) -> Result<i64> {

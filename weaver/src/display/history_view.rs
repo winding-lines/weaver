@@ -9,15 +9,19 @@ use lib_tui::{ActionListView, ActionListViewItem};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum BasicColumn {
+    Index,
     Name,
     Detail,
 }
+
+static DEFAULT_COLUMN: usize = 1;
 
 /// The table view for the history.
 impl ActionListViewItem<BasicColumn> for Row {
     fn to_column(&self, column: BasicColumn, is_focussed: bool) -> Option<String> {
         match *self {
             Row::Regular(ref r) => match column {
+                BasicColumn::Index => Some(format!("{}",r.id)),
                 BasicColumn::Name => Some(r.name.to_string()),
                 BasicColumn::Detail => if is_focussed && r.location.is_some() {
                     Some(r.location.as_ref().unwrap().clone())
@@ -26,6 +30,7 @@ impl ActionListViewItem<BasicColumn> for Row {
                 },
             },
             Row::Recommended(ref r) => match column {
+                BasicColumn::Index => Some(format!("{}",r.id)),
                 BasicColumn::Name => Some(r.name.to_string()),
                 BasicColumn::Detail => match r.reason {
                     RecommendReason::CorrelatedMostRecent(_age) => Some("most recent".into()),
@@ -52,6 +57,7 @@ pub type TView = ActionListView<Row, BasicColumn>;
 // Create the Cursive table for actions.
 pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TView {
     let mut view = TView::new()
+        .column(BasicColumn::Index, |c| c.align(HAlign::Right).width(5))
         .column(BasicColumn::Name, |c| {
             c.align(HAlign::Left).width_percent(70)
         })
@@ -78,10 +84,10 @@ pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TV
                     let value = t.borrow_item(index).cloned().map(|a| {
                         (
                             a,
-                            if column == 0 {
-                                Column::Left
-                            } else {
-                                Column::Right
+                            match column {
+                                0 => Column::Left,
+                                1 => Column::Middle,
+                                _ => Column::Right,
                             },
                         )
                     });
@@ -104,6 +110,6 @@ pub fn redisplay(view: &mut TView, content: Vec<Row>) {
     let select = content.len();
     view.set_items(content);
     if select > 0 {
-        view.set_selected_row(select - 1);
+        view.set_selected(select - 1, DEFAULT_COLUMN);
     }
 }

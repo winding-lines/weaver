@@ -6,7 +6,7 @@ use cursive::views::EditView;
 use cursive::{CbFunc as CursiveCbFunc, Cursive};
 use lib_goo::config::Destination;
 use lib_goo::entities::{FormattedAction, RecommendReason};
-use lib_goo::{config, FilteredVec};
+use lib_goo::{config, date, FilteredVec};
 use lib_rpc::client as rpc_client;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -15,8 +15,11 @@ use std::thread;
 #[derive(Clone, Debug)]
 pub enum Column {
     Left,
+    Middle,
     Right,
 }
+
+static DEFAULT_COLUMN: usize = 1;
 
 /// Message types sent to the selection processor
 #[derive(Clone)]
@@ -103,6 +106,10 @@ impl Processor {
                     Column::Right if location.is_some() => {
                         action.name = format!("cd {} && {}", location.unwrap(), action.name)
                     }
+                    Column::Left => {
+                        let ago = action.when.as_ref().map(|w| date::pretty_diff(w.age())).unwrap_or(String::new());
+                        action.name = format!("{} ago", ago);
+                    },
                     _ => (),
                 };
                 self.formatted_action = Some(action);
@@ -131,6 +138,7 @@ impl Processor {
             epic: None,
             location: None,
             reason: RecommendReason::UserSelected,
+            when: None,
         });
         sel.name = name;
     }
@@ -162,8 +170,8 @@ impl Processor {
                 tview.set_items(content);
                 if select > 0 {
                     let index = selected_row.unwrap_or(select - 1);
-                    tview.set_selected_row(index);
-                    let selected = tview.borrow_item(index).cloned().map(|a| (a, Column::Left));
+                    tview.set_selected(index, DEFAULT_COLUMN);
+                    let selected = tview.borrow_item(index).cloned().map(|a| (a, Column::Middle));
 
                     // Update the rest of the system with the selection.
                     // Since there are state changes need to defer to the processor.
@@ -174,14 +182,14 @@ impl Processor {
         self.cursive_sink.send(Box::new(update_table));
     }
 
-    fn set_selected_row(&mut self, row: usize) {
+    fn set_selected(&mut self, row: usize) {
         let jump = move |siv: &mut Cursive| {
             if let Some(mut tview) = siv.find_id::<history_view::TView>("actions") {
-                tview.set_selected_row(row);
+                tview.set_selected(row, DEFAULT_COLUMN);
             }
         };
         self.cursive_sink.send(Box::new(jump));
-        let action = self.table.get(row).map(|a| (a, Column::Left));
+        let action = self.table.get(row).map(|a| (a, Column::Middle));
         self.select_row_and_col(action);
     }
 
@@ -195,7 +203,7 @@ impl Processor {
             _ => None,
         };
         if let Some(new_pos) = maybe_pos {
-            self.set_selected_row(new_pos);
+            self.set_selected(new_pos);
         }
     }
 
@@ -209,7 +217,7 @@ impl Processor {
             _ => None,
         };
         if let Some(new_pos) = maybe_pos {
-            self.set_selected_row(new_pos);
+            self.set_selected(new_pos);
         }
     }
 
