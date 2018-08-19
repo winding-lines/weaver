@@ -3,7 +3,7 @@ use super::{history_view, UserSelection};
 use api::Row;
 use crossbeam_channel as channel;
 use cursive::event::{Event, Key};
-use cursive::theme::{Color, PaletteColor, Theme};
+use cursive::theme::{Color, BorderStyle, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
 use cursive::Cursive;
@@ -16,14 +16,12 @@ const MARGIN_X: usize = 7;
 
 // Create the Cursive environment.
 fn create_cursive() -> Cursive {
-    let mut siv = Cursive::default();
+    let mut siv = Cursive::ncurses();
 
     // set our custom theme to match the terminal
-    let theme = custom_theme_from_cursive(&siv);
+    let mut theme = custom_theme_from_cursive(&siv);
+    theme.borders = BorderStyle::None;
     siv.set_theme(theme);
-
-    // set the fps parameter to enable callbacks.
-    siv.set_fps(10);
 
     siv
 }
@@ -36,6 +34,7 @@ fn send(tx: &channel::Sender<Msg>, msg: Msg) {
 fn create_filter_edit(tx: channel::Sender<Msg>) -> EditView {
     let tx2 = tx.clone();
     EditView::new()
+        .filler(" ")
         .on_edit(move |_: &mut Cursive, text: &str, _position: usize| {
             send(&tx, Msg::Filter(String::from(text)));
         })
@@ -46,20 +45,21 @@ fn create_filter_edit(tx: channel::Sender<Msg>) -> EditView {
 
 // Create the Edit view used for for the editing the command to run.
 fn create_command_edit(tx: channel::Sender<Msg>) -> EditView {
-    EditView::new().on_submit(move |_: &mut Cursive, content: &str| {
-        let message = Msg::CommandSubmit(Some(String::from(content)));
-        send(&tx, message);
-    })
+    EditView::new()
+        .filler(" ")
+        .on_submit(move |_: &mut Cursive, content: &str| {
+            let message = Msg::CommandSubmit(Some(String::from(content)));
+            send(&tx, message);
+        })
 }
 
-/*
-fn create_annotation_edit(tx: channel::Sender<Msg>) -> EditView {
-    EditView::new().on_submit(move |_: &mut Cursive, content: &str| {
-        let message = Msg::AnnotationSubmit(Some(String::from(content)));
-        send(&tx, message);
-    })
+// Create a line containing some instructions
+fn create_help() -> TextView {
+    use cursive::theme::Effect;
+    TextView::new(
+        "Type to filter| UP/DOWN to change selection | LEFT/RIGHT for folder | ENTER to select"
+    ).effect(Effect::Reverse)
 }
-*/
 
 fn setup_global_keys(siv: &mut Cursive, ch: channel::Sender<Msg>) {
     let mapping = vec![
@@ -96,7 +96,7 @@ pub fn display(
 
     // Fill the screen
     let screen = siv.screen_size();
-    let content_height = (screen.y - 9) as usize;
+    let content_height = (screen.y - 6) as usize;
 
     // History table, the current margin constants found by experimentation.
     let history_height = content_height;
@@ -130,13 +130,16 @@ pub fn display(
     // build the table pane
     let content = history_view::create_view(initial, &process_tx)
         .with_id("actions")
-        .min_height(history_height)
+        .fixed_height(history_height)
         .fixed_width(history_width);
 
     // Assemble the table pane with the bottom fields
     let mut layout = LinearLayout::vertical();
     layout.add_child(content);
-    layout.add_child(BoxView::with_fixed_size((0, 2), DummyView));
+    layout.add_child(BoxView::with_fixed_size((0, 1), DummyView));
+
+    // Help line
+    layout.add_child(create_help().fixed_width(screen.x-4));
 
     // build the filter pane
     let filter_pane = LinearLayout::horizontal()
@@ -144,7 +147,7 @@ pub fn display(
         .child(
             create_filter_edit(process_tx.clone())
                 .with_id("filter")
-                .min_width(20),
+                .fixed_width((screen.x - 30) as usize),
         );
     layout.add_child(filter_pane);
 
@@ -154,32 +157,13 @@ pub fn display(
         .child(
             create_command_edit(process_tx.clone())
                 .with_id("command")
-                .min_width((screen.x - 50) as usize),
+                .fixed_width((screen.x - 30) as usize),
         );
     layout.add_child(command_pane);
 
-    // build the annotation pane
-    /*
-    let annotation_pane = LinearLayout::horizontal()
-        .child(TextView::new("Annotate:     "))
-        .child(
-            create_annotation_edit(process_tx.clone())
-                .with_id("annotation")
-                .min_width((screen.x - 50) as usize),
-        );
-    layout.add_child(annotation_pane);
-    */
-
-    // build the output kind UI
-    let mut output_pane = LinearLayout::horizontal();
-    output_pane.add_child(TextView::new(format!(
-        "<Enter> will: {}| <Esc> to change | Ctrl-G to jump to selection",
-        &kind.channel
-    )));
     setup_global_keys(&mut siv, process_tx.clone());
-    layout.add_child(output_pane);
 
-    siv.add_layer(layout.min_size((screen.x, screen.y)));
+    siv.add_layer(layout.full_width());
 
     siv.focus_id("filter").expect("set focus on filter");
 

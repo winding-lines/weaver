@@ -4,6 +4,8 @@
 // Crate Dependencies ---------------------------------------------------------
 extern crate cursive;
 extern crate regex;
+#[macro_use]
+extern crate log;
 
 mod action_list_view;
 
