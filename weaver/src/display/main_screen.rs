@@ -5,7 +5,8 @@ use crossbeam_channel as channel;
 use cursive::event::{Event, Key};
 use cursive::theme::{Color, BorderStyle, PaletteColor, Theme};
 use cursive::traits::*;
-use cursive::views::{BoxView, DummyView, EditView, LinearLayout, TextView};
+use cursive::views::{EditView, LinearLayout, TextView};
+use cursive::vec::Vec2;
 use cursive::Cursive;
 use lib_error::*;
 use lib_goo::config::{Destination, Environment, OutputKind};
@@ -96,10 +97,9 @@ pub fn display(
 
     // Fill the screen
     let screen = siv.screen_size();
-    let content_height = (screen.y - 6) as usize;
 
     // History table, the current margin constants found by experimentation.
-    let history_height = content_height;
+    let history_height = (screen.y - 5) as usize;
     let history_width = (screen.x - MARGIN_X) as usize;
 
     // communication channels between views and data processor.
@@ -130,13 +130,11 @@ pub fn display(
     // build the table pane
     let content = history_view::create_view(initial, &process_tx)
         .with_id("actions")
-        .fixed_height(history_height)
-        .fixed_width(history_width);
+        .fixed_size(Vec2::new(history_width, history_height));
 
     // Assemble the table pane with the bottom fields
     let mut layout = LinearLayout::vertical();
     layout.add_child(content);
-    layout.add_child(BoxView::with_fixed_size((0, 1), DummyView));
 
     // Help line
     layout.add_child(create_help().fixed_width(screen.x-4));
