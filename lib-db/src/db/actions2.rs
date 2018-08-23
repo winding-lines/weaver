@@ -4,7 +4,7 @@ use diesel;
 use diesel::prelude::*;
 use lib_error::*;
 use lib_goo::config::net::Pagination;
-use lib_goo::entities::{FormattedAction, NewAction, RecommendReason};
+use lib_goo::entities::{ActionId, FormattedAction, NewAction, RecommendReason};
 use lib_goo::date;
 use Connection;
 
@@ -77,7 +77,7 @@ pub fn fetch(
         let when = date::Date::parse(&action2.executed).ok();
         let formatted = FormattedAction {
             annotation: action2.annotation,
-            id: action2.id.unwrap_or(0) as usize,
+            id: action2.id.map(|a| ActionId::new(a as usize)).unwrap_or_default(),
             epic: epic.map(|e| e.name),
             kind: command.kind,
             name: command.command,

@@ -54,7 +54,7 @@ fn build_recommendations(
         query.term.as_ref().map(|a| &**a),
         &pagination,
     )?;
-    let cycles = compact::extract_cycles(&historical);
+    let cycles = compact::extract_cycles(&historical, 4);
     let mut recommended = recommender::recommend(&historical, &query.term);
     compact::decycle(&mut historical, &cycles);
 

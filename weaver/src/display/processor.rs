@@ -133,12 +133,8 @@ impl Processor {
         let sel = self.formatted_action.get_or_insert(FormattedAction {
             name: name.clone(),
             kind: String::from("shell"),
-            id: 0,
-            annotation: None,
-            epic: None,
-            location: None,
             reason: RecommendReason::UserSelected,
-            when: None,
+            .. FormattedAction::default()
         });
         sel.name = name;
     }
@@ -199,7 +195,7 @@ impl Processor {
             self.search_string, self.formatted_action
         );
         let maybe_pos = match (self.search_string.as_ref(), self.formatted_action.as_ref()) {
-            (Some(search), Some(action)) => self.table.find_next(search, action.id - 1),
+            (Some(search), Some(action)) => self.table.find_next(search, action.id.next()),
             _ => None,
         };
         if let Some(new_pos) = maybe_pos {
@@ -213,7 +209,7 @@ impl Processor {
             self.search_string, self.formatted_action
         );
         let maybe_pos = match (self.search_string.as_ref(), self.formatted_action.as_ref()) {
-            (Some(search), Some(action)) => self.table.find_previous(search, action.id - 1),
+            (Some(search), Some(action)) => self.table.find_previous(search, action.id.prev()),
             _ => None,
         };
         if let Some(new_pos) = maybe_pos {
@@ -235,7 +231,7 @@ impl Processor {
     #[allow(dead_code)]
     fn set_annotation(&self, annotation: &str) {
         if let Some(selection) = self.formatted_action.as_ref() {
-            rpc_client::set_annotation(&self.destination, selection.id as u64, annotation)
+            rpc_client::set_annotation(&self.destination, &selection.id, annotation)
                 .expect("saving annotation");
         }
     }
@@ -321,7 +317,9 @@ impl ProcessorThread {
                     }
                     Some(Msg::JumpToSelection) => {
                         debug!("Received JumpToSelection");
-                        let current_id = processor.formatted_action.as_ref().map(|a| a.id - 1);
+                        let current_id = processor.formatted_action.as_ref().map(|a| a.id.prev(
+
+                        ));
                         processor.filter(None, current_id);
                     }
                     Some(Msg::JumpToNextMatch) => {

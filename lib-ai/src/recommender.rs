@@ -1,5 +1,5 @@
 /// Build a list of recommended actions from the historical list of actions and current context.
-use lib_goo::entities::{FormattedAction, RecommendReason};
+use lib_goo::entities::{ActionId, FormattedAction, RecommendReason};
 use std::collections::HashMap;
 
 use chrono::prelude::*;
@@ -12,7 +12,7 @@ fn to_recommended_recent(action: &FormattedAction) -> FormattedAction {
     } else {
         0
     };
-    out.id = 0;
+    out.id = ActionId::default();
     out.reason = RecommendReason::CorrelatedMostRecent(age);
     out
 }
@@ -21,7 +21,7 @@ fn to_recommended_recent(action: &FormattedAction) -> FormattedAction {
 fn to_recommended_frequent(action: &FormattedAction, name: String, repeat: u32) -> FormattedAction {
     let mut out = action.clone();
     out.name = name;
-    out.id = 0;
+    out.id = ActionId::default();
     out.reason = RecommendReason::CorrelatedMostFrequent(repeat);
     out
 }

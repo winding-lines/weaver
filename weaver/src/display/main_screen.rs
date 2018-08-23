@@ -13,7 +13,7 @@ use lib_goo::config::{Destination, Environment, OutputKind};
 use lib_goo::filtered_vec::FilteredVec;
 use std::sync::Arc;
 
-const MARGIN_X: usize = 7;
+const MARGIN_X: usize = 4;
 
 // Create the Cursive environment.
 fn create_cursive() -> Cursive {
@@ -55,11 +55,10 @@ fn create_command_edit(tx: channel::Sender<Msg>) -> EditView {
 }
 
 // Create a line containing some instructions
-fn create_help() -> TextView {
+fn create_help(width: usize) -> TextView {
     use cursive::theme::Effect;
-    TextView::new(
-        "Type to filter| UP/DOWN to change selection | LEFT/RIGHT for folder | ENTER to select"
-    ).effect(Effect::Reverse)
+    let txt = format!("{:width$}", "Type to filter| UP/DOWN to change selection | LEFT/RIGHT for folder | ENTER to select", width=width);
+    TextView::new(txt).effect(Effect::Reverse)
 }
 
 fn setup_global_keys(siv: &mut Cursive, ch: channel::Sender<Msg>) {
@@ -137,7 +136,7 @@ pub fn display(
     layout.add_child(content);
 
     // Help line
-    layout.add_child(create_help().fixed_width(screen.x-4));
+    layout.add_child(create_help(screen.x-MARGIN_X));
 
     // build the filter pane
     let filter_pane = LinearLayout::horizontal()
@@ -145,7 +144,7 @@ pub fn display(
         .child(
             create_filter_edit(process_tx.clone())
                 .with_id("filter")
-                .fixed_width((screen.x - 30) as usize),
+                .fixed_width((screen.x - 18) as usize),
         );
     layout.add_child(filter_pane);
 
@@ -155,7 +154,7 @@ pub fn display(
         .child(
             create_command_edit(process_tx.clone())
                 .with_id("command")
-                .fixed_width((screen.x - 30) as usize),
+                .fixed_width((screen.x - 18) as usize),
         );
     layout.add_child(command_pane);
 

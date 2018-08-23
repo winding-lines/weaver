@@ -21,7 +21,7 @@ impl ActionListViewItem<BasicColumn> for Row {
     fn to_column(&self, column: BasicColumn, is_focussed: bool) -> Option<String> {
         match *self {
             Row::Regular(ref r) => match column {
-                BasicColumn::Index => if r.id == 0 {None} else {Some(format!("{}",r.id))},
+                BasicColumn::Index => r.id.format(),
                 BasicColumn::Name => Some(r.name.to_string()),
                 BasicColumn::Detail => if is_focussed && r.location.is_some() {
                     Some(r.location.as_ref().unwrap().clone())
@@ -30,7 +30,7 @@ impl ActionListViewItem<BasicColumn> for Row {
                 },
             },
             Row::Recommended(ref r) => match column {
-                BasicColumn::Index => if r.id == 0 {None} else {Some(format!("{}",r.id))},
+                BasicColumn::Index => r.id.format(),
                 BasicColumn::Name => Some(r.name.to_string()),
                 BasicColumn::Detail => match r.reason {
                     RecommendReason::CorrelatedMostRecent(_age) => Some("most recent".into()),

@@ -1,7 +1,7 @@
 use lib_error::*;
 use lib_goo::config::net::{self, ANNOTATIONS, EPICS};
 use lib_goo::config::Destination;
-use lib_goo::entities::{Epic, NewAction};
+use lib_goo::entities::{Epic, NewAction, ActionId};
 use reqwest;
 use serde_urlencoded;
 
@@ -50,7 +50,7 @@ pub fn add(destination: &Destination, req: &NewAction) -> Result<u64> {
         .map_err(|e| e.into())
 }
 
-pub fn set_annotation(destination: &Destination, id: u64, content: &str) -> Result<u64> {
+pub fn set_annotation(destination: &Destination, id: &ActionId, content: &str) -> Result<u64> {
     let data = net::Annotation {
         annotation: content.into(),
     };
