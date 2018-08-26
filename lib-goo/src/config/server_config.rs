@@ -2,16 +2,19 @@ use lib_error::*;
 /// Ports and other information about the server.
 use std::net::{TcpListener, ToSocketAddrs};
 
-pub const ACTIX_ADDRESS: &str = "127.0.0.1:8466";
+pub const HTTP_PORT: u16 = 8466;
+pub const HTTPS_PORT: u16 = 8467;
 
 pub struct ServerConfig {
-    pub actix_address: String,
+    pub http_port: u16,
+    pub https_port: u16,
 }
 
 impl Default for ServerConfig {
     fn default() -> Self {
         ServerConfig {
-            actix_address: ACTIX_ADDRESS.into(),
+            http_port: HTTP_PORT,
+            https_port: HTTPS_PORT,
         }
     }
 }
@@ -21,8 +24,12 @@ impl ServerConfig {
         ServerConfig::default()
     }
 
+    pub fn actix_address(&self) -> String {
+        format!("localhost:{}", self.http_port)
+    }
+
     pub fn is_running(&self) -> bool {
-        is_listening(&self.actix_address)
+        is_listening(&self.actix_address())
     }
 
     pub fn check(&self) -> Result<()> {

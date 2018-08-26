@@ -28,9 +28,20 @@ Follow the following steps to install the local server/cli component.
 - Checkout weaver from git@gitlab.com:lab-flow/weaver.git
 - Install required libraries, see .gitlab-ci.yml
 - Build with `cargo build -all --release`
-- Install in your `$PATH`
+- Install in your `$PATH` the files `weaver`, `weaver-data`, `weaver-server`
 - Create all the data stores `weaver-data setup`
+- Create certificates for localhost and place in `~/.weaver/server`, for an example on how to do this check [https://letsencrypt.org/docs/certificates-for-localhost/]
 - Start the server with `weaver-server start`
+
+
+Current certificate generation:
+    openssl req -x509 -out localhost.crt -keyout localhost.key \
+       -newkey rsa:2048 -nodes -sha256   -subj '/CN=localhost' -extensions EXT -config <( \
+    printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
+ 
+If you want to use native-tls you need to additionally generate a pfx file. A password is required and it is hardcoded to 1234 - feel free to change.
+
+`openssl pkcs12 -export  -inkey localhost.key -in localhost.crt  -out ~/.weaver/server/localhost.pfx`
 
 Every time your reboot your computer you will need to restart the server.
 

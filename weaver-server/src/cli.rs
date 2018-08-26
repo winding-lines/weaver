@@ -84,9 +84,11 @@ pub fn parse() -> CommandAndConfig {
         )
         .get_matches();
 
-    let server_config = match matches.value_of("port") {
+    // Check if port is present and is in int format.
+    let server_config = match matches.value_of("port").and_then(|p| p.parse::<u16>().ok()) {
         Some(port) => ServerConfig {
-            actix_address: format!("127.0.0.1:{}", port),
+            http_port: port,
+            https_port: port+1,
         },
         None => ServerConfig::current(),
     };

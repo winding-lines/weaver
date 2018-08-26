@@ -131,13 +131,13 @@ mod tests {
     fn test_overlap() {
         let one = Cycle {
             id: 1,
-            anchors: vec![0],
-            sequence: vec![1, 2],
+            anchors: vec![ActionId::new(0)],
+            sequence: vec![ActionId::new(1), ActionId::new(2)],
         };
         let two = Cycle {
             id: 2,
-            anchors: vec![1],
-            sequence: vec![2, 3],
+            anchors: vec![ActionId::new(1)],
+            sequence: vec![ActionId::new(2), ActionId::new(3)],
         };
         assert!(one.overlaps(&two));
         assert!(two.overlaps(&one));
@@ -147,13 +147,13 @@ mod tests {
     fn test_non_overlap() {
         let one = Cycle {
             id: 1,
-            anchors: vec![0],
-            sequence: vec![1, 2],
+            anchors: vec![ActionId::new(0)],
+            sequence: vec![ActionId::new(1), ActionId::new(2)],
         };
         let two = Cycle {
             id: 2,
-            anchors: vec![1],
-            sequence: vec![3, 4],
+            anchors: vec![ActionId::new(1)],
+            sequence: vec![ActionId::new(3), ActionId::new(4)],
         };
         assert!(!one.overlaps(&two));
         assert!(!two.overlaps(&one));
@@ -163,13 +163,13 @@ mod tests {
     fn test_remove() {
         let one = Cycle {
             id: 1,
-            anchors: vec![0],
-            sequence: vec![1, 2],
+            anchors: vec![ActionId::new(0)],
+            sequence: vec![ActionId::new(1), ActionId::new(2)],
         };
         let two = Cycle {
             id: 2,
-            anchors: vec![1],
-            sequence: vec![2, 3],
+            anchors: vec![ActionId::new(1)],
+            sequence: vec![ActionId::new(2), ActionId::new(3)],
         };
         let mut data = vec![one, two];
         Cycle::remove_overlapping(&mut data);

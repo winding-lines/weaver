@@ -13,7 +13,7 @@ pub fn run() -> Result<()> {
         command,
         server_config,
     } = parse();
-    let destination = Destination::Remote(server_config.actix_address);
+    let destination = Destination::Remote(server_config.actix_address());
     debug!("Executing cli command {:?}", command);
     let epic = epics::epic()?;
     let env = Arc::new(Environment::build(epic)?);

@@ -21,6 +21,5 @@ members = [
 # The python extension is built using setup.py to support the ecosystem expectation and special linker builds.
 exclude = ["weaver2py"]
 
-[dependencies]
 
 

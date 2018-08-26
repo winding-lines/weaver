@@ -19,6 +19,10 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tera;
 extern crate walkdir;
+#[cfg(feature="tls")]
+extern crate native_tls;
+#[cfg(feature = "rust-tls")]
+extern crate rustls;
 
 pub use server::Server;
 
