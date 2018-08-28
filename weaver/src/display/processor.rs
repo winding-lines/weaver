@@ -104,7 +104,11 @@ impl Processor {
                 let location = action.location.as_ref().cloned();
                 match col {
                     Column::Right if location.is_some() => {
-                        action.name = format!("cd {} && {}", location.unwrap(), action.name)
+                        action.name = if action.name.starts_with("cd ") {
+                            format!("cd {}", location.unwrap())
+                        } else {
+                            format!("cd {} && {}", location.unwrap(), action.name)
+                        }
                     }
                     Column::Left => {
                         let ago = action.when.as_ref().map(|w| date::pretty_diff(w.age())).unwrap_or(String::new());
