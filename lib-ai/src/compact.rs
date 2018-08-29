@@ -168,7 +168,7 @@ pub fn decycle(actions: &mut Vec<FormattedAction>, cycles: &[Cycle]) {
         }
         for ia in &cycle.anchors {
             let mut repeating = ia.clone();
-            for c in 0..(cycle.sequence.len()) {
+            for _c in 0..(cycle.sequence.len()) {
                 let next = repeating.next();
                 could_delete.insert(repeating);
                 repeating = ActionId::new(next);

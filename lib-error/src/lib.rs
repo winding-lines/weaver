@@ -10,6 +10,7 @@ extern crate error_chain;
 extern crate regex;
 extern crate reqwest;
 extern crate sys_info;
+extern crate tantivy;
 
 use std::convert;
 
@@ -35,5 +36,11 @@ impl<'a> convert::From<&'a Error> for actix_web::Error {
 impl convert::From<Error> for actix_web::Error {
     fn from(werror: Error) -> Self {
         actix_web::error::ErrorInternalServerError(werror.description().to_string())
+    }
+}
+
+impl convert::From<tantivy::TantivyError> for Error {
+    fn from(terror: tantivy::TantivyError) -> Error {
+        format!("tantivy {:?}", terror).into()
     }
 }

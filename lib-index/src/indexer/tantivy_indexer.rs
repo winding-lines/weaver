@@ -27,7 +27,7 @@ impl TantivyIndexer {
     pub fn build() -> Result<Self> {
         let index_path = index_path()?;
 
-        let index = Index::open_in_dir(index_path).chain_err(|| "open index")?;
+        let index = Index::open_in_dir(index_path)?;
 
         Ok(Self { index })
     }
@@ -55,7 +55,7 @@ impl TantivyIndexer {
             schema_builder.add_text_field("body", TEXT);
 
             let schema = schema_builder.build();
-            let _ = Index::create_in_dir(index_path.clone(), schema).chain_err(|| "create index")?;
+            let _ = Index::create_in_dir(index_path.clone(), schema)?;
         }
 
         Ok(())
@@ -78,8 +78,7 @@ impl Indexer for TantivyIndexer {
     fn add(&self, page_content: &PageContent) -> Result<(u64)> {
         let mut index_writer = self
             .index
-            .writer_with_num_threads(1, 10_000_000)
-            .chain_err(|| "create index writer")?;
+            .writer_with_num_threads(1, 10_000_000)?;
 
         let schema = self.index.schema();
         let f_id = schema.get_field("id").chain_err(|| "get id field")?;
@@ -92,25 +91,25 @@ impl Indexer for TantivyIndexer {
         doc.add_text(f_title, &page_content.title);
         doc.add_text(f_body, &page_content.body);
         index_writer.add_document(doc);
-        index_writer.commit().chain_err(|| "commit index")
+        let id = index_writer.commit()?;
+        Ok(id)
     }
 
     fn delete(&self, id: &str) -> Result<()> {
         let mut index_writer = self
             .index
-            .writer(50_000_000)
-            .chain_err(|| "create index writer")?;
+            .writer(50_000_000)?;
 
         let schema = self.index.schema();
         let f_id = schema.get_field("id").chain_err(|| "get id field")?;
         let term = Term::from_field_text(f_id, id);
         index_writer.delete_term(term);
-        index_writer.commit().chain_err(|| "commit index")?;
+        index_writer.commit()?;
         Ok(())
     }
 
     fn search(&self, what: &str) -> Result<Results> {
-        self.index.load_searchers().chain_err(|| "load searchers")?;
+        self.index.load_searchers()?;
 
         // Afterwards create one (or more) searchers.
         //
@@ -152,8 +151,7 @@ impl Indexer for TantivyIndexer {
 
         // We can now perform our query.
         searcher
-            .search(&*query, &mut top_collector)
-            .chain_err(|| "actual search")?;
+            .search(&*query, &mut top_collector)?;
 
         // Our top collector now contains the 10
         // most relevant doc ids...
@@ -169,8 +167,7 @@ impl Indexer for TantivyIndexer {
         let mut out = Vec::new();
         for doc_address in doc_addresses {
             let retrieved_doc = searcher
-                .doc(&doc_address)
-                .chain_err(|| "retrieve document")?;
+                .doc(&doc_address)?;
             let found_id = retrieved_doc
                 .get_first(f_id)
                 .map(|a| a.text())
