@@ -189,7 +189,7 @@ mod tests {
             .enumerate()
             .map(|(i, a)| FormattedAction {
                 name: a.into(),
-                id: ActionId(i),
+                id: ActionId::new(i),
                 ..FormattedAction::default()
             })
             .collect()
@@ -202,17 +202,17 @@ mod tests {
             extract_cycles(&mut actions, 2),
             vec![Cycle {
                 id: 0,
-                anchors: vec![0, 1],
-                sequence: vec![1],
+                anchors: vec![ActionId::new(0), ActionId::new(1)],
+                sequence: vec![ActionId::new(1)],
             }]
         );
         let mut actions = build_actions(vec!["foo", "foo", "foo"]);
         assert_eq!(
-            extract_cycles(&mut actions, 2),
-            vec![Cycle {
+            &extract_cycles(&mut actions, 2)[0..1],
+            &[Cycle {
                 id: 0,
-                anchors: vec![0, 1, 2],
-                sequence: vec![1],
+                anchors: vec![ActionId::new(0), ActionId::new(1), ActionId::new(2)],
+                sequence: vec![ActionId::new(2)],
             }]
         );
     }
@@ -225,18 +225,18 @@ mod tests {
             vec![
                 Cycle {
                     id: 0,
-                    sequence: vec![3],
-                    anchors: vec![0, 3],
+                    sequence: vec![ActionId::new(3)],
+                    anchors: vec![ActionId::new(0), ActionId::new(3)],
                 },
                 Cycle {
                     id: 1,
-                    sequence: vec![4],
-                    anchors: vec![1, 4],
+                    sequence: vec![ActionId::new(4)],
+                    anchors: vec![ActionId::new(1), ActionId::new(4)],
                 },
                 Cycle {
                     id: 2,
-                    anchors: vec![0, 3],
-                    sequence: vec![3, 4],
+                    anchors: vec![ActionId::new(0), ActionId::new(3)],
+                    sequence: vec![ActionId::new(3), ActionId::new(4)],
                 },
             ]
         );
@@ -279,7 +279,7 @@ mod tests {
     fn test_decycle_one() {
         let mut actions = build_actions(vec!["foo", "foo", "foo"]);
         let cycles = extract_cycles(&actions, 3);
-        decycle(&mut actions, &cycles);
+        decycle(&mut actions, &cycles[0..1]);
         let names: Vec<String> = actions.into_iter().map(|a| a.name).collect();
         assert_eq!(vec!["foo"], names);
     }
