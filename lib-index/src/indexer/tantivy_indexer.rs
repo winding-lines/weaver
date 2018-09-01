@@ -145,7 +145,7 @@ impl Indexer for TantivyIndexer {
         // ### Collectors
         //
         // We are not interested in all of the documents but
-        // only in the top 10. Keeping track of our top 40 best documents
+        // only in the top N. Keeping track of our top best documents
         // is the role of the TopCollector.
         let mut top_collector = TopCollector::with_limit(40);
 
@@ -171,11 +171,11 @@ impl Indexer for TantivyIndexer {
             let found_id = retrieved_doc
                 .get_first(f_id)
                 .map(|a| a.text())
-                .unwrap_or("no id");
+                .chain_err(|| "missing id in retrieved document")?;
             let found_title = retrieved_doc
                 .get_first(f_title)
                 .map(|a| a.text())
-                .unwrap_or("no title");
+                .chain_err(|| "missing title in retrieved document")?;
             out.push(PageContent {
                 url: String::from(found_id),
                 title: String::from(found_title),
