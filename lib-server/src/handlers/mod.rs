@@ -15,20 +15,15 @@ fn is_first_run() -> bool {
     let run = RUN.fetch_add(1, Ordering::SeqCst);
     run == 1
 }
-/// Configure all the handlers in the app
-pub(crate) fn config_obsolete(app: App<AppState>) -> App<AppState> {
-    let should_log = is_first_run();
-    let app = action_api::config(app, should_log);
-    let app = search_api::config(app);
-    let app = url::config(app);
-    let app = summary::config(app);
-    url_policies::config(app)
-}
 
 /// Configure all the handlers in the app.
 /// This is used to migrate to the new /api prefix.
 pub(crate) fn config(app: App<AppState>) -> App<AppState> {
     let should_log = is_first_run();
     let app = system::config(app);
+    let app = summary::config(app);
+    let app = url_policies::config(app);
+    let app = search_api::config(app);
+    let app = url::config(app);
     action_api::config(app, should_log)
 }

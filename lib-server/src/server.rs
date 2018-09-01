@@ -108,7 +108,7 @@ impl Server {
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     .configure(handlers::config)
                     .boxed(),
-                App::with_state(AppState {
+                                    App::with_state(AppState {
                     sql: store.clone(),
                     indexer: indexer.clone(),
                     repo: repo.clone(),
@@ -117,8 +117,6 @@ impl Server {
                     topic_store: topic_store.clone(),
                 })
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
-                    // Add the API entry points.
-                    .configure(handlers::config_obsolete)
                     // Add the html pages
                     .configure(pages::config)
                     .boxed(),

@@ -6,7 +6,6 @@ pub const API_BASE: &str = "/api";
 pub const ACTIONS2_BASE: &str = "/v2/actions";
 pub const ANNOTATIONS: &str = "/annotations";
 pub const RECOMMENDATIONS: &str = "/recommendations";
-pub const EPICS: &str = "/epics";
 
 /// A request to change the annotation for a given entry.
 #[derive(Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 use lib_error::*;
-use lib_goo::config::net::{self, ANNOTATIONS, EPICS};
+use lib_goo::config::net::{self, ANNOTATIONS };
 use lib_goo::config::Destination;
-use lib_goo::entities::{Epic, NewAction, ActionId};
+use lib_goo::entities::{NewAction, ActionId};
 use reqwest;
 use serde_urlencoded;
 
@@ -70,27 +70,3 @@ pub fn set_annotation(destination: &Destination, id: &ActionId, content: &str) -
         .map_err(|e| e.into())
 }
 
-pub fn fetch_epics(destination: &Destination) -> Result<Vec<Epic>> {
-    reqwest::get(&format!("http://{}{}", rpc_addr(destination), EPICS))?
-        .json::<Vec<Epic>>()
-        .map_err(|e| e.into())
-}
-
-pub fn save_epic(destination: &Destination, req: &Epic) -> Result<()> {
-    let client = reqwest::Client::new();
-    client
-        .post(&format!("http://{}{}", rpc_addr(destination), EPICS))
-        .json(req)
-        .send()
-        .map(|_| ())
-        .map_err(|e| e.into())
-}
-
-pub fn epic(destination: &Destination) -> Result<Epic> {
-    reqwest::get(&format!(
-        "http://{}{}?query=latest",
-        rpc_addr(destination),
-        EPICS
-    ))?.json::<Epic>()
-        .map_err(|e| e.into())
-}
