@@ -3,7 +3,7 @@ use super::{history_view, UserSelection};
 use api::Row;
 use crossbeam_channel as channel;
 use cursive::event::{Event, Key};
-use cursive::theme::{Color, BorderStyle, PaletteColor, Theme};
+use cursive::theme::{Color, ColorStyle, BorderStyle, PaletteColor, Theme};
 use cursive::traits::*;
 use cursive::views::{EditView, LinearLayout, TextView};
 use cursive::vec::Vec2;
@@ -36,6 +36,7 @@ fn create_filter_edit(tx: channel::Sender<Msg>) -> EditView {
     let tx2 = tx.clone();
     EditView::new()
         .filler(" ")
+        .style(ColorStyle::terminal_default())
         .on_edit(move |_: &mut Cursive, text: &str, _position: usize| {
             send(&tx, Msg::Filter(String::from(text)));
         })
@@ -48,6 +49,7 @@ fn create_filter_edit(tx: channel::Sender<Msg>) -> EditView {
 fn create_command_edit(tx: channel::Sender<Msg>) -> EditView {
     EditView::new()
         .filler(" ")
+        .style(ColorStyle::terminal_default())
         .on_submit(move |_: &mut Cursive, content: &str| {
             let message = Msg::CommandSubmit(Some(String::from(content)));
             send(&tx, message);
@@ -181,6 +183,8 @@ fn custom_theme_from_cursive(siv: &Cursive) -> Theme {
     let mut theme = siv.current_theme().clone();
 
     theme.palette[PaletteColor::Background] = Color::TerminalDefault;
+    theme.palette[PaletteColor::View] = Color::TerminalDefault;
+    theme.palette[PaletteColor::Primary] = Color::TerminalDefault;
 
     theme
 }

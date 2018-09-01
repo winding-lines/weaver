@@ -45,8 +45,8 @@ impl ActionListViewItem<BasicColumn> for Row {
 
     fn color_style(&self) -> Option<ColorStyle> {
         match self {
-            Row::Recommended(_) => Some(ColorStyle::secondary()),
-            Row::Regular(_) => Some(ColorStyle::primary()),
+            Row::Recommended(_) => Some(ColorStyle::terminal_default()),
+            Row::Regular(_) => Some(ColorStyle::terminal_default()),
         }
     }
 }

@@ -380,7 +380,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             let value =
                 self.items[draw_config.item].to_column(column.column, draw_config.is_focussed);
             if let Some(value) = value {
-                let effect = if ci == draw_config.focus_column {
+                let effect = if ci == draw_config.focus_column && draw_config.is_focussed {
                     Effect::Bold
                 } else {
                     Effect::Simple
@@ -392,7 +392,6 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
 
     fn focus_up(&mut self, n: usize) {
         self.focus -= cmp::min(self.focus, n);
-        // self.focus_column = 0;
     }
 
     fn focus_down(&mut self, n: usize) {
@@ -407,7 +406,8 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
     fn draw(&self, printer: &Printer) {
         let printer = &printer.cropped(printer.size);
         self.scrollbase.draw(printer, |printer, i| {
-            let color = if i == self.focus {
+            let is_focussed = i == self.focus;
+            let color = if is_focussed {
                 if !self.enabled && printer.focused {
                     ColorStyle::highlight()
                 } else {
@@ -416,13 +416,13 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
             } else {
                 self.items[i]
                     .color_style()
-                    .unwrap_or_else(|| ColorStyle::primary())
+                    .unwrap_or_else(|| ColorStyle::terminal_default())
             };
 
             printer.with_color(color, |printer| {
                 let config = DrawConfig {
                     item: i,
-                    is_focussed: i == self.focus,
+                    is_focussed,
                     focus_column: self.focus_column,
                 };
                 self.draw_item(printer, config);
