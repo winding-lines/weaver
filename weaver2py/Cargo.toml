@@ -22,7 +22,6 @@ serde_json = "1.0"
 
 # Note that we depend on the workspace but we are not part of it.
 # Instead use setup.py to support the ecosystem expectation and special linker builds.
-# Once this is open sourced and published to
 lib-index = {path="../lib-index"}
 lib-error = {path="../lib-error"}
 lib-goo = {path="../lib-goo"}
