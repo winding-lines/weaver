@@ -362,29 +362,35 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     fn draw_columns<C: Fn(&Printer, &TableColumn<H>, usize)>(
         &self,
         printer: &Printer,
-        _sep: &str,
+        draw_config: &DrawConfig,
         callback: C,
     ) {
         let mut column_offset = 0;
         for (index, column) in self.columns.iter().enumerate() {
+            if index == draw_config.focus_column && draw_config.is_focussed {
+                printer.print((column_offset, 0), ">" );
+            }
+            column_offset += 1;
             let printer = &printer.offset((column_offset, 0)).cropped(printer.size);
 
             callback(printer, column, index);
+            column_offset += column.width;
 
-            column_offset += column.width + 1;
         }
     }
 
     fn draw_item(&self, printer: &Printer, draw_config: DrawConfig) {
-        self.draw_columns(printer, "┆ ", |printer, column, ci| {
+        self.draw_columns(printer, &draw_config, |printer, column, ci| {
             let value =
                 self.items[draw_config.item].to_column(column.column, draw_config.is_focussed);
             if let Some(value) = value {
                 let effect = if ci == draw_config.focus_column && draw_config.is_focussed {
+
                     Effect::Bold
                 } else {
                     Effect::Simple
                 };
+
                 printer.with_style(effect, |printer| column.draw_row(printer, value.as_str()));
             }
         });
@@ -400,6 +406,18 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     }
 }
 
+// Define the color used for the row with the cursor
+// To defer to the one defined by the theme return ColorStyle::highlight()
+fn color_highlight() -> ColorStyle {
+    ColorStyle::terminal_default()
+}
+
+// Define the color used for the row with the cursor when the widget is inactive.
+// To defer to the one defined by the theme return ColorStyle::highlight_inactive()
+fn color_highlight_inactive() -> ColorStyle {
+    ColorStyle::terminal_default()
+}
+
 impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> View
     for ActionListView<T, H>
 {
@@ -409,9 +427,9 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
             let is_focussed = i == self.focus;
             let color = if is_focussed {
                 if !self.enabled && printer.focused {
-                    ColorStyle::highlight()
+                    color_highlight()
                 } else {
-                    ColorStyle::highlight_inactive()
+                    color_highlight_inactive()
                 }
             } else {
                 self.items[i]
