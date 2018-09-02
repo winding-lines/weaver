@@ -368,7 +368,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
         let mut column_offset = 0;
         for (index, column) in self.columns.iter().enumerate() {
             if index == draw_config.focus_column && draw_config.is_focussed {
-                printer.print((column_offset, 0), ">" );
+                printer.with_style(Effect::Reverse, |p| p.print((column_offset, 0), ">" ));
             }
             column_offset += 1;
             let printer = &printer.offset((column_offset, 0)).cropped(printer.size);
