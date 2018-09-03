@@ -65,6 +65,28 @@
         },
         {
             "type": "shell",
+            "label": "cargo test-hud",
+            "command": "./my-cargo.sh",
+            "args": [
+                "test",
+                "-p",
+                "weaver-hud",
+                "-p",
+                "lib-rpc",
+                "--",
+                "--nocapture"
+            ],
+            "options": {
+                "env": {
+                    "WEAVER": "debug"
+                }
+            },
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
+            "type": "shell",
             "label": "cargo test-server",
             "command": "./my-cargo.sh",
             "args": [

@@ -16,6 +16,7 @@ members = [
   "lib-tui",
   "weaver",
   "weaver-data",
+  "weaver-hud",
   "weaver-server",
 ]
 # The python extension is built using setup.py to support the ecosystem expectation and special linker builds.
