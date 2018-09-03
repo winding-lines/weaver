@@ -1,7 +1,7 @@
 #![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 
 use actix_web::{http, App, HttpResponse, Json, Query, State};
-use app_state::AppState;
+use app_state::ApiState;
 use bincode;
 use lib_ai::normalize;
 use lib_db::store_policies;
@@ -15,7 +15,7 @@ struct PageStatus {
     summary: Option<String>,
 }
 
-fn _create((state, mut input): (State<AppState>, Json<PageContent>)) -> Wesult<PageStatus> {
+fn _create((state, mut input): (State<ApiState>, Json<PageContent>)) -> Wesult<PageStatus> {
     let repo = &*state.repo;
 
     let connection = state.sql.connection()?;
@@ -44,7 +44,7 @@ fn _create((state, mut input): (State<AppState>, Json<PageContent>)) -> Wesult<P
 }
 
 // API used by the Chrome extension to upload content to be indexed.
-fn create(data: (State<AppState>, Json<PageContent>)) -> HttpResponse {
+fn create(data: (State<ApiState>, Json<PageContent>)) -> HttpResponse {
     match _create(data) {
         Ok(ps) => HttpResponse::Ok().json(ps),
         Err(e) => {
@@ -61,7 +61,7 @@ struct SearchQuery {
 }
 
 // API used to make a query and download the matches.
-fn search((state, query): (State<AppState>, Query<SearchQuery>)) -> String {
+fn search((state, query): (State<ApiState>, Query<SearchQuery>)) -> String {
     let indexer = &*state.indexer;
 
     indexer
@@ -78,7 +78,7 @@ fn search((state, query): (State<AppState>, Query<SearchQuery>)) -> String {
         .unwrap_or_else(|_| String::new())
 }
 
-pub(crate) fn config(app: App<AppState>) -> App<AppState> {
+pub(crate) fn config(app: App<ApiState>) -> App<ApiState> {
     app.resource("/search", |r| {
         r.method(http::Method::GET).with(search);
         r.method(http::Method::POST).with(create);
@@ -92,7 +92,7 @@ mod tests {
     use actix_web::*;
     use app_state::tests::default_test;
 
-    fn state() -> AppState {
+    fn state() -> ApiState {
         let s = default_test();
         s.indexer
             .add(&PageContent {

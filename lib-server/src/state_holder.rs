@@ -1,13 +1,17 @@
+use analyses::Analysis;
 use lib_db::{topics, SqlProvider};
 use lib_index::repo::Repo;
 use lib_index::Indexer;
 use std::sync::Arc;
+use template_engine::TemplateEngine;
 
 /// Store per request state.
 pub(crate) struct ApiState {
+    pub analyses: Option<Vec<Analysis>>,
     pub indexer: Arc<Indexer>,
     pub repo: Arc<Repo>,
     pub sql: Arc<SqlProvider>,
+    pub template: Arc<TemplateEngine>,
     pub topic_store: Arc<Option<topics::TopicStore>>,
 }
 
@@ -77,9 +81,11 @@ pub(crate) mod tests {
 
     pub(crate) fn default_test() -> ApiState {
         ApiState {
+            analyses: None,
             indexer: Arc::new(TestIndexer::new()),
             repo: Arc::new(TestRepo),
             sql: Arc::new(FailingSqlProvider),
+            template: Arc::new(TemplateEngine::build().unwrap()),
             topic_store: Arc::new(None),
         }
     }

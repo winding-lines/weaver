@@ -1,5 +1,5 @@
+use super::PageState;
 use actix_web::{App, Error, HttpResponse, Query, State};
-use app_state::AppState;
 use lib_db::actions2;
 use lib_goo::config::net::{PaginatedActions, Pagination};
 use std::collections::HashMap;
@@ -7,13 +7,13 @@ use template_engine::build_context;
 
 /// Render the history page.
 fn handle(
-    (state, _query): (State<AppState>, Query<HashMap<String, String>>),
+    (state, _query): (State<PageState>, Query<HashMap<String, String>>),
 ) -> Result<HttpResponse, Error> {
     let template = &state.template;
     let mut ctx = build_context(&state.analyses);
     ctx.add("term", &" ".to_owned());
 
-    let connection = state.sql.connection()?;
+    let connection = state.api.sql.connection()?;
     let pagination = Pagination {
         start: Some(0),
         length: Some(200),
@@ -30,7 +30,7 @@ fn handle(
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
-pub(crate) fn config(app: App<AppState>) -> App<AppState> {
+pub(crate) fn config(app: App<PageState>) -> App<PageState> {
     app.resource("/history", |r| r.with(handle))
 }
 
@@ -50,7 +50,6 @@ mod tests {
             cycles: Vec::new(),
         };
         ctx.add("results", &results);
-        ctx.add("inline_css", "<!-- css -->");
         ctx.add("analyses", &Vec::<String>::new());
         TemplateEngine::build()
             .unwrap()

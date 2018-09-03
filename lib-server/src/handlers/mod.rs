@@ -1,10 +1,9 @@
 use actix_web::App;
-use app_state::AppState;
+use app_state::ApiState;
 
 mod action_api;
 mod search_api;
 mod summary;
-mod system;
 mod url;
 mod url_policies;
 
@@ -18,9 +17,8 @@ fn is_first_run() -> bool {
 
 /// Configure all the handlers in the app.
 /// This is used to migrate to the new /api prefix.
-pub(crate) fn config(app: App<AppState>) -> App<AppState> {
+pub(crate) fn config(app: App<ApiState>) -> App<ApiState> {
     let should_log = is_first_run();
-    let app = system::config(app);
     let app = summary::config(app);
     let app = url_policies::config(app);
     let app = search_api::config(app);

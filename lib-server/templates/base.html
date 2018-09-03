@@ -1,37 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head
   <meta charset="UTF-8">
   <link rel="icon" type="image/x-icon"
   href="/assets/favicon.ico">
   <title>{% block title %}{% endblock title %}</title>
-  <style>
-    {{inline_css}}
-  </style>
+    <link rel="stylesheet" href="/assets/weaver.css">
   {% block head %} {% endblock head %}
 </head>
 <body>
-<nav>
-  <div class="logo">
-    <a href="/">
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="/">
       <svg viewBox="0 0 720 792" width="19">
         <use href="/assets/inline.svg#analemma-icon"/>
       </svg>
     </a>
+    <div class="navbar-burger burger" data-target="weaverNavBar">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+  
   </div>
-  <ul id="menu">
-    <li><a href="/">Search</a></li>
-    <li><a href="/history">History</a></li>
-    {% for e in analyses %}
-      <li><a href="/analyses/{{ e.file }}">{{ e.name }}</a></li>
-    {% endfor %}
-  </ul>
+  <div class="navbar-menu" id="weaverNavBar">
+    <div class="navbar-start">
+      <a class="navbar-item is-tab" href="/">Search</a>
+      <a class="navbar-item is-tab" href="/history">History</a>
+      <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">Analyses</a>
+          <div class="navbar-dropdown is-boxed">
+            {% for e in analyses %}
+              <a class="navbar-item is-tab" href="/analyses/{{ e.file }}">{{ e.name }}</a>
+            {% endfor %}
+          </div>
+      </div>
+    </div>
+    <div class="navbar-end">
+
+    </div>
+  <div>
 </nav>
 <script>
-  // activate the right navigation tab
-  const pathname = document.location.pathname;
-  const selector = `nav li a[href='${[pathname]}']`;
-  document.querySelector(selector).parentNode.classList.add("active");
+  // activate the right navigation tab, the pages are server side rendered for now
+  (function() {
+    const pathname = document.location.pathname;
+    const selector = `nav div.navbar-start a[href='${[pathname]}']`;
+    const el = document.querySelector(selector);
+    el.classList.add("is-active");
+  })();
 </script>
 <div class="body">
   <div class="sidebar">

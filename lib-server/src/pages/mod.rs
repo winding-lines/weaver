@@ -1,12 +1,24 @@
 //! Define the html pages used by the app and the related assets.
 //!
 use actix_web::App;
-use app_state::AppState;
+use analyses::Analysis;
+use app_state::ApiState;
+use asset_map::AssetMap;
+use std::sync::Arc;
+use template_engine::TemplateEngine;
 
 mod canned;
 mod history;
 mod search_form;
 pub mod static_assets;
+mod system;
+
+pub(crate) struct PageState {
+    pub analyses: Option<Vec<Analysis>>,
+    pub template: Arc<TemplateEngine>,
+    pub assets: Arc<AssetMap>,
+    pub api: ApiState,
+}
 
 /// Count the number of times the configuration code is ran.
 fn is_first_run() -> bool {
@@ -17,9 +29,10 @@ fn is_first_run() -> bool {
 }
 
 /// Configure all the pages in the app
-pub(crate) fn config(app: App<AppState>) -> App<AppState> {
+pub(crate) fn config(app: App<PageState>) -> App<PageState> {
     let should_log = is_first_run();
     let app = canned::config(app, should_log);
     let app = search_form::config(app);
+    let app = system::config(app);
     history::config(app)
 }

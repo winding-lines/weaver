@@ -6,8 +6,6 @@ use std::sync::Mutex;
 use tera;
 use walkdir::WalkDir;
 
-const INLINE_CSS: &str = include_str!("../templates/inline.css");
-
 /// Template engine providing reload functionality and more integrated error
 /// loading on top of the tera engine.
 pub struct TemplateEngine(Mutex<tera::Tera>);
@@ -90,6 +88,5 @@ pub fn build_context(canned: &Option<Vec<Analysis>>) -> tera::Context {
     } else {
         ctx.add("analyses", &(Vec::new() as Vec<Analysis>));
     }
-    ctx.add("inline_css", INLINE_CSS);
     ctx
 }

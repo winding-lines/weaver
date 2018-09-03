@@ -1,7 +1,7 @@
 #![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 
 use actix_web::{http, App, HttpResponse, Json, Path, Query, State};
-use app_state::AppState;
+use app_state::ApiState;
 use bson::{self, Bson};
 use lib_ai::{compact, recommender};
 use lib_db::{actions2, Connection};
@@ -28,7 +28,7 @@ fn save_to_repo(repo: &Repo, new_action: &NewAction) -> Result<String> {
 }
 
 /// Create a new action.
-fn create((state, new_action): (State<AppState>, Json<NewAction>)) -> Wesult<String> {
+fn create((state, new_action): (State<ApiState>, Json<NewAction>)) -> Wesult<String> {
     debug!("Entering create in action_api");
     let repo = &*state.repo;
     let new_action = &*new_action;
@@ -77,7 +77,7 @@ fn build_recommendations(
 }
 
 fn recommendations(
-    (state, input): (State<AppState>, Query<net::RecommendationQuery>),
+    (state, input): (State<ApiState>, Query<net::RecommendationQuery>),
 ) -> HttpResponse {
     match state
         .sql
@@ -95,7 +95,7 @@ fn recommendations(
 
 /// Pagination enabled fetch.
 /// Returns actions together with pagination meta data.
-fn paginated_fetch((state, input): (State<AppState>, Query<net::Pagination>)) -> HttpResponse {
+fn paginated_fetch((state, input): (State<ApiState>, Query<net::Pagination>)) -> HttpResponse {
     let pagination = &*input;
     debug!("Entering paginated_fetch {:?}", pagination);
     match state
@@ -122,14 +122,14 @@ fn paginated_fetch((state, input): (State<AppState>, Query<net::Pagination>)) ->
 
 /// Update the annotation for the given action.
 fn set_annotation(
-    (state, input, path): (State<AppState>, Json<net::Annotation>, Path<u64>),
+    (state, input, path): (State<ApiState>, Json<net::Annotation>, Path<u64>),
 ) -> Wesult<String> {
     actions2::set_annotation(&state.sql.connection()?, *path, &input.annotation)
         .map(|d| format!("{}", d))
 }
 
 // Register the routes with the application.
-pub(crate) fn config(app: App<AppState>, should_log: bool) -> App<AppState> {
+pub(crate) fn config(app: App<ApiState>, should_log: bool) -> App<ApiState> {
     // v2 actions
     if should_log {
         debug!("registering {}", net::ACTIONS2_BASE);

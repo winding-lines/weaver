@@ -1,5 +1,5 @@
+use super::PageState;
 use actix_web::{App, Error, HttpResponse, Query, State};
-use app_state::AppState;
 use lib_db::{actions2, store_policies};
 use lib_goo::date;
 use lib_goo::entities::lda;
@@ -63,19 +63,19 @@ fn display_topic(topic: &lda::Topic) -> String {
 
 /// Render the initial form or the results page, depending on the data passed in.
 fn _handle(
-    (state, query): (State<AppState>, Query<HashMap<String, String>>),
+    (state, query): (State<PageState>, Query<HashMap<String, String>>),
 ) -> Result<HttpResponse, Error> {
     let template = &state.template;
-    let topic_store = &*state.topic_store;
+    let topic_store = &*state.api.topic_store;
     let mut ctx = build_context(&state.analyses);
     let rendered = if let Some(term) = query.get("term") {
-        let indexer = &*state.indexer;
+        let indexer = &*state.api.indexer;
 
         // Fetch results from indexer
         let mut results = indexer.search(term).unwrap_or_else(|_| Results::default());
 
         // Process the hidden output and topics
-        let connection = state.sql.connection()?;
+        let connection = state.api.sql.connection()?;
         let restrictions = store_policies::Restrictions::fetch(&connection)?;
 
         let hidden_title = String::from("********");
@@ -133,14 +133,14 @@ fn _handle(
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
-fn handle(arg: (State<AppState>, Query<HashMap<String, String>>)) -> Result<HttpResponse, Error> {
+fn handle(arg: (State<PageState>, Query<HashMap<String, String>>)) -> Result<HttpResponse, Error> {
     _handle(arg).map_err(|a| {
         println!("error {:?}", a);
         a
     })
 }
 
-pub(crate) fn config(app: App<AppState>) -> App<AppState> {
+pub(crate) fn config(app: App<PageState>) -> App<PageState> {
     app.resource("/", |r| r.with(handle))
 }
 
@@ -150,12 +150,14 @@ mod tests {
     use actix_web::test::TestServer;
     use actix_web::*;
     use app_state::tests::default_test;
+    use asset_map::AssetMap;
     use lib_db::test_helpers::SqlStoreInMemory;
     use std::sync::Arc;
+    use template_engine::TemplateEngine;
 
     use lib_goo::entities::PageContent;
 
-    fn state() -> AppState {
+    fn state() -> PageState {
         let mut s = default_test();
         s.indexer
             .add(&PageContent {
@@ -165,7 +167,12 @@ mod tests {
             })
             .expect("adding test PageContent");
         s.sql = Arc::new(SqlStoreInMemory::build(|_| Ok(())));
-        s
+        PageState {
+            api: s,
+            analyses: None,
+            assets: Arc::new(AssetMap::default()),
+            template: Arc::new(TemplateEngine::build().unwrap()),
+        }
     }
 
     #[test]

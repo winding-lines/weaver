@@ -1,7 +1,8 @@
 use actix_web::middleware::Logger;
 use actix_web::{server, App};
 use analyses::load_analyses;
-use app_state::AppState;
+use app_state::ApiState;
+use asset_map::AssetMap;
 use handlers;
 use lib_db::{topics, SqlStore};
 use lib_error::*;
@@ -90,31 +91,32 @@ impl Server {
         let indexer = Arc::new(TantivyIndexer::build()?);
         let template = Arc::new(TemplateEngine::build()?);
         let topic_store = Arc::new(topics::TopicStore::load()?);
+        let asset_map = Arc::new(AssetMap::build());
         let apps_factory = move || {
             vec![
-                App::new()
-                    .prefix("/assets/")
+                App::with_state(asset_map.clone()).prefix("/assets/")
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     .configure(pages::static_assets::config)
                     .boxed(),
-                App::with_state(AppState {
+                App::with_state(ApiState {
                     sql: store.clone(),
                     indexer: indexer.clone(),
                     repo: repo.clone(),
-                    template: template.clone(),
-                    analyses: load_analyses().ok(),
                     topic_store: topic_store.clone(),
                 }).prefix("/api/")
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     .configure(handlers::config)
                     .boxed(),
-                                    App::with_state(AppState {
-                    sql: store.clone(),
-                    indexer: indexer.clone(),
-                    repo: repo.clone(),
+                App::with_state(pages::PageState {
                     template: template.clone(),
+                    assets: asset_map.clone(),
                     analyses: load_analyses().ok(),
-                    topic_store: topic_store.clone(),
+                    api: ApiState {
+                        sql: store.clone(),
+                        indexer: indexer.clone(),
+                        repo: repo.clone(),
+                        topic_store: topic_store.clone(),
+                    },
                 })
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     // Add the html pages

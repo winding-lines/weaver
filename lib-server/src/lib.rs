@@ -27,6 +27,7 @@ extern crate rustls;
 pub use server::Server;
 
 mod analyses;
+mod asset_map;
 mod app_state;
 mod handlers;
 mod pages;

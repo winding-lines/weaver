@@ -1,6 +1,6 @@
 #![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 use actix_web::{http, App, HttpResponse, Json, State};
-use app_state::AppState;
+use app_state::ApiState;
 use lib_db::store_policies;
 use lib_db::url_restrictions;
 use lib_error::*;
@@ -23,7 +23,7 @@ fn build_urls(all: &[store_policies::DocumentMatcher]) -> Vec<String> {
 
 /// Fetch the URL policies from the database.
 /// Do not return the do_not_index entries since this may be a privacy issue.
-fn fetch(state: State<AppState>) -> HttpResponse {
+fn fetch(state: State<ApiState>) -> HttpResponse {
     match state
         .sql
         .connection()
@@ -56,7 +56,7 @@ pub struct UrlRestriction {
 /// Process a new URL policy from the client:
 ///  - save in the db
 ///  - remove any entry from the text search index.
-fn create((state, input): (State<AppState>, Json<UrlRestriction>)) -> Result<String> {
+fn create((state, input): (State<ApiState>, Json<UrlRestriction>)) -> Result<String> {
     let connection = state.sql.connection()?;
     let policy = input.kind.parse::<url_restrictions::StorePolicy>()?;
     debug!("marked private {}", input.url);
@@ -72,7 +72,7 @@ fn create((state, input): (State<AppState>, Json<UrlRestriction>)) -> Result<Str
 }
 
 /// Add our routes to the Actix server configuration.
-pub(crate) fn config(app: App<AppState>) -> App<AppState> {
+pub(crate) fn config(app: App<ApiState>) -> App<ApiState> {
     app.resource("/store_policies", |r| {
         r.method(http::Method::POST).with(create);
         r.method(http::Method::GET).with(fetch);

@@ -1,0 +1,48 @@
+@charset "utf-8";
+
+// Set your brand colors
+$purple: #8A4D76;
+$pink: #FA7C91;
+$brown: #757763;
+$beige-light: #D0D1CD;
+$beige-lighter: #EFF0EB;
+
+
+// Import only what you need from Bulma
+@import "../node_modules/bulma/sass/utilities/_all.sass";
+@import "../node_modules/bulma/sass/base/_all.sass";
+@import "../node_modules/bulma/sass/components/navbar.sass";
+@import "../node_modules/bulma/sass/components/dropdown.sass";
+@import "../node_modules/bulma/sass/components/menu.sass";
+@import "../node_modules/bulma/sass/elements/button.sass";
+@import "../node_modules/bulma/sass/elements/container.sass";
+@import "../node_modules/bulma/sass/elements/form.sass";
+@import "../node_modules/bulma/sass/elements/title.sass";
+@import "../node_modules/bulma/sass/layout/hero.sass";
+@import "../node_modules/bulma/sass/layout/section.sass";
+
+
+/* Initial pre-bulma css */
+body, input {
+  font-size: 14px;
+}
+
+.navbar svg {
+    height: 19px;
+    width: 19px;
+}
+
+.body {
+  display: flex;
+  margin: 5px 0 0 0;
+}
+
+.sidebar {
+  width: 30px;
+}
+
+.search-form {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
