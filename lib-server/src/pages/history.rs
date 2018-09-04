@@ -31,8 +31,33 @@ fn handle(
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
+fn hud(
+    (state, _query): (State<PageState>, Query<HashMap<String, String>>),
+) -> Result<HttpResponse, Error> {
+    let template = &state.template;
+    let mut ctx = build_context(&None);
+
+    let connection = state.api.sql.connection()?;
+    let count = actions2::count(&connection)? as i64;
+    let pagination = Pagination {
+        start: Some(count-200),
+        length: Some(200),
+    };
+    let mut fetched = actions2::fetch(&connection, None, &pagination)?;
+    fetched.reverse();
+    let results = PaginatedActions {
+        entries: fetched,
+        total: actions2::count(&connection)?,
+        cycles: Vec::new(),
+    };
+    ctx.add("results", &results);
+    let rendered = template.render("hud.html", &ctx)?;
+    Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
+}
+
 pub(crate) fn config(app: App<PageState>) -> App<PageState> {
-    app.resource("/history", |r| r.with(handle))
+    let app = app.resource("/history", |r| r.with(handle));
+    app.resource("/hud", |r| r.with(hud))
 }
 
 #[cfg(test)]

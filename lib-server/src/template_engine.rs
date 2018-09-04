@@ -33,6 +33,8 @@ impl TemplateEngine {
             ),
             // Display a lot of all the actions.
             ("history.html", include_str!("../templates/history.html")),
+            // Display a brief list of all the actions.
+            ("hud.html", include_str!("../templates/hud.html")),
         ]).chain_err(|| "template error")?;
 
         Ok(TemplateEngine(Mutex::new(tera)))

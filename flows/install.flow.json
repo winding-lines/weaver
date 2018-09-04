@@ -6,6 +6,7 @@
     "cp target/debug/weaver ~/.cargo/bin",
     "cp target/debug/weaver-server ~/.cargo/bin",
     "cp target/debug/weaver-data ~/.cargo/bin",
+    "cp target/debug/weaver-hud ~/.cargo/bin",
     "weaver-server check",
     "kill  `cat ~/.weaver/server/server.pid`",
     "weaver-server start --retry 10",
