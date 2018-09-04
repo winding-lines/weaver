@@ -48,6 +48,9 @@ fn do_not_log_urls(connection: &Connection) -> Result<()> {
         // commerce
         "\\.ebay\\.",
         "www\\.amazon\\.com",
+        "localhost:8888",
+        "localhost:8466",
+        "localhost",
     ];
     for u in sites {
         let ur = UrlRestriction::with_url(&url_restrictions::StorePolicy::NoLog, u);

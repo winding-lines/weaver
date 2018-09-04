@@ -14,17 +14,18 @@ fn handle(
     ctx.add("term", &" ".to_owned());
 
     let connection = state.api.sql.connection()?;
+    let count = actions2::count(&connection)? as i64;
     let pagination = Pagination {
-        start: Some(0),
+        start: Some(count-200),
         length: Some(200),
     };
-    let fetched = actions2::fetch(&connection, None, &pagination)?;
-    let mut results = PaginatedActions {
+    let mut fetched = actions2::fetch(&connection, None, &pagination)?;
+    fetched.reverse();
+    let results = PaginatedActions {
         entries: fetched,
         total: actions2::count(&connection)?,
         cycles: Vec::new(),
     };
-    results.entries.reverse();
     ctx.add("results", &results);
     let rendered = template.render("history.html", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))

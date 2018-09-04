@@ -2,9 +2,9 @@
 {% block title %}Weaver History{% endblock title %}
 {% block head %}
   <style>
-    tr.action td:nth-child(2) b {
+    tr.action td:nth-child(1) b {
       display: block;
-      width: 300px;
+      width: 500px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -27,18 +27,16 @@
     <div class="results">
       <table>
         <tr>
-          <th>Kind</th>
           <th>Name</th>
           <th>Location</th>
         </tr>
         {% for i in results.entries %}
           <tr class="action">
-            <td>{{ i.kind }}</td>
             <td>{% if i.kind == 'url' %}<a href="{{ i.name }}">{% endif %}
               <b>{{ i.name }}</b>
               {% if i.kind == 'url' %} </a> {% endif %}
             </td>
-            <td>{{ i.location }}</td>
+            <td>{% if i.kind == 'shell' %}{{ i.location }}{% endif %}</td>
           </tr>
         {% endfor %}
       </table>
