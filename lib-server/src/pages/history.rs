@@ -2,6 +2,7 @@ use super::PageState;
 use actix_web::{App, Error, HttpResponse, Query, State};
 use lib_db::actions2;
 use lib_goo::config::net::{PaginatedActions, Pagination};
+use lib_goo::date;
 use std::collections::HashMap;
 use template_engine::build_context;
 
@@ -31,6 +32,13 @@ fn handle(
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
+#[derive(Serialize)]
+struct HudEntry {
+    ago: String,
+    name: String,
+    kind: String,
+}
+
 fn hud(
     (state, _query): (State<PageState>, Query<HashMap<String, String>>),
 ) -> Result<HttpResponse, Error> {
@@ -43,13 +51,17 @@ fn hud(
         start: Some(count-200),
         length: Some(200),
     };
-    let mut fetched = actions2::fetch(&connection, None, &pagination)?;
-    fetched.reverse();
-    let results = PaginatedActions {
-        entries: fetched,
-        total: actions2::count(&connection)?,
-        cycles: Vec::new(),
-    };
+    let fetched = actions2::fetch(&connection, None, &pagination)?;
+    let mut results: Vec<HudEntry> = Vec::new();
+    for action in fetched.into_iter().rev() {
+        let ago = action.when.as_ref().map(|w| date::short_diff(w.age())).unwrap_or(String::new());
+        let entry = HudEntry {
+            ago,
+            name: action.name,
+            kind: action.kind,
+        };
+        results.push(entry);
+    }
     ctx.add("results", &results);
     let rendered = template.render("hud.html", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))

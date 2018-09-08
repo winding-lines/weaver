@@ -5,9 +5,18 @@
   <title>Weaver</title>
     <link rel="stylesheet" href="/assets/weaver.css">
   <style>
-    tr.action td:nth-child(1) b {
+    .time {
+      text-align: right;
+      color: rgba(0,0,0, 0.5);
+    }
+
+    .name {
+      padding-left: 7px;
+    }
+
+    tr.action td:nth-child(2) b {
       display: block;
-      width: 500px;
+      /*width: 500px;*/
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -16,7 +25,6 @@
 
     .action a:link, .action a:visited {
       text-decoration-color: lightgrey;
-
     }
 
     th {
@@ -29,17 +37,13 @@
   <div class="search-block">
     <div class="results">
       <table>
-        <tr>
-          <th>Name</th>
-          <th>Location</th>
-        </tr>
-        {% for i in results.entries %}
+        {% for i in results %}
           <tr class="action">
-            <td>{% if i.kind == 'url' %}<a href="{{ i.name }}">{% endif %}
-              <b>{{ i.name }}</b>
+            <td class="time">{{i.ago}}</td>
+            <td class="name">{% if i.kind == 'url' %}<a href="{{ i.name }}">{% endif %}
+              {{i.name}}
               {% if i.kind == 'url' %} </a> {% endif %}
             </td>
-            <td>{% if i.kind == 'shell' %}{{ i.location }}{% endif %}</td>
           </tr>
         {% endfor %}
       </table>
@@ -47,7 +51,4 @@
 
   </div>
 </body>
-<script>
-    setTimeout(() => {window.location.reload(true);}, 10000);
-</script>
 </html>

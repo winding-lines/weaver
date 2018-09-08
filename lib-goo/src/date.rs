@@ -42,6 +42,19 @@ pub fn pretty_diff(seconds: i64) -> String {
     format!("{:1} days", seconds/(3600*24))
 }
 
+pub fn short_diff(seconds: i64) -> String {
+    if seconds < 60 {
+        return "now".into();
+    }
+    if seconds < 3600 {
+        return format!("{:0}m", seconds/60);
+    }
+    if seconds < 3600*24 {
+        return format!("{:2}h", seconds/3600);
+    }
+    format!("{:1}d", seconds/(3600*24))
+}
+
 pub fn now() -> String {
 
     let utc: DateTime<Utc> = Utc::now();
