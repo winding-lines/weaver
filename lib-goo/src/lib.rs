@@ -15,6 +15,7 @@ extern crate lib_error;
 extern crate libc;
 extern crate serde_json;
 extern crate sys_info;
+extern crate url;
 
 pub use self::filtered_vec::FilteredVec;
 
@@ -22,3 +23,4 @@ pub mod config;
 pub mod entities;
 pub mod filtered_vec;
 pub mod date;
+pub mod normalize;

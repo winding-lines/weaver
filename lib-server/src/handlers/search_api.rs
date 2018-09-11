@@ -3,8 +3,8 @@
 use actix_web::{http, App, HttpResponse, Json, Query, State};
 use app_state::ApiState;
 use bincode;
-use lib_ai::normalize;
-use lib_db::store_policies;
+use lib_goo::normalize;
+use lib_db::{store_policies, pages};
 use lib_error::{Result as Wesult, ResultExt};
 use lib_goo::entities::PageContent;
 use lib_index::repo::Collection;
@@ -36,6 +36,8 @@ fn _create((state, mut input): (State<ApiState>, Json<PageContent>)) -> Wesult<P
     )?;
     let indexer = &*(state.indexer);
     let _id = indexer.add(&input)?;
+
+    let _page_id = pages::fetch_or_create_id(&connection, &input.url, Some(&input.title))?;
 
     Ok(PageStatus {
         is_indexed: true,

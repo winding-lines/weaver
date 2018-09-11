@@ -18,7 +18,7 @@ extern crate serde_derive;
 extern crate serde_json;
 
 pub use db::actions2;
-pub use db::epics;
+pub use db::pages;
 pub use db::url_restrictions;
 use diesel::sqlite::SqliteConnection;
 use lib_error::*;

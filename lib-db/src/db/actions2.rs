@@ -19,6 +19,7 @@ struct Action2 {
     sent: Option<bool>,
     annotation: Option<String>,
     host_id: Option<i32>,
+    status: Option<i32>,
 }
 
 #[derive(Queryable)]
@@ -41,6 +42,7 @@ struct Command {
     id: Option<i32>,
     kind: String,
     command: String,
+    page_id: Option<i32>,
 }
 
 /// Count the number of actions.
@@ -89,24 +91,6 @@ pub fn fetch(
     }
 
     Ok(out)
-}
-
-pub fn last_url(connection: &Connection) -> Result<Option<(String, String)>> {
-    let entries = actions2::dsl::actions2
-        .inner_join(commands::dsl::commands)
-        .left_join(locations::table)
-        .filter(commands::dsl::kind.eq("url"))
-        .order(actions2::dsl::id.desc())
-        .limit(1)
-        .load::<(Action2, Command, Option<Location>)>(connection)
-        .chain_err(|| "loading last url")?;
-    let first = entries.into_iter().next();
-    Ok(first.map(|(_, command, location)| {
-        (
-            command.command,
-            location.map(|l| l.location).unwrap_or_else(String::new),
-        )
-    }))
 }
 
 // Return the last access time for the given command

@@ -8,6 +8,5 @@ extern crate url;
 extern crate log;
 extern crate chrono;
 
-pub mod normalize;
 pub mod recommender;
 pub mod compact;

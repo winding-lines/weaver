@@ -1,6 +1,7 @@
 use backends::schema::commands;
 use diesel;
 use diesel::prelude::*;
+use db;
 use lib_error::{Result, ResultExt};
 use Connection;
 
@@ -20,10 +21,12 @@ pub fn fetch_or_create_id(connection: &Connection, kind: &str, command: &str) ->
     match fetch_id(connection, kind, command)? {
         Some(existing) => Ok(existing),
         None => {
+            let page_id = db::pages::fetch_id(connection, command)?;
             diesel::insert_into(commands::table)
                 .values((
                     commands::dsl::command.eq(command),
                     commands::dsl::kind.eq(kind),
+                    commands::dsl::page_id.eq(page_id)
                 ))
                 .execute(connection)
                 .chain_err(|| "insert into commands")?;
