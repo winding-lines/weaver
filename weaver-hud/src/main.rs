@@ -1,8 +1,10 @@
+#[cfg(osx)]
 extern crate web_view;
 
-use web_view::*;
 
+#[cfg(osx)]
 fn main() {
+    use web_view::*;
     let size = (300, 300);
     let resizable = true;
     let debug = true;
@@ -19,4 +21,9 @@ fn main() {
         frontend_cb,
         userdata,
     );
+}
+
+#[cfg(not(osxa))]
+fn main() {
+  println!("not supported");
 }
