@@ -30,7 +30,7 @@
         {
             "type": "shell",
             "label": "cargo test-weaver",
-            "command": "cargo",
+            "command": "./my-cargo.sh",
             "args": [
                 "test",
                 "-p",
@@ -47,7 +47,7 @@
         {
             "type": "shell",
             "label": "cargo test-data",
-            "command": "cargo",
+            "command": "./my-cargo.sh",
             "args": [
                 "test",
                 "-p",
@@ -112,7 +112,7 @@
         {
             "type": "shell",
             "label": "cargo test-lib-db",
-            "command": "cargo",
+            "command": "./my-cargo.sh",
             "args": [
                 "test",
                 "-p",
@@ -138,7 +138,7 @@
         {
             "type": "cargo",
             "label": "cargo test",
-            "command": "cargo",
+            "command": "./my-cargo.sh",
             "args": [
                 "test"
             ],
