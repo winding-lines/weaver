@@ -118,3 +118,8 @@ impl SqlProvider for SqlStore {
         Ok(connection)
     }
 }
+
+// Recreate various connections between tables.
+pub fn link_tables(connection: &Connection)  -> Result<()> {
+    db::commands::link_pages(connection)
+}

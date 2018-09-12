@@ -101,21 +101,31 @@ impl Processor {
                     Row::Recommended(r) => r,
                     Row::Regular(r) => r,
                 };
-                let location = action.location.as_ref().cloned();
-                match col {
-                    Column::Right if location.is_some() => {
-                        action.name = if action.name.starts_with("cd ") {
-                            format!("cd {}", location.unwrap())
-                        } else {
-                            format!("cd {} && {}", location.unwrap(), action.name)
-                        }
+                if action.kind == "url" {
+                    if let Some(ref url) = action.location {
+                        action.name = url.clone();
                     }
-                    Column::Left => {
-                        let ago = action.when.as_ref().map(|w| date::pretty_diff(w.age())).unwrap_or(String::new());
-                        action.name = format!("{} ago", ago);
-                    },
-                    _ => (),
-                };
+                } else {
+                    let location = action.location.as_ref().cloned();
+                    match col {
+                        Column::Right if location.is_some() => {
+                            action.name = if action.name.starts_with("cd ") {
+                                format!("cd {}", location.unwrap())
+                            } else {
+                                format!("cd {} && {}", location.unwrap(), action.name)
+                            }
+                        }
+                        Column::Left => {
+                            let ago = action
+                                .when
+                                .as_ref()
+                                .map(|w| date::pretty_diff(w.age()))
+                                .unwrap_or(String::new());
+                            action.name = format!("{} ago", ago);
+                        }
+                        _ => (),
+                    };
+                }
                 self.formatted_action = Some(action);
             }
         };
@@ -138,7 +148,7 @@ impl Processor {
             name: name.clone(),
             kind: String::from("shell"),
             reason: RecommendReason::UserSelected,
-            .. FormattedAction::default()
+            ..FormattedAction::default()
         });
         sel.name = name;
     }
@@ -171,7 +181,10 @@ impl Processor {
                 if select > 0 {
                     let index = selected_row.unwrap_or(select - 1);
                     tview.set_selected(index, DEFAULT_COLUMN);
-                    let selected = tview.borrow_item(index).cloned().map(|a| (a, Column::Middle));
+                    let selected = tview
+                        .borrow_item(index)
+                        .cloned()
+                        .map(|a| (a, Column::Middle));
 
                     // Update the rest of the system with the selection.
                     // Since there are state changes need to defer to the processor.
@@ -321,9 +334,7 @@ impl ProcessorThread {
                     }
                     Some(Msg::JumpToSelection) => {
                         debug!("Received JumpToSelection");
-                        let current_id = processor.formatted_action.as_ref().map(|a| a.id.prev(
-
-                        ));
+                        let current_id = processor.formatted_action.as_ref().map(|a| a.id.prev());
                         processor.filter(None, current_id);
                     }
                     Some(Msg::JumpToNextMatch) => {

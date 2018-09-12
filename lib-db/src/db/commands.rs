@@ -1,7 +1,7 @@
 use backends::schema::commands;
+use db;
 use diesel;
 use diesel::prelude::*;
-use db;
 use lib_error::{Result, ResultExt};
 use Connection;
 
@@ -26,7 +26,7 @@ pub fn fetch_or_create_id(connection: &Connection, kind: &str, command: &str) ->
                 .values((
                     commands::dsl::command.eq(command),
                     commands::dsl::kind.eq(kind),
-                    commands::dsl::page_id.eq(page_id)
+                    commands::dsl::page_id.eq(page_id),
                 ))
                 .execute(connection)
                 .chain_err(|| "insert into commands")?;
@@ -46,4 +46,30 @@ pub fn fetch_commands(connection: &Connection) -> Result<Vec<String>> {
         .select(commands::dsl::command)
         .load::<String>(connection)
         .chain_err(|| "fetch all commands")
+}
+
+// Re-link all the `commands` that are urls to their optional entry in `pages`.
+pub fn link_pages(connection: &Connection) -> Result<()> {
+    for (url, id, page_id) in commands::dsl::commands
+        .select((
+            commands::dsl::command,
+            commands::dsl::id,
+            commands::dsl::page_id,
+        ))
+        .filter(commands::dsl::kind.eq(&"url"))
+        .load::<(String, Option<i32>, Option<i32>)>(connection)?
+    {
+        println!("looking for page of {}", url);
+        if let Some(connect_id) = db::pages::fetch_id(connection, &url)? {
+            if page_id.is_none() || page_id.unwrap() != connect_id {
+                let find_clause =
+                    commands::dsl::commands.filter(commands::dsl::id.eq(id.expect("command id")));
+                diesel::update(find_clause)
+                    .set(commands::dsl::page_id.eq(connect_id))
+                    .execute(connection)
+                    .chain_err(|| "error updating page_id field")?;
+            }
+        }
+    }
+    Ok(())
 }

@@ -1,6 +1,6 @@
 use bincode;
 use cli::{parse, ConfigAndCommand, DataSubCommand};
-use lib_db::{self, setup, topics, SqlProvider, SqlStore};
+use lib_db::{self, pages, setup, topics, SqlProvider, SqlStore};
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use lib_goo::config::file_utils;
@@ -104,18 +104,37 @@ pub fn run() -> Result<()> {
         }
         Noop => Ok(()),
         RebuildIndex => {
+
             lib_index::init()?;
             let repo = repo::EncryptedRepo::build(&password_source)?;
+            let store = SqlStore::build()?;
+            let connection = store.connection()?;
+
             TantivyIndexer::delete_all()?;
             TantivyIndexer::setup_if_needed()?;
             let indexer = TantivyIndexer::build()?;
+
             for entry in repo.list(&repo::Collection(PageContent::collection_name().into()))? {
                 let decrypted = entry?;
                 let page_content = bincode::deserialize::<PageContent>(decrypted.as_slice())
                     .chain_err(|| "cannot bindecode")?;
+
+                // add to the indexer
                 let handle = indexer.add(&page_content)?;
+
+                // update/create the entry in pages
+                let _page_id = pages::fetch_or_create_id(
+                    &connection,
+                    &page_content.url,
+                    Some(&page_content.title),
+                )?;
                 println!("Indexed {} as {}", &page_content.url, handle);
+
             }
+
+            println!("Linking the commands and pages tables...");
+            lib_db::link_tables(&connection)?;
+
             Ok(())
         }
         Sqlite => execute_sqlite(),

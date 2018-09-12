@@ -35,8 +35,9 @@ fn handle(
 #[derive(Serialize)]
 struct HudEntry {
     ago: String,
-    name: String,
     kind: String,
+    location: Option<String>,
+    name: String,
 }
 
 fn hud(
@@ -59,6 +60,7 @@ fn hud(
             ago,
             name: action.name,
             kind: action.kind,
+            location: action.location,
         };
         results.push(entry);
     }

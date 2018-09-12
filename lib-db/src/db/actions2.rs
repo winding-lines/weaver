@@ -4,8 +4,8 @@ use diesel;
 use diesel::prelude::*;
 use lib_error::*;
 use lib_goo::config::net::Pagination;
-use lib_goo::entities::{ActionId, FormattedAction, NewAction, RecommendReason};
 use lib_goo::date;
+use lib_goo::entities::{ActionId, FormattedAction, NewAction, RecommendReason};
 use Connection;
 
 #[derive(Queryable)]
@@ -38,6 +38,14 @@ struct Epic {
 
 #[derive(Queryable)]
 #[allow(dead_code)]
+struct Page {
+    id: Option<i32>,
+    normalized_url: String,
+    title: Option<String>,
+}
+
+#[derive(Queryable)]
+#[allow(dead_code)]
 struct Command {
     id: Option<i32>,
     kind: String,
@@ -59,9 +67,8 @@ pub fn fetch(
 ) -> Result<Vec<FormattedAction>> {
     // setup the table joins, need to use into_boxed() to handle conditional code.
     let mut joined = actions2::table
-        .inner_join(commands::table)
+        .inner_join(commands::table.left_join(pages::table))
         .left_join(locations::table)
-        .left_join(epics::table)
         .into_boxed();
 
     // Apply an optional filter
@@ -73,17 +80,37 @@ pub fn fetch(
     let loaded = joined
         .limit(pagination.length.unwrap_or(-1))
         .offset(pagination.start.unwrap_or(0))
-        .load::<(Action2, Command, Option<Location>, Option<Epic>)>(connection)?;
+        .load::<(Action2, (Command, Option<Page>), Option<Location>)>(connection)?;
     let mut out = Vec::new();
-    for (action2, command, location, epic) in loaded {
+    for (action2, (command, page_rec), location_rec) in loaded {
         let when = date::Date::parse(&action2.executed).ok();
+
+        let (name, location) = if let Some(page) = page_rec {
+            // If we have a matching page and it has a title then use it's title for the name
+            (
+                page.title.unwrap_or_else(|| command.command.clone()),
+                Some(command.command),
+            )
+        } else {
+            let clean = if command.kind == "url" {
+                // For urls the location is not useful, just leave as empty.
+                None
+            } else {
+                // Otherwise defer to the location of the command.
+                location_rec.map(|l| l.location)
+            };
+            (command.command, clean)
+        };
         let formatted = FormattedAction {
             annotation: action2.annotation,
-            id: action2.id.map(|a| ActionId::new(a as usize)).unwrap_or_default(),
-            epic: epic.map(|e| e.name),
+            id: action2
+                .id
+                .map(|a| ActionId::new(a as usize))
+                .unwrap_or_default(),
+            epic: None,
             kind: command.kind,
-            name: command.command,
-            location: location.map(|l| l.location),
+            name,
+            location,
             reason: RecommendReason::default(),
             when,
         };
@@ -123,7 +150,7 @@ pub fn insert(connection: &Connection, action: &NewAction) -> Result<u64> {
         let command_id =
             db::commands::fetch_or_create_id(connection, &action.kind, &action.command)?;
         let host_id = db::hosts::fetch_or_create_id(connection, &action.host)?;
-        let migrated = (
+        let entry = (
             actions2::dsl::command_id.eq(command_id),
             actions2::dsl::executed.eq(&action.executed),
             actions2::dsl::location_id.eq(location_id),
@@ -133,7 +160,7 @@ pub fn insert(connection: &Connection, action: &NewAction) -> Result<u64> {
             actions2::dsl::host_id.eq(host_id),
         );
         let count = diesel::insert_into(actions2::table)
-            .values(migrated)
+            .values(entry)
             .execute(connection)
             .chain_err(|| "inserting action2")?;
         if count != 1 {
@@ -155,8 +182,8 @@ pub fn set_annotation(connection: &Connection, id: u64, annotation: &str) -> Res
 #[cfg(test)]
 mod tests {
     use lib_goo::config::net::*;
-    use lib_goo::entities::NewAction;
     use lib_goo::date::now;
+    use lib_goo::entities::NewAction;
     use test_helpers::SqlStoreInMemory;
     use SqlProvider;
 
