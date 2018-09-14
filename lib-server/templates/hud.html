@@ -40,7 +40,7 @@
         {% for i in results %}
           <tr class="action">
             <td class="time">{{i.ago}}</td>
-            <td class="name">{% if i.kind == 'url' %}<a href="{{ i.name }}">{% endif %}
+            <td class="name">{% if i.kind == 'url' %}<a data-href="{{ i.name }}">{% endif %}
               {{i.name}}
               {% if i.kind == 'url' %} </a> {% endif %}
             </td>
@@ -50,5 +50,14 @@
     </div>
 
   </div>
+  <script>
+    function clickBody(event) {
+      let href = event.target && event.target.dataset.href;
+      if (href && window.external && window.external.invoke) {
+        window.external.invoke(JSON.stringify({fn: 'click', href: href}));
+      }
+    }
+    document.body.addEventListener("click", clickBody)
+  </script>
 </body>
 </html>
