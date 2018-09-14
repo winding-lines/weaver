@@ -46,8 +46,7 @@ impl DocumentMatcher {
     fn matches_any(page_content: &PageContent, restrictions: &[DocumentMatcher]) -> bool {
         restrictions
             .iter()
-            .find(|r| r.matches(page_content))
-            .is_some()
+            .any(|r| r.matches(page_content))
     }
 }
 

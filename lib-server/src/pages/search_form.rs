@@ -85,7 +85,7 @@ fn _handle(
             topics: Vec::new(),
         };
 
-        for mut result in results.matches.iter_mut() {
+        for mut result in &mut results.matches {
             let title = if !restrictions.should_display(result) {
                 &hidden_title
             } else {

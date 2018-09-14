@@ -31,7 +31,7 @@ impl Environment {
         Ok(Environment {
             cwd,
             epic,
-            home_dir: home_dir,
+            home_dir,
             cwd_rebased,
         })
     }
@@ -50,7 +50,7 @@ impl Environment {
             let relative = path.strip_prefix(base).chain_err(|| "strip prefix")?;
             let mut out = PathBuf::new();
             out.push(replacement);
-            if !relative.components().next().is_none() {
+            if relative.components().next().is_some() {
                 out.push(relative);
             }
             Ok(out)

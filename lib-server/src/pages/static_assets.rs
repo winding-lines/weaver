@@ -1,3 +1,4 @@
+#![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 use actix_web::http::StatusCode;
 use actix_web::{error, http, App, HttpRequest, HttpResponse, Responder, State};
 use asset_map::AssetMap;

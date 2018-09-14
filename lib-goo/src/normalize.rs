@@ -5,7 +5,7 @@ use url::Url;
 // Return a canonical URL for the given input.
 pub fn normalize_url<'a>(input: &'a str) -> Result<Cow<'a, str>> {
     // fast check
-    if !input.contains("?") && !input.contains("#") {
+    if !input.contains('?') && !input.contains('#') {
         // Return the input as Borrowed.
         return Ok(input.into());
     }

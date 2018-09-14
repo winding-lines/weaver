@@ -5,7 +5,7 @@ use cursive::align::HAlign;
 use cursive::theme::ColorStyle;
 use cursive::Cursive;
 use lib_goo::entities::RecommendReason;
-use lib_tui::{ActionListView, ActionListViewItem};
+use lib_tui::{ActionListPos, ActionListView, ActionListViewItem};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum BasicColumn {
@@ -56,7 +56,7 @@ pub type TView = ActionListView<Row, BasicColumn>;
 
 // Create the Cursive table for actions.
 pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TView {
-    let mut view = TView::new()
+    let mut view = TView::default()
         .column(BasicColumn::Index, |c| c.align(HAlign::Right).width(5))
         .column(BasicColumn::Name, |c| {
             c.align(HAlign::Left).width_percent(70)
@@ -67,7 +67,7 @@ pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TV
     {
         let view_tx = processor_tx.clone();
         view.set_on_submit(
-            move |siv: &mut Cursive, _row: usize, _column: usize, _index: usize| {
+            move |siv: &mut Cursive, _pos: ActionListPos| {
                 view_tx.send(Msg::TableSubmit);
 
                 siv.quit();
@@ -79,7 +79,7 @@ pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TV
     {
         let view_tx = processor_tx.clone();
         view.set_on_select(
-            move |siv: &mut Cursive, _row: usize, column: usize, index: usize| {
+            move |siv: &mut Cursive, ActionListPos { row: _row, column, index}| {
                 if let Some(mut t) = siv.find_id::<TView>("actions") {
                     let value = t.borrow_item(index).cloned().map(|a| {
                         (

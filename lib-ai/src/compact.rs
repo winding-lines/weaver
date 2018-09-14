@@ -31,7 +31,7 @@ where
     for action in actions {
         // All the magic happens here in the entry() API.
         let id = identity_map.entry(&action.name).or_insert_with(|| {
-            generator = generator + 1;
+            generator += 1;
             generator
         });
         out.push(*id);
@@ -102,7 +102,7 @@ fn extract_anchors(ids: &[usize]) -> Vec<Anchors> {
         }
     }
 
-    return anchors;
+    anchors
 }
 
 // Take a Cycle containing indexes in the level index and translate it to

@@ -28,7 +28,7 @@ pub fn load_analyses() -> Result<Vec<Analysis>> {
                     let len = file.len();
                     let name = file[..len - 5].to_title_case();
                     out.push(Analysis {
-                        name: name.into(),
+                        name,
                         file: file.into(),
                         path: path.into(),
                     });

@@ -32,6 +32,12 @@ where
 
 const HEIGHT_SUB: usize = 0;
 
+pub struct ActionListPos {
+    pub row: usize,
+    pub column: usize,
+    pub index: usize,
+}
+
 pub struct ActionListView<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> {
     enabled: bool,
     scrollbase: ScrollBase,
@@ -46,16 +52,16 @@ pub struct ActionListView<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone 
 
     // TODO Pass drawing offsets into the handlers so a popup menu
     // can be created easily?
-    on_submit: Option<Rc<Fn(&mut Cursive, usize, usize, usize)>>,
-    on_select: Option<Rc<Fn(&mut Cursive, usize, usize, usize)>>,
+    on_submit: Option<Rc<Fn(&mut Cursive, ActionListPos)>>,
+    on_select: Option<Rc<Fn(&mut Cursive, ActionListPos)>>,
 }
 
-impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionListView<T, H> {
+impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> Default for ActionListView<T, H> {
     /// Creates a new empty `ActionListView` without any columns.
     ///
     /// A ActionListView should be accompanied by a enum of type `H` representing
     /// the table columns.
-    pub fn new() -> Self {
+    fn default() -> Self {
         Self {
             enabled: true,
             scrollbase: ScrollBase::new(),
@@ -72,6 +78,9 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
             on_select: None,
         }
     }
+}
+
+impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionListView<T, H> {
 
     /// Adds a column for the specified table colum from type `H` along with
     /// a title for its visual display.
@@ -125,10 +134,10 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// ```
     pub fn set_on_submit<F>(&mut self, cb: F)
     where
-        F: Fn(&mut Cursive, usize, usize, usize) + 'static,
+        F: Fn(&mut Cursive, ActionListPos) + 'static,
     {
-        self.on_submit = Some(Rc::new(move |s, row, column, index| {
-            cb(s, row, column, index)
+        self.on_submit = Some(Rc::new(move |s, list_pos| {
+            cb(s, list_pos)
         }));
     }
 
@@ -149,7 +158,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// ```
     pub fn on_submit<F>(self, cb: F) -> Self
     where
-        F: Fn(&mut Cursive, usize, usize, usize) + 'static,
+        F: Fn(&mut Cursive, ActionListPos) + 'static,
     {
         self.with(|t| t.set_on_submit(cb))
     }
@@ -162,16 +171,16 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// # Example
     ///
     /// ```norun
-    /// table.set_on_select(|siv: &mut Cursive, row: usize, column: usize, index: usize| {
+    /// table.set_on_select(|siv: &mut Cursive, list_pos: ActiontListPos| {
     ///
     /// });
     /// ```
     pub fn set_on_select<F>(&mut self, cb: F)
     where
-        F: Fn(&mut Cursive, usize, usize, usize) + 'static,
+        F: Fn(&mut Cursive, ActionListPos) + 'static,
     {
-        self.on_select = Some(Rc::new(move |s, row, column, index| {
-            cb(s, row, column, index)
+        self.on_select = Some(Rc::new(move |s, list_pos| {
+            cb(s, list_pos)
         }));
     }
 
@@ -185,13 +194,13 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
     /// # Example
     ///
     /// ```norun
-    /// table.on_select(|siv: &mut Cursive, row: usize, column: usize, index: usize| {
+    /// table.on_select(|siv: &mut Cursive, list_pos: ActionListPos| {
     ///
     /// });
     /// ```
     pub fn on_select<F>(self, cb: F) -> Self
     where
-        F: Fn(&mut Cursive, usize, usize, usize) + 'static,
+        F: Fn(&mut Cursive, ActionListPos) + 'static,
     {
         self.with(|t| t.set_on_select(cb))
     }
@@ -379,7 +388,7 @@ impl<T: ActionListViewItem<H>, H: Eq + Hash + Copy + Clone + 'static> ActionList
         }
     }
 
-    fn draw_item(&self, printer: &Printer, draw_config: DrawConfig) {
+    fn draw_item(&self, printer: &Printer, draw_config: &DrawConfig) {
         self.draw_columns(printer, &draw_config, |printer, column, ci| {
             let value =
                 self.items[draw_config.item].to_column(column.column, draw_config.is_focussed);
@@ -434,7 +443,7 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
             } else {
                 self.items[i]
                     .color_style()
-                    .unwrap_or_else(|| ColorStyle::terminal_default())
+                    .unwrap_or_else(ColorStyle::terminal_default)
             };
 
             printer.with_color(color, |printer| {
@@ -443,7 +452,7 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
                     is_focussed,
                     focus_column: self.focus_column,
                 };
-                self.draw_item(printer, config);
+                self.draw_item(printer, &config);
             });
         });
     }
@@ -541,7 +550,7 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
                     let index = self.item().unwrap();
                     let column = self.focus_column;
                     return EventResult::Consumed(Some(Callback::from_fn(move |s| {
-                        cb(s, row, column, index)
+                        cb(s, ActionListPos {row, column, index})
                     })));
                 }
             }
@@ -559,7 +568,7 @@ impl<T: ActionListViewItem<H> + 'static, H: Eq + Hash + Copy + Clone + 'static> 
             EventResult::Consumed(
                 self.on_select
                     .clone()
-                    .map(|cb| Callback::from_fn(move |s| cb(s, row, column, index))),
+                    .map(|cb| Callback::from_fn(move |s| cb(s, ActionListPos {row, column, index}))),
             )
         } else {
             EventResult::Ignored

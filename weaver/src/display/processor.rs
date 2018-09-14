@@ -120,7 +120,7 @@ impl Processor {
                                 .when
                                 .as_ref()
                                 .map(|w| date::pretty_diff(w.age()))
-                                .unwrap_or(String::new());
+                                .unwrap_or_default();
                             action.name = format!("{} ago", ago);
                         }
                         _ => (),

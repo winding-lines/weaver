@@ -27,7 +27,7 @@ impl AssetMap {
             .0
             .write()
             .map_err(|e| format!("lock asset hash map {:?}", e))?;
-        guard.insert("weaver.css".into(), css.into());
+        guard.insert("weaver.css".into(), css);
         Ok("weaver.css".into())
     }
 

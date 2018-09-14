@@ -29,15 +29,15 @@ struct Location {
     location: String,
 }
 
-#[derive(Queryable)]
 #[allow(dead_code)]
+#[derive(Queryable)]
 struct Epic {
     id: Option<i32>,
     name: String,
 }
 
-#[derive(Queryable)]
 #[allow(dead_code)]
+#[derive(Queryable)]
 struct Page {
     id: Option<i32>,
     normalized_url: String,

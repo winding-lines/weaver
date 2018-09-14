@@ -55,7 +55,7 @@ fn hud(
     let fetched = actions2::fetch(&connection, None, &pagination)?;
     let mut results: Vec<HudEntry> = Vec::new();
     for action in fetched.into_iter().rev() {
-        let ago = action.when.as_ref().map(|w| date::short_diff(w.age())).unwrap_or(String::new());
+        let ago = action.when.as_ref().map(|w| date::short_diff(w.age())).unwrap_or_default();
         let entry = HudEntry {
             ago,
             name: action.name,

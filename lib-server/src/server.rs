@@ -65,7 +65,7 @@ fn config_tls() -> Result<server::RustlsAcceptor> {
         pkcs8_private_keys(&mut buf_key).map_err(|e| format!("key decode {:?}", e))?
     };
 
-    if keys.len() == 0 {
+    if keys.is_empty() {
         return Err("empty keys".into());
     }
     let mut config = ServerConfig::new(NoClientAuth::new());

@@ -58,7 +58,7 @@ impl Config {
         if let Some(file_name) = path.file_name() {
             return file_name == "repo.def";
         }
-        return false;
+        false
     }
 
     // Write the configuration of this Repo. Overwriting the hash would make this store

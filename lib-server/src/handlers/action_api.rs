@@ -107,7 +107,7 @@ fn paginated_fetch((state, input): (State<ApiState>, Query<net::Pagination>)) ->
         Ok((entries, total)) => {
             let out = net::PaginatedActions {
                 entries: entries.to_vec(),
-                total: total,
+                total,
                 cycles: Vec::new(),
             };
             HttpResponse::Ok().json(out)

@@ -29,6 +29,23 @@
         },
         {
             "type": "shell",
+            "label": "cargo clippy",
+            "command": "./my-cargo.sh",
+            "args": [
+                "clippy",
+                "-p",
+                "weaver",
+                "-p",
+                "weaver-server",
+                "-p",
+                "weaver-data"
+            ],
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
+            "type": "shell",
             "label": "cargo test-weaver",
             "command": "./my-cargo.sh",
             "args": [

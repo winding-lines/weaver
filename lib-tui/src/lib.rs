@@ -9,4 +9,4 @@ extern crate log;
 
 mod action_list_view;
 
-pub use action_list_view::{ActionListView, ActionListViewItem};
+pub use action_list_view::{ActionListPos, ActionListView, ActionListViewItem};
