@@ -1,12 +1,20 @@
 {% extends "base.html" %} {% block title %}{{ term }} - Weaver Search{% endblock title %} {% block head %}
 <style>
   .summary {
+    margin-top: 4px;
+  }
+
+  .result {
     margin-top: 3px;
+    border-left: transparent solid 2px;
   }
 
   .result h4 {
-    margin-bottom: 3px;
     width: 60%;
+  }
+
+  .result .info {
+    font-size: x-small;
   }
 
   .link {
@@ -51,7 +59,7 @@
   }
 
   #search-results .active {
-    background-color: #ccc;
+    border-left: #3273dc solid 2px;
   }
 
   #search-results .collapsed {
@@ -65,6 +73,16 @@
   .topics tr.rel {
     background-color: #eee;
   }
+
+  .topics .words {
+    width: 250px;
+  }
+
+  .topics tr {
+    border-bottom: #ddd solid 1px;
+  }
+
+  
 </style>
 {% endblock head %} {% block content %}
 
@@ -83,10 +101,9 @@
         <h4>
           <a href={{ i.url }}>{{ i.title }}</a>
         </h4>
-        <div class="link">
-          <a href={{ i.url }}>{{ i.url }}</a>
-        </div>
-        <div>{{i.last_access}} - {%for t in i.topic_ids%} ({{t.t}}) {{t.p | round(method="ceil", precision=3)}} | {% endfor
+        <div class="info">{{i.last_access}} - 
+          {% if i.topic_ids %} <b>Topics:</b> {% endif %}
+          {%for t in i.topic_ids%} ({{t.t}}) {{t.p | round(method="ceil", precision=3)}} | {% endfor
           %}</div>
       </div>
       {% endfor %}
@@ -101,8 +118,8 @@
         {% for i in results.topics %}
         <tr id="topic-{{i.id}}">
           <td>({{i.id}})</td>
-          <td>{{i.count}}<input type="checkbox"></td>
-          <td>{{i.display}}</td>
+          <td>{{i.count}} <input type="checkbox"></td>
+          <td class="words">{{i.display}}</td>
         </tr>
         {% endfor %}
       </table>
