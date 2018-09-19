@@ -2,7 +2,7 @@ use super::PageState;
 use actix_web::{App, Error, HttpResponse, Query, State};
 use lib_db::actions2;
 use lib_goo::config::net::{PaginatedActions, Pagination};
-use lib_goo::date;
+use lib_goo::entities::ActionId;
 use std::collections::HashMap;
 use template_engine::build_context;
 
@@ -17,7 +17,7 @@ fn handle(
     let connection = state.api.sql.connection()?;
     let count = actions2::count(&connection)? as i64;
     let pagination = Pagination {
-        start: Some(count-200),
+        start: Some(count - 200),
         length: Some(200),
     };
     let mut fetched = actions2::fetch(&connection, None, &pagination)?;
@@ -34,35 +34,50 @@ fn handle(
 
 #[derive(Serialize)]
 struct HudEntry {
-    ago: String,
+    id: ActionId,
+    when: String,
     kind: String,
     location: Option<String>,
     name: String,
 }
 
 fn hud(
-    (state, _query): (State<PageState>, Query<HashMap<String, String>>),
+    (state, query): (State<PageState>, Query<HashMap<String, String>>),
 ) -> Result<HttpResponse, Error> {
     let template = &state.template;
     let mut ctx = build_context(&None);
+    let since_id = query.get("since").and_then(|s| {
+        if let Ok(id) = s.parse::<usize>() {
+            Some(ActionId::new(id))
+        } else {
+            None
+        }
+    });
 
     let connection = state.api.sql.connection()?;
     let count = actions2::count(&connection)? as i64;
     let pagination = Pagination {
-        start: Some(count-200),
+        start: Some(count - 200),
         length: Some(200),
     };
     let fetched = actions2::fetch(&connection, None, &pagination)?;
     let mut results: Vec<HudEntry> = Vec::new();
     for action in fetched.into_iter().rev() {
-        let ago = action.when.as_ref().map(|w| date::short_diff(w.age())).unwrap_or_default();
-        let entry = HudEntry {
-            ago,
-            name: action.name,
-            kind: action.kind,
-            location: action.location,
+        let keep = match since_id {
+            Some(ref limit) => limit.is_before(&action.id),
+            None => true,
         };
-        results.push(entry);
+        if keep {
+            let when = action.when.as_ref().map(|a| a.to_js()).unwrap_or_default();
+            let entry = HudEntry {
+                id: action.id,
+                when,
+                name: action.name,
+                kind: action.kind,
+                location: action.location,
+            };
+            results.push(entry);
+        }
     }
     ctx.add("results", &results);
     let rendered = template.render("hud.html", &ctx)?;

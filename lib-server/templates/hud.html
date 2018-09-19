@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head
-  <meta charset="UTF-8">
+
+<head <meta charset="UTF-8">
   <title>Weaver</title>
-    <link rel="stylesheet" href="/assets/weaver.css">
+  <link rel="stylesheet" href="/assets/weaver.css">
   <style>
     .time {
       text-align: right;
-      color: rgba(0,0,0, 0.5);
+      color: rgba(0, 0, 0, 0.5);
     }
 
     .name {
@@ -23,7 +23,8 @@
       font-weight: normal;
     }
 
-    .action a:link, .action a:visited {
+    .action a:link,
+    .action a:visited {
       text-decoration-color: lightgrey;
     }
 
@@ -36,15 +37,15 @@
 <body>
   <div class="search-block">
     <div class="results">
-      <table>
+      <table id="actions">
         {% for i in results %}
-          <tr class="action">
-            <td class="time">{{i.ago}}</td>
-            <td class="name">{% if i.kind == 'url' %}<a data-href="{{ i.name }}">{% endif %}
+        <tr class="action" id={{i.id}}>
+          <td class="time" data-when={{i.when}}></td>
+          <td class="name">{% if i.kind == 'url' %}<a data-href="{{ i.name }}">{% endif %}
               {{i.name}}
               {% if i.kind == 'url' %} </a> {% endif %}
-            </td>
-          </tr>
+          </td>
+        </tr>
         {% endfor %}
       </table>
     </div>
@@ -54,10 +55,54 @@
     function clickBody(event) {
       let href = event.target && event.target.dataset.href;
       if (href && window.external && window.external.invoke) {
-        window.external.invoke(JSON.stringify({fn: 'click', href: href}));
+        window.external.invoke(JSON.stringify({ fn: 'click', href: href }));
       }
     }
-    document.body.addEventListener("click", clickBody)
+    document.body.addEventListener("click", clickBody);
+
+    function timeSince(dateString) {
+      const timeStamp = Date.parse(dateString);
+      var now = new Date(),
+        secondsPast = (now.getTime() - timeStamp) / 1000;
+      if (secondsPast < 60) {
+        return parseInt(secondsPast) + 's';
+      }
+      if (secondsPast < 3600) {
+        return parseInt(secondsPast / 60) + 'm';
+      }
+      if (secondsPast <= 86400) {
+        return parseInt(secondsPast / 3600) + 'h';
+      }
+      if (secondsPast > 86400) {
+        const date = new Date(new Date(timeStamp));
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      }
+    }
+
+    (function () {
+      let loopsToReload = 10;
+      function updateTime() {
+        loopsToReload -= 1;
+        if (loopsToReload == 0) {
+          window.location.reload();
+          return;
+        }
+        let timeEls = document.getElementsByClassName('time');
+        for (let i = 0; i < timeEls.length; i++) {
+          let el = timeEls[i];
+          if (el.dataset.when) {
+            let ago = timeSince(el.dataset.when);
+            el.innerHTML = ago;
+
+          }
+        }
+      }
+
+      updateTime();
+      setInterval(updateTime, 60000);
+
+    })();
   </script>
 </body>
+
 </html>
