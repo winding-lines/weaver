@@ -3,6 +3,7 @@
 
 <head <meta charset="UTF-8">
   <title>Weaver</title>
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
   <link rel="stylesheet" href="/assets/weaver.css">
   <style>
     .time {
@@ -41,7 +42,7 @@
         {% for i in results %}
         <tr class="action" id={{i.id}}>
           <td class="time" data-when={{i.when}}></td>
-          <td class="name">{% if i.kind == 'url' %}<a data-href="{{ i.name }}">{% endif %}
+          <td class="name">{% if i.kind == 'url' %}<a data-href="{{ i.location }}">{% endif %}
               {{i.name}}
               {% if i.kind == 'url' %} </a> {% endif %}
           </td>
