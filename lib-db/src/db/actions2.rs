@@ -73,7 +73,9 @@ pub fn fetch(
 
     // Apply an optional filter
     if let Some(txt) = search {
-        joined = joined.filter(commands::dsl::command.like(format!("%{}%", txt)));
+        let like_clause = format!("%{}%", txt);
+        info!("like clause '{}'", like_clause);
+        joined = joined.filter(commands::dsl::command.like(like_clause));
     };
 
     // Note: in sqlite3 you cannot pass offset without limit.

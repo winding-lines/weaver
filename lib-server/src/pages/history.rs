@@ -1,5 +1,6 @@
 use super::PageState;
 use actix_web::{App, Error, HttpResponse, Query, State};
+use lib_ai::compact;
 use lib_db::actions2;
 use lib_goo::config::net::{PaginatedActions, Pagination};
 use lib_goo::entities::ActionId;
@@ -40,27 +41,38 @@ struct HudEntry {
     location: Option<String>,
     name: String,
 }
+#[derive(Deserialize)]
+struct HudQuery {
+    term: Option<String>,
+    since_id: Option<usize>,
+}
 
-fn hud(
-    (state, query): (State<PageState>, Query<HashMap<String, String>>),
-) -> Result<HttpResponse, Error> {
-    let template = &state.template;
-    let mut ctx = build_context(&None);
-    let since_id = query.get("since").and_then(|s| {
-        if let Ok(id) = s.parse::<usize>() {
-            Some(ActionId::new(id))
-        } else {
-            None
-        }
-    });
-
+fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpResponse, Error> {
     let connection = state.api.sql.connection()?;
     let count = actions2::count(&connection)? as i64;
-    let pagination = Pagination {
-        start: Some(count - 200),
-        length: Some(200),
+    let pagination = if query.term.is_some() {
+        Pagination {
+            start: None,
+            length: None,
+        }
+    } else {
+        Pagination {
+            start: Some(count - 200),
+            length: Some(200),
+        }
     };
-    let fetched = actions2::fetch(&connection, None, &pagination)?;
+    let mut fetched = actions2::fetch(&connection, query.term.as_ref().map(|a| &**a), &pagination)?;
+    info!(
+        "fetched {} actions for term {:?}",
+        fetched.len(),
+        query.term
+    );
+    let cycles = compact::extract_cycles(&fetched, 4);
+    compact::decycle(&mut fetched, &cycles);
+    info!("after compacting got {} actions", fetched.len());
+
+    // Put in the shape expected by the template.
+    let since_id = query.since_id.map(|s| ActionId::new(s));
     let mut results: Vec<HudEntry> = Vec::new();
     for action in fetched.into_iter().rev() {
         let keep = match since_id {
@@ -79,6 +91,10 @@ fn hud(
             results.push(entry);
         }
     }
+
+    // Render the output.
+    let template = &state.template;
+    let mut ctx = build_context(&None);
     ctx.add("results", &results);
     let rendered = template.render("hud.html", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
