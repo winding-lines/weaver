@@ -2,7 +2,7 @@
   "name": "install",
   "preconditions": [],
   "actions": [
-    "cargo build --all",
+    "./my-cargo.sh build --all",
     "cp target/debug/weaver ~/.cargo/bin",
     "cp target/debug/weaver-server ~/.cargo/bin",
     "cp target/debug/weaver-data ~/.cargo/bin",
