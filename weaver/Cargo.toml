@@ -10,7 +10,7 @@ path = "src/main.rs"
 
 [dependencies]
 chrono = "0.4"
-clap = "2.30.0"
+clap = "2.32"
 clipboard = "0.4"
 crossbeam-channel = "0.2.1"
 cursive = {version = "0.9", features = ["termion-backend"]}

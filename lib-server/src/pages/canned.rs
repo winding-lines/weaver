@@ -11,8 +11,8 @@ fn handle((req, state): (HttpRequest<PageState>, State<PageState>)) -> Result<Ht
             let content = get_analysis(to)?;
             let template = &state.template;
             let mut ctx = build_context(&state.analyses);
-            ctx.add("report", to);
-            ctx.add("content", &content);
+            ctx.insert("report", to);
+            ctx.insert("content", &content);
             let rendered = template.render("canned.raw", &ctx)?;
             Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
         }

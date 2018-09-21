@@ -86,9 +86,9 @@ impl TemplateEngine {
 pub fn build_context(canned: &Option<Vec<Analysis>>) -> tera::Context {
     let mut ctx = tera::Context::new();
     if let Some(canned) = canned {
-        ctx.add("analyses", canned);
+        ctx.insert("analyses", canned);
     } else {
-        ctx.add("analyses", &(Vec::new() as Vec<Analysis>));
+        ctx.insert("analyses", &(Vec::new() as Vec<Analysis>));
     }
     ctx
 }

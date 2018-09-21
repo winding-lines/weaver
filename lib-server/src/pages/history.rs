@@ -13,7 +13,7 @@ fn handle(
 ) -> Result<HttpResponse, Error> {
     let template = &state.template;
     let mut ctx = build_context(&state.analyses);
-    ctx.add("term", &" ".to_owned());
+    ctx.insert("term", &" ".to_owned());
 
     let connection = state.api.sql.connection()?;
     let count = actions2::count(&connection)? as i64;
@@ -28,7 +28,7 @@ fn handle(
         total: actions2::count(&connection)?,
         cycles: Vec::new(),
     };
-    ctx.add("results", &results);
+    ctx.insert("results", &results);
     let rendered = template.render("history.html", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
@@ -38,7 +38,7 @@ struct HudEntry {
     id: ActionId,
     when: String,
     kind: String,
-    location: Option<String>,
+    location: String,
     name: String,
 }
 #[derive(Deserialize)]
@@ -81,12 +81,13 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
         };
         if keep {
             let when = action.when.as_ref().map(|a| a.to_js()).unwrap_or_default();
+            let location = action.location.unwrap_or(action.name.clone());
             let entry = HudEntry {
                 id: action.id,
                 when,
                 name: action.name,
                 kind: action.kind,
-                location: action.location,
+                location,
             };
             results.push(entry);
         }
@@ -95,8 +96,8 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
     // Render the output.
     let template = &state.template;
     let mut ctx = build_context(&None);
-    ctx.add("results", &results);
-    ctx.add("term", &query.term);
+    ctx.insert("results", &results);
+    ctx.insert("term", &query.term);
     let rendered = template.render("hud.html", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
@@ -121,8 +122,8 @@ mod tests {
             entries: vec![FormattedAction::default()],
             cycles: Vec::new(),
         };
-        ctx.add("results", &results);
-        ctx.add("analyses", &Vec::<String>::new());
+        ctx.insert("results", &results);
+        ctx.insert("analyses", &Vec::<String>::new());
         TemplateEngine::build()
             .unwrap()
             .render("history.html", &ctx)
