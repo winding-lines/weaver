@@ -123,11 +123,11 @@ fn _handle(
         datum.topics.sort_unstable_by_key(|topic| topic.count);
         datum.topics.reverse();
 
-        ctx.add("term", &term.to_owned());
-        ctx.add("results", &datum);
+        ctx.insert("term", &term.to_owned());
+        ctx.insert("results", &datum);
         template.render("search-results.html", &ctx)
     } else {
-        ctx.add("term", &" ".to_owned());
+        ctx.insert("term", &" ".to_owned());
         template.render("search-form.html", &ctx)
     }?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
