@@ -96,6 +96,7 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
     let template = &state.template;
     let mut ctx = build_context(&None);
     ctx.add("results", &results);
+    ctx.add("term", &query.term);
     let rendered = template.render("hud.html", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
