@@ -1,6 +1,6 @@
 use actix_web::{error, Error};
 use analyses::*;
-use lib_error::{Result as Wesult, ResultExt};
+use lib_error::{Result as Wesult};
 use lib_goo::config::file_utils;
 use std::sync::Mutex;
 use tera;
@@ -35,7 +35,7 @@ impl TemplateEngine {
             ("history.html", include_str!("../templates/history.html")),
             // Display a brief list of all the actions.
             ("hud.html", include_str!("../templates/hud.html")),
-        ]).chain_err(|| "template error")?;
+        ]).map_err(|_| "template error")?;
 
         Ok(TemplateEngine(Mutex::new(tera)))
     }
@@ -46,7 +46,7 @@ impl TemplateEngine {
         let mut processed = Vec::new();
 
         for entry in WalkDir::new(Path::new("lib-server/templates")) {
-            let entry = entry.chain_err(|| "listing templates")?;
+            let entry = entry.map_err(|_| "listing templates")?;
             let path = entry.path();
             if let Some(os_name) = path.file_name() {
                 if let Some(name) = os_name.to_str() {
@@ -58,7 +58,7 @@ impl TemplateEngine {
                             .lock()
                             .unwrap()
                             .add_raw_template(name, &content)
-                            .chain_err(|| "adding template")?;
+                            .map_err(|_| "adding template")?;
                         processed.push(name.to_owned());
                     }
                 }

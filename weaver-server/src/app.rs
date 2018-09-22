@@ -38,7 +38,7 @@ fn server_folder() -> Result<PathBuf> {
     file_utils::app_folder().and_then(|mut path| {
         path.push("server");
         if !path.exists() {
-            fs::create_dir(&path).chain_err(|| "create server folder")?;
+            fs::create_dir(&path)?;
         }
         Ok(path)
     })
@@ -63,10 +63,9 @@ fn rename_files(server_folder: &Path, extension: &str, timestamp: &str) -> Resul
     if out.exists() && out.metadata()?.len() > 0 {
         let out_renamed = PathBuf::from(server_folder);
         out_renamed.join(format!("server-{}.{}", timestamp, extension));
-        fs::rename(out, out_renamed).chain_err(|| "file rename")
-    } else {
-        Ok(())
+        fs::rename(out, out_renamed)?;
     }
+    Ok(())
 }
 
 /// Start a server and use a `Router` to dispatch requests

@@ -175,7 +175,10 @@ pub fn display(
     let _ = processor.join();
 
     // Extract the desired output kind, needs to be done in the same thread.
-    user_selection.chain_err(|| "could not receive final result")
+    match user_selection {
+        Some(us) => Ok(us),
+        None => Err("failed getting user selection".into())
+    }
 }
 
 fn custom_theme_from_cursive(siv: &Cursive) -> Theme {

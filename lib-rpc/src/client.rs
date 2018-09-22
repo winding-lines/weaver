@@ -1,7 +1,7 @@
 use lib_error::*;
-use lib_goo::config::net::{self, ANNOTATIONS };
+use lib_goo::config::net::{self, ANNOTATIONS};
 use lib_goo::config::Destination;
-use lib_goo::entities::{NewAction, ActionId};
+use lib_goo::entities::{ActionId, NewAction};
 use reqwest;
 use serde_urlencoded;
 
@@ -22,7 +22,7 @@ pub fn recommendations(
         net::API_BASE,
         net::ACTIONS2_BASE,
         net::RECOMMENDATIONS,
-        serde_urlencoded::to_string(params).chain_err(|| "generate recommendation url")?
+        serde_urlencoded::to_string(params).map_err(|_| "encoding url params")?
     );
     debug!("Downloading recommendations from {}", url);
     let client = reqwest::Client::new();
@@ -37,17 +37,16 @@ pub fn recommendations(
 
 pub fn add(destination: &Destination, req: &NewAction) -> Result<u64> {
     let client = reqwest::Client::new();
-    client
+    let id = client
         .post(&format!(
             "http://{}{}{}",
             rpc_addr(destination),
             net::API_BASE,
             net::ACTIONS2_BASE
-        ))
-        .json(req)
+        )).json(req)
         .send()
-        .map(|_| 0)
-        .map_err(|e| e.into())
+        .map(|_| 0)?;
+    Ok(id)
 }
 
 pub fn set_annotation(destination: &Destination, id: &ActionId, content: &str) -> Result<u64> {
@@ -63,10 +62,8 @@ pub fn set_annotation(destination: &Destination, id: &ActionId, content: &str) -
             net::ACTIONS2_BASE,
             id,
             ANNOTATIONS
-        ))
-        .json(&data)
+        )).json(&data)
         .send()
         .map(|_| 0)
         .map_err(|e| e.into())
 }
-

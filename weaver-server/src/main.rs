@@ -62,16 +62,7 @@ fn main() {
         print!(" ERR `export WEAVER=error` for more");
         error!("error {}", e);
 
-        for e in e.iter().skip(1) {
-            error!("caused by: {}", e);
-        }
-
-        // The backtrace is not always generated. Try to run this example
-        // with `RUST_BACKTRACE=1`.
-        if let Some(backtrace) = e.backtrace() {
-            error!("backtrace: {:?}", backtrace);
-        }
-        error!(" `export WEAVER=debug` for more details.");
+        e.display();
 
         ::std::process::exit(1);
     }

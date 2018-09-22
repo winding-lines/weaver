@@ -9,7 +9,7 @@ pub fn normalize_url<'a>(input: &'a str) -> Result<Cow<'a, str>> {
         // Return the input as Borrowed.
         return Ok(input.into());
     }
-    let mut url = Url::parse(input).chain_err(|| "cannot parse url")?;
+    let mut url = Url::parse(input).map_err(|_| "cannot parse url")?;
     if url.fragment().is_some() {
         url.set_fragment(None);
     }
@@ -17,7 +17,7 @@ pub fn normalize_url<'a>(input: &'a str) -> Result<Cow<'a, str>> {
         url.set_query(None);
     }
     {
-        let mut segments = url.path_segments_mut().map_err(|_| Error::from(""))?;
+        let mut segments = url.path_segments_mut().map_err(|_| "normalize url paths")?;
         segments.pop_if_empty();
     }
 

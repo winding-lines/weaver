@@ -1,7 +1,7 @@
 use backends::schema::epics;
 use diesel;
 use diesel::prelude::*;
-use lib_error::{Result, ResultExt};
+use lib_error::*;
 use Connection;
 
 /// Fetch the id for the given epic, if present.
@@ -9,8 +9,7 @@ pub fn fetch_id(connection: &Connection, name: &str) -> Result<Option<i32>> {
     let existing = epics::dsl::epics
         .filter(epics::dsl::name.eq(&name))
         .select(epics::dsl::id)
-        .load::<Option<i32>>(connection)
-        .chain_err(|| "testing existence in epics table")?;
+        .load::<Option<i32>>(connection)?;
     Ok(existing.iter().next().map(|a| a.expect("must have id")))
 }
 
@@ -21,8 +20,7 @@ pub fn fetch_or_create_id(connection: &Connection, path: &str) -> Result<i32> {
         None => {
             diesel::insert_into(epics::table)
                 .values(epics::dsl::name.eq(path))
-                .execute(connection)
-                .chain_err(|| "insert into epics")?;
+                .execute(connection)?;
             match fetch_id(connection, path) {
                 Err(e) => Err(e),
                 Ok(Some(id)) => Ok(id),
@@ -35,8 +33,8 @@ pub fn fetch_or_create_id(connection: &Connection, path: &str) -> Result<i32> {
 /// Fetch all the epics
 #[allow(dead_code)]
 pub fn fetch_all(connection: &Connection) -> Result<Vec<String>> {
-    epics::dsl::epics
+    let entries = epics::dsl::epics
         .select(epics::dsl::name)
-        .load::<String>(connection)
-        .chain_err(|| "fetch all")
+        .load::<String>(connection)?;
+        Ok(entries)
 }

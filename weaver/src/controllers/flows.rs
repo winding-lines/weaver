@@ -16,7 +16,7 @@ fn flows_folder(global: bool) -> Result<PathBuf> {
     };
     path.push("flows");
     if !path.exists() {
-        fs::create_dir(&path).chain_err(|| "create flows folder")?;
+        fs::create_dir(&path)?;
     }
     Ok(path)
 }
@@ -24,14 +24,13 @@ fn flows_folder(global: bool) -> Result<PathBuf> {
 /// Load the flows in the given folder.
 pub fn load_folder(path: &Path, out: &mut Vec<Flow>) -> Result<()> {
     for entry in WalkDir::new(path) {
-        let entry = entry.chain_err(|| "listing flows")?;
+        let entry = entry.map_err(|_| "listing flows")?;
         let path = entry.path();
         if let Some(os_name) = path.file_name() {
             if let Some(name) = os_name.to_str() {
                 if entry.file_type().is_file() && name.ends_with(".flow.json") {
                     let flow = read_content(path)
-                        .and_then(|c| Flow::load_from_string(&c))
-                        .chain_err(|| format!("loading flow from {:?}", path))?;
+                        .and_then(|c| Flow::load_from_string(&c))?;
                     out.push(flow);
                 }
             }
@@ -64,7 +63,7 @@ pub fn active() -> Result<Vec<String>> {
 fn run_flow(flow: &Flow) -> Result<()> {
     for action in &flow.actions {
         println!("  {}", action);
-        let exit_code = shell_proxy::run(action).chain_err(|| "running flow action")?;
+        let exit_code = shell_proxy::run(action).map_err(|_| "running flow action")?;
         if exit_code != 0 {
             let msg = format!(" '{}' failed: {}", action, exit_code);
             println!("{}", msg);
@@ -98,12 +97,12 @@ pub fn create(name: String, global: bool, actions: Vec<String>) -> Result<()> {
         actions,
     };
     let data = flow.to_str()?;
-    write_content(&path, &data).chain_err(|| "create flow")
+    write_content(&path, &data)
 }
 
 /// Recommend a list of Flows for the current user.
 pub fn recommend() -> Result<()> {
-    let active = active().chain_err(|| "getting active flows")?;
+    let active = active()?;
 
     let mut displayed = 0;
     for name in &active {

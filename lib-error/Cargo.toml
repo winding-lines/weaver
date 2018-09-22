@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Marius Seritan <git@winding-lines.com>"]
 
 [dependencies]
-error-chain = "0.12"
+failure = "0.1"
 diesel = "*"
 sys-info = "*"
 actix-web = "0.7"
@@ -13,5 +13,5 @@ regex = "1.0"
 
 [dependencies.tantivy]
 git = "https://github.com/tantivy-search/tantivy"
-rev = "2649c8a7158e6b8c504aa6b43e5af98da8d2c420"
+rev = "e0cdd3114d05c927a349eb07a5daaf17360661ae"
 features = ["mmap"]

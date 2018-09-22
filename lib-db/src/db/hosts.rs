@@ -9,8 +9,7 @@ pub fn fetch_id(connection: &Connection, host: &str) -> Result<Option<i32>> {
     let existing = hosts::dsl::hosts
         .filter(hosts::dsl::name.eq(&host))
         .select(hosts::dsl::id)
-        .load::<Option<i32>>(connection)
-        .chain_err(|| "testing existence in hosts table")?;
+        .load::<Option<i32>>(connection)?;
     Ok(existing.iter().next().map(|a| a.expect("must have isd")))
 }
 
@@ -21,8 +20,7 @@ pub fn fetch_or_create_id(connection: &Connection, host: &str) -> Result<i32> {
         None => {
             diesel::insert_into(hosts::table)
                 .values(hosts::dsl::name.eq(host))
-                .execute(connection)
-                .chain_err(|| "insert into hosts")?;
+                .execute(connection)?;
             match fetch_id(connection, host) {
                 Err(e) => Err(e),
                 Ok(Some(id)) => Ok(id),
@@ -35,8 +33,8 @@ pub fn fetch_or_create_id(connection: &Connection, host: &str) -> Result<i32> {
 /// Fetch all hosts.
 #[allow(dead_code)]
 pub fn fetch_all(connection: &Connection) -> Result<Vec<String>> {
-    hosts::dsl::hosts
+    let entries = hosts::dsl::hosts
         .select(hosts::dsl::name)
-        .load::<String>(connection)
-        .chain_err(|| "fetch all")
+        .load::<String>(connection)?;
+    Ok(entries)
 }

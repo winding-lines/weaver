@@ -1,7 +1,7 @@
 use backends::schema::pages;
 use diesel;
 use diesel::prelude::*;
-use lib_error::{Result, ResultExt};
+use lib_error::*;
 use lib_goo::normalize;
 use Connection;
 
@@ -11,8 +11,7 @@ pub fn fetch_id(connection: &Connection, url: &str) -> Result<Option<i32>> {
     let existing = pages::dsl::pages
         .filter(pages::dsl::normalized_url.eq(&normalized_url))
         .select(pages::dsl::id)
-        .load::<Option<i32>>(connection)
-        .chain_err(|| "testing existence in pages table")?;
+        .load::<Option<i32>>(connection)?;
     Ok(existing.iter().next().map(|a| a.expect("must have id")))
 }
 
@@ -27,8 +26,7 @@ pub fn fetch_or_create_id(connection: &Connection, url: &str, title: Option<&str
                     pages::dsl::normalized_url.eq(&normalized_url),
                     pages::dsl::title.eq(title),
                 ))
-                .execute(connection)
-                .chain_err(|| "insert into epics")?;
+                .execute(connection)?;
             match fetch_id(connection, &normalized_url) {
                 Err(e) => Err(e),
                 Ok(Some(id)) => Ok(id),

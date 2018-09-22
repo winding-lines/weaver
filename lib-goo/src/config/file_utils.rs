@@ -8,19 +8,19 @@ use std::path::{Path, PathBuf};
 
 /// Load the content of the given file.
 pub fn read_content(path: &Path) -> Result<String> {
-    File::open(path)
+    let content = File::open(path)
         .and_then(|mut file| {
             let mut contents = String::new();
             file.read_to_string(&mut contents).map(|_| contents)
-        })
-        .chain_err(|| "read from file")
+        })?;
+    Ok(content)
 }
 
 /// Write the content to the given file.
 pub fn write_content<T: AsRef<str>>(path: &Path, content: T) -> Result<()> {
     File::create(path)
-        .and_then(|mut f| f.write_all(content.as_ref().as_bytes()))
-        .chain_err(|| "writing entity")
+        .and_then(|mut f| f.write_all(content.as_ref().as_bytes()))?;
+    Ok(())
 }
 
 // Allow the app_location to be optionally overwritten.
@@ -55,7 +55,7 @@ pub fn app_folder() -> Result<PathBuf> {
         path.push(home);
         path.push(app_location());
         if !path.exists() {
-            fs::create_dir(&path).chain_err(|| "create weaver folder")?;
+            fs::create_dir(&path)?;
         }
         Ok(path)
     } else {
@@ -68,7 +68,7 @@ pub fn backup_for_file(filename: &str) -> Result<PathBuf> {
     let mut out = app_folder()?;
     out.push("backup");
     if !out.exists() {
-        fs::create_dir(&out).chain_err(|| "create backup folder")?;
+        fs::create_dir(&out)?;
     }
     let now: DateTime<Local> = Local::now();
     let timestamp = format!(
@@ -79,7 +79,7 @@ pub fn backup_for_file(filename: &str) -> Result<PathBuf> {
     );
     out.push(timestamp);
     if !out.exists() {
-        fs::create_dir(&out).chain_err(|| "create backup timestamp folder")?;
+        fs::create_dir(&out)?;
     }
     let out_name = format!(
         "{hour:02}-{min:02}-{sec:02}-{name}",
@@ -99,7 +99,7 @@ pub fn default_database() -> Result<PathBuf> {
         path.push(home);
         path.push(app_location());
         if !path.exists() {
-            fs::create_dir(&path).chain_err(|| "create weaver folder")?;
+            fs::create_dir(&path)?;
         }
         path.push(DEFAULT_DB_NAME);
         Ok(path)

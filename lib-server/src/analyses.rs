@@ -20,7 +20,7 @@ pub fn load_analyses() -> Result<Vec<Analysis>> {
     // Read it
     let mut out = Vec::new();
     for entry in WalkDir::new(path) {
-        let entry = entry.chain_err(|| "listing analyses")?;
+        let entry = entry.map_err(|_| "listing analyses")?;
         let path = entry.path();
         if let Some(os_name) = path.file_name() {
             if let Some(file) = os_name.to_str() {

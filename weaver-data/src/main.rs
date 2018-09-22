@@ -49,15 +49,7 @@ fn main() {
         println!("error {}", e);
         error!("error {}", e);
 
-        for e in e.iter().skip(1) {
-            error!("caused by: {}", e);
-        }
-
-        // The backtrace is not always generated. Try to run this example
-        // with `RUST_BACKTRACE=1`.
-        if let Some(backtrace) = e.backtrace() {
-            error!("backtrace: {:?}", backtrace);
-        }
+        e.display();
 
         ::std::process::exit(1);
     }

@@ -93,7 +93,7 @@ fn user_defined(connection: &Connection) -> Result<()> {
     input.push("user-content.json");
     if input.exists() {
         let content = file_utils::read_content(&input)?;
-        let uc: UserContent = json::from_str(&content).chain_err(|| "reading user content")?;
+        let uc: UserContent = json::from_str(&content).map_err(|_| WeaverError::Generic("reading user content".into()))?;
         for r in uc.restrictions {
             println!("creating user-content {:?}", r);
             url_restrictions::insert(&connection, r)?;

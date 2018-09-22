@@ -38,7 +38,7 @@ struct Epic {
 }
 
 #[allow(dead_code)]
-#[derive(Queryable,Debug)]
+#[derive(Queryable, Debug)]
 struct Page {
     id: Option<i32>,
     normalized_url: String,
@@ -82,7 +82,7 @@ pub fn fetch(
         joined = joined.filter(
             commands::dsl::command
                 .like(like_clause.clone())
-                .or(pages::dsl::title.like(like_clause))
+                .or(pages::dsl::title.like(like_clause)),
         );
     };
 
@@ -172,8 +172,7 @@ pub fn insert(connection: &Connection, action: &NewAction) -> Result<u64> {
         );
         let count = diesel::insert_into(actions2::table)
             .values(entry)
-            .execute(connection)
-            .chain_err(|| "inserting action2")?;
+            .execute(connection)?;
         if count != 1 {
             return Err(format!("bad insert count {} during migration", count).into());
         }
@@ -183,11 +182,10 @@ pub fn insert(connection: &Connection, action: &NewAction) -> Result<u64> {
 
 pub fn set_annotation(connection: &Connection, id: u64, annotation: &str) -> Result<(u64)> {
     let find_clause = actions2::dsl::actions2.filter(actions2::dsl::id.eq(id as i32));
-    diesel::update(find_clause)
+    let id = diesel::update(find_clause)
         .set(actions2::dsl::annotation.eq(annotation))
-        .execute(connection)
-        .chain_err(|| "error updating annotation field")
-        .map(|_| (id))
+        .execute(connection)?;
+    Ok(id as u64)
 }
 
 #[cfg(test)]

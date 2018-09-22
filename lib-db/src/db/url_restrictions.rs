@@ -2,7 +2,7 @@
 use backends::schema::url_restrictions;
 use diesel;
 use diesel::prelude::*;
-use lib_error::{Result as WResult, ResultExt};
+use lib_error::{Result as WResult};
 use std::str::FromStr;
 use std::string::ToString;
 use Connection;
@@ -59,8 +59,7 @@ fn fetch_id(connection: &Connection, ur: &UrlRestriction) -> WResult<Option<i32>
         .filter(url_restrictions::dsl::title_match.eq(&ur.title_match))
         .filter(url_restrictions::dsl::body_match.eq(&ur.body_match))
         .select(url_restrictions::dsl::id)
-        .load::<Option<i32>>(connection)
-        .chain_err(|| "testing existence in epics table")?;
+        .load::<Option<i32>>(connection)?;
     Ok(existing.iter().next().map(|a| a.expect("must have id")))
 }
 
@@ -74,9 +73,7 @@ pub fn insert(connection: &Connection, ur: UrlRestriction) -> WResult<()> {
                 url_restrictions::dsl::url_expr.eq(ur.url_expr),
                 url_restrictions::dsl::title_match.eq(ur.title_match),
                 url_restrictions::dsl::body_match.eq(ur.body_match),
-            ))
-            .execute(connection)
-            .chain_err(|| "insert into url_restrictions")?;
+            )).execute(connection)?;
     }
     Ok(())
 }
@@ -102,9 +99,8 @@ impl UrlRestriction {
 }
 
 pub fn fetch_all(connection: &Connection) -> WResult<Vec<UrlRestriction>> {
-    url_restrictions::dsl::url_restrictions
-        .load::<UrlRestriction>(connection)
-        .chain_err(|| "fetch all")
+    let entries = url_restrictions::dsl::url_restrictions.load::<UrlRestriction>(connection)?;
+    Ok(entries)
 }
 
 #[cfg(test)]

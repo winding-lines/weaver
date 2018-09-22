@@ -5,7 +5,7 @@ use app_state::ApiState;
 use bincode;
 use lib_goo::normalize;
 use lib_db::{store_policies, pages};
-use lib_error::{Result as Wesult, ResultExt};
+use lib_error::{Result as Wesult};
 use lib_goo::entities::PageContent;
 use lib_index::repo::Collection;
 
@@ -29,7 +29,7 @@ fn _create((state, mut input): (State<ApiState>, Json<PageContent>)) -> Wesult<P
         });
     }
 
-    let serialized = bincode::serialize(&*input).chain_err(|| "serializing for the repo")?;
+    let serialized = bincode::serialize(&*input).map_err(|_| "serializing for the repo")?;
     repo.add(
         &Collection(PageContent::collection_name().into()),
         &serialized,

@@ -1,46 +1,109 @@
-//! Common error definitions for [Weaver Project](../weaver_project/index.html).
-
-// `error_chain!` can recurse deeply
-#![recursion_limit = "1024"]
-
 extern crate actix_web;
 extern crate diesel;
 #[macro_use]
-extern crate error_chain;
+extern crate failure;
 extern crate regex;
 extern crate reqwest;
 extern crate sys_info;
 extern crate tantivy;
+use std::result;
 
-use std::convert;
+use std::convert::From;
 
-// `error_chain!` creates.
+#[derive(Debug, Fail)]
+pub enum WeaverError {
+    #[fail(display = "weaver error {:?}", _0)]
+    Generic(String),
+    #[fail(display = "error {:?}", _0)]
+    Server(actix_web::Error),
+    #[fail(display = "error {:?}", _0)]
+    Tantivy(tantivy::TantivyError),
+    #[fail(display = "error {:?}", _0)]
+    Diesel(::diesel::result::Error),
+    #[fail(display = "error {:?}", _0)]
+    DieselConnection(::diesel::ConnectionError),
+    #[fail(display = "error {:?}", _0)]
+    SysInfo(::sys_info::Error),
+    #[fail(display = "error {:?}", _0)]
+    Io(#[cause] ::std::io::Error),
+    #[fail(display = "error {:?}", _0)]
+    Reqwest(::reqwest::Error),
+    #[fail(display = "error {:?}", _0)]
+    Regex(::regex::Error),
+}
 
-// Create the Error, ErrorKind, ResultExt, and Result types
-error_chain! {
-    foreign_links {
-        Diesel(::diesel::result::Error);
-        SysInfo(::sys_info::Error);
-        Io(::std::io::Error);
-        Reqwest(::reqwest::Error);
-        Regex(::regex::Error);
+pub type Result<T> = result::Result<T, WeaverError>;
+
+impl<'a> From<&'a str> for WeaverError {
+    fn from(reason: &'a str) -> Self {
+        WeaverError::Generic(String::from(reason))
     }
 }
 
-impl<'a> convert::From<&'a Error> for actix_web::Error {
-    fn from(werror: &Error) -> Self {
-        actix_web::error::ErrorInternalServerError(werror.description().to_string())
+impl From<String> for WeaverError {
+    fn from(reason: String) -> Self {
+        WeaverError::Generic(reason)
     }
 }
 
-impl convert::From<Error> for actix_web::Error {
-    fn from(werror: Error) -> Self {
-        actix_web::error::ErrorInternalServerError(werror.description().to_string())
+impl From<tantivy::TantivyError> for WeaverError {
+    fn from(terror: tantivy::TantivyError) -> Self {
+        WeaverError::Tantivy(terror).into()
     }
 }
 
-impl convert::From<tantivy::TantivyError> for Error {
-    fn from(terror: tantivy::TantivyError) -> Error {
-        format!("tantivy {:?}", terror).into()
+impl From<::diesel::result::Error> for WeaverError {
+    fn from(err: ::diesel::result::Error) -> Self {
+        WeaverError::Diesel(err).into()
+    }
+}
+
+impl From<::diesel::ConnectionError> for WeaverError {
+    fn from(err: ::diesel::ConnectionError) -> Self {
+        WeaverError::DieselConnection(err).into()
+    }
+}
+
+impl From<::sys_info::Error> for WeaverError {
+    fn from(err: ::sys_info::Error) -> Self {
+        WeaverError::SysInfo(err).into()
+    }
+}
+
+impl From<::std::io::Error> for WeaverError {
+    fn from(err: ::std::io::Error) -> Self {
+        WeaverError::Io(err).into()
+    }
+}
+
+impl From<::reqwest::Error> for WeaverError {
+    fn from(err: ::reqwest::Error) -> Self {
+        WeaverError::Reqwest(err).into()
+    }
+}
+
+impl From<::regex::Error> for WeaverError {
+    fn from(err: ::regex::Error) -> Self {
+        WeaverError::Regex(err).into()
+    }
+}
+
+impl WeaverError {
+    pub fn display(&self) {
+        use failure::Fail;
+
+        for e in Fail::iter_causes(self) {
+            println!("caused by: {}", e);
+        }
+
+        if let Some(backtrace) = self.backtrace() {
+            println!("backtrace: {:?}", backtrace);
+        }
+    }
+}
+
+impl actix_web::ResponseError for WeaverError {
+    fn error_response(&self) -> actix_web::HttpResponse {
+        actix_web::HttpResponse::InternalServerError().into()
     }
 }

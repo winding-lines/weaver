@@ -1,5 +1,5 @@
 use super::weaver::Weaver;
-use lib_error::{Result, ResultExt};
+use lib_error::*;
 use lib_goo::config::file_utils;
 use std::time::SystemTime;
 
@@ -30,9 +30,9 @@ impl JsonStore {
         // Check the last modified time, exit if no changes.
         let file_modified = Some(
             path.metadata()
-                .chain_err(|| "metadata in fresh")?
+                .map_err(|_| "metadata in fresh")?
                 .modified()
-                .chain_err(|| "modified check in fresh")?,
+                .map_err(|_| "modified check in fresh")?,
         );
         if file_modified == self.modified {
             return Ok(());
@@ -40,7 +40,7 @@ impl JsonStore {
 
         debug!("loading config {:?}", &path);
 
-        let content = file_utils::read_content(&path).chain_err(|| "loading weaver config")?;
+        let content = file_utils::read_content(&path)?;
         let content = Weaver::load_from_string(&content)?;
         self.content = content;
         self.modified = file_modified;
@@ -55,10 +55,9 @@ impl JsonStore {
         let content = self.content.to_str()?;
         file_utils::write_content(&path, &content)?;
         self.modified = Some(
-            path.metadata()
-                .chain_err(|| "reading metadata in save")?
+            path.metadata()?
                 .modified()
-                .chain_err(|| "modified time in save")?,
+                .map_err(|_| "reading metadata")?
         );
         Ok(())
     }

@@ -125,7 +125,7 @@ pub fn run() -> Result<()> {
             for entry in repo.list(&repo::Collection(PageContent::collection_name().into()))? {
                 let decrypted = entry?;
                 let page_content = bincode::deserialize::<PageContent>(decrypted.as_slice())
-                    .chain_err(|| "cannot bindecode")?;
+                    .map_err(|_| "cannot bindecode")?;
 
                 // add to the indexer
                 let handle = indexer.add(&page_content)?;
@@ -157,7 +157,8 @@ fn execute_sqlite() -> Result<()> {
         cmd.arg(open_cmd);
         cmd.status()
             .map(|_exit_code| ())
-            .chain_err(|| "running sqlite3")
+            .map_err(|_| "running sqlite3")?;
+        Ok(())
     } else {
         Err("Bad db path".into())
     }

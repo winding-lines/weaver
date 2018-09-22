@@ -111,7 +111,7 @@ impl EncryptedRepo {
             let new_pwd =
                 rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
             ring.set_password(&new_pwd)
-                .chain_err(|| "save password in keyring")?;
+                .map_err(|_| "save password in keyring")?;
             println!("Password saved in the keyring.");
         }
         Ok(())
@@ -122,7 +122,8 @@ impl EncryptedRepo {
         let mut out = self.collection_path(collection);
         out.push(id);
         if out.exists() {
-            remove_file(&out).chain_err(|| "Error deleting file")
+            remove_file(&out)?;
+            Ok(())
         } else {
             Err("File does not exist".into())
         }
@@ -151,11 +152,11 @@ impl EncryptedRepo {
         if !path.exists() {
             return Err("File does not exist".into());
         }
-        let disk = read(path).chain_err(|| "file read")?;
+        let disk = read(path)?;
 
         // Deserialize
         let entry = deserialize::<DiskEntry>(&disk)
-            .chain_err(|| format!("deserialize disk entry {:?}", path))?;
+            .map_err(|_| format!("deserialize disk entry {:?}", path))?;
 
         // Build crypto entities and decrypt.
         let nonce = match secretbox::Nonce::from_slice(&entry.nonce[..]) {
@@ -203,7 +204,7 @@ impl Repo for EncryptedRepo {
         let hash = format!("{}", hasher.finish());
         let mut out = self.collection_path(collection);
         if !out.exists() {
-            create_dir(&out).chain_err(|| "create collection folder")?;
+            create_dir(&out)?;
         };
         out.push(hash.clone());
 
@@ -214,7 +215,7 @@ impl Repo for EncryptedRepo {
             nonce: nonce_vec,
             content: ciphertext,
         };
-        let serialized = serialize(&disk_entry).chain_err(|| "serialize disk entry")?;
+        let serialized = serialize(&disk_entry).map_err(|_| "serialize to bincode")?;
 
         debug!("writing to disk");
         write(&out, &serialized)?;

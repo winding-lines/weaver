@@ -85,8 +85,9 @@ impl SqlStore {
             return Err("bad path".into());
         }
         let connection =
-            SqliteConnection::establish(path_s.unwrap()).chain_err(|| "opening up the connection")?;
-        embedded_migrations::run(&connection).chain_err(|| "running migration")
+            SqliteConnection::establish(path_s.unwrap())?;
+        embedded_migrations::run(&connection).map_err(|_| WeaverError::Generic("migration error".into()))?;
+        Ok(())
     }
 
     // Display information about the store, returns any errors.
@@ -113,8 +114,7 @@ impl SqlProvider for SqlStore {
             return Err("no database url".into());
         };
         debug!("opening database {} ", &db_url);
-        let connection = SqliteConnection::establish(&db_url)
-            .chain_err(|| format!("Cannot open database {}", db_url))?;
+        let connection = SqliteConnection::establish(&db_url)?;
         Ok(connection)
     }
 }

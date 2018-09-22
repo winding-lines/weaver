@@ -23,9 +23,10 @@ impl Config {
         // Config file exists, read its content and deserialize it.
         let content = read(&path)?;
 
-        bincode::deserialize::<Config>(&content[..])
+        let config = bincode::deserialize::<Config>(&content[..])
             .map(Some)
-            .chain_err(|| "read repo config")
+            .map_err(|_| "read repo config")?;
+        Ok(config)
     }
 
     // Read an existing config or build a new one if
@@ -77,8 +78,9 @@ impl Config {
             }
         }
         let bin =
-            bincode::serialize(self).chain_err(|| "bincode serialization error for repo config")?;
-        write(&path, bin).chain_err(|| "write repo config")
+            bincode::serialize(self).map_err(|_| "bincode serialization error for repo config")?;
+        write(&path, bin)?;
+        Ok(())
     }
 
     // The folder where we should find the repo.

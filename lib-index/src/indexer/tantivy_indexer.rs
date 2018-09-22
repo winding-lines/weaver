@@ -45,7 +45,7 @@ impl TantivyIndexer {
     pub fn setup_if_needed() -> Result<()> {
         let index_path = index_path()?;
         if !index_path.exists() {
-            fs::create_dir(&index_path).chain_err(|| "create index folder")?;
+            fs::create_dir(&index_path)?;
             let mut schema_builder = SchemaBuilder::default();
 
             schema_builder.add_text_field("id", STRING | STORED);
@@ -76,14 +76,12 @@ impl TantivyIndexer {
 
 impl Indexer for TantivyIndexer {
     fn add(&self, page_content: &PageContent) -> Result<(u64)> {
-        let mut index_writer = self
-            .index
-            .writer_with_num_threads(1, 10_000_000)?;
+        let mut index_writer = self.index.writer_with_num_threads(1, 10_000_000)?;
 
         let schema = self.index.schema();
-        let f_id = schema.get_field("id").chain_err(|| "get id field")?;
-        let f_title = schema.get_field("title").chain_err(|| "get title field")?;
-        let f_body = schema.get_field("body").chain_err(|| "get body field")?;
+        let f_id = schema.get_field("id").expect("get id field");
+        let f_title = schema.get_field("title").expect("get title field");
+        let f_body = schema.get_field("body").expect("get body field");
         let term = Term::from_field_text(f_id, &page_content.url);
         index_writer.delete_term(term);
         let mut doc = Document::default();
@@ -96,12 +94,10 @@ impl Indexer for TantivyIndexer {
     }
 
     fn delete(&self, id: &str) -> Result<()> {
-        let mut index_writer = self
-            .index
-            .writer(50_000_000)?;
+        let mut index_writer = self.index.writer(50_000_000)?;
 
         let schema = self.index.schema();
-        let f_id = schema.get_field("id").chain_err(|| "get id field")?;
+        let f_id = schema.get_field("id").expect("get id field");
         let term = Term::from_field_text(f_id, id);
         index_writer.delete_term(term);
         index_writer.commit()?;
@@ -118,9 +114,9 @@ impl Indexer for TantivyIndexer {
         let searcher = self.index.searcher();
 
         let schema = self.index.schema();
-        let f_id = schema.get_field("id").chain_err(|| "get id field")?;
-        let f_title = schema.get_field("title").chain_err(|| "get title field")?;
-        let f_body = schema.get_field("body").chain_err(|| "get body field")?;
+        let f_id = schema.get_field("id").expect("get id field");
+        let f_title = schema.get_field("title").expect("get title field");
+        let f_body = schema.get_field("body").expect("get body field");
         // The query parser can interpret human queries.
         // Here, if the user does not specify which
         // field they want to search, tantivy will search
@@ -150,8 +146,7 @@ impl Indexer for TantivyIndexer {
         let mut top_collector = TopCollector::with_limit(40);
 
         // We can now perform our query.
-        searcher
-            .search(&*query, &mut top_collector)?;
+        searcher.search(&*query, &mut top_collector)?;
 
         // Our top collector now contains the 10
         // most relevant doc ids...
@@ -166,16 +161,17 @@ impl Indexer for TantivyIndexer {
 
         let mut out = Vec::new();
         for doc_address in doc_addresses {
-            let retrieved_doc = searcher
-                .doc(&doc_address)?;
+            let retrieved_doc = searcher.doc(doc_address)?;
             let found_id = retrieved_doc
                 .get_first(f_id)
-                .map(|a| a.text())
-                .chain_err(|| "missing id in retrieved document")?;
+                .expect("missing id in retrieved document")
+                .text()
+                .unwrap_or_default();
             let found_title = retrieved_doc
                 .get_first(f_title)
-                .map(|a| a.text())
-                .chain_err(|| "missing title in retrieved document")?;
+                .expect("missing title in retrieved document")
+                .text()
+                .unwrap_or_default();
             out.push(PageContent {
                 url: String::from(found_id),
                 title: String::from(found_title),

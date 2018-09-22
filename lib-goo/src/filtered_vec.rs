@@ -14,7 +14,7 @@ struct Matcher(Regex);
 
 impl Matcher {
     pub fn build(s: &str) -> Result<Matcher> {
-        let r = Regex::new(s).chain_err(|| "invalid regex")?;
+        let r = Regex::new(s)?;
         Ok(Matcher(r))
     }
 

@@ -16,13 +16,13 @@ use std::cmp;
 // Wrap into a bson envelope and save into the repo.
 fn save_to_repo(repo: &Repo, new_action: &NewAction) -> Result<String> {
     debug!("Saving to repo");
-    let data = bson::to_bson(new_action).chain_err(|| "create document for new_action")?;
+    let data = bson::to_bson(new_action).map_err(|_| "create document for new_action")?;
     let mut document = bson::Document::new();
     document.insert("data", data);
     document.insert("type", Bson::String("NewAction".into()));
     document.insert("version", Bson::String(NewAction::version().into()));
     let mut out = Vec::<u8>::new();
-    bson::encode_document(&mut out, &document).chain_err(|| "encode new_action")?;
+    bson::encode_document(&mut out, &document).map_err(|_| "encode new_action")?;
 
     repo.add(&Collection(NewAction::collection_name().into()), &out)
 }

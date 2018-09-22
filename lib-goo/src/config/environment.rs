@@ -1,5 +1,5 @@
 use dirs;
-use lib_error::{Result, ResultExt};
+use lib_error::*;
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -26,7 +26,7 @@ impl Environment {
             Some(d) => d,
             None => return Err("cannot get home directory location".into()),
         };
-        let cwd = env::current_dir().chain_err(|| "getting current directory")?;
+        let cwd = env::current_dir()?;
         let cwd_rebased = Self::normalize_base_dir(cwd.clone(), &home_dir, "~")?;
         Ok(Environment {
             cwd,
@@ -47,7 +47,7 @@ impl Environment {
         replacement: &str,
     ) -> Result<PathBuf> {
         if path.starts_with(base) {
-            let relative = path.strip_prefix(base).chain_err(|| "strip prefix")?;
+            let relative = path.strip_prefix(base).map_err(|_| "strip prefix")?;
             let mut out = PathBuf::new();
             out.push(replacement);
             if relative.components().next().is_some() {
