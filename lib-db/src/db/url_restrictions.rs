@@ -1,3 +1,4 @@
+#![allow(proc_macro_derive_resolution_fallback)]
 use backends::schema::url_restrictions;
 use diesel;
 use diesel::prelude::*;

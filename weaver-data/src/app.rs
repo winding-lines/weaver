@@ -103,6 +103,14 @@ pub fn run() -> Result<()> {
             Ok(())
         }
         Noop => Ok(()),
+        LinkCommandPages => {
+            let store = SqlStore::build()?;
+            let connection = store.connection()?;
+            println!("Linking the commands and pages tables...");
+            lib_db::link_tables(&connection)?;
+            
+            Ok(())
+        },
         RebuildIndex => {
 
             lib_index::init()?;

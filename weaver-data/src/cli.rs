@@ -25,6 +25,8 @@ pub enum DataSubCommand {
     Noop,
     /// Delete the text index and rebuilds it by replaying the document in the store.
     RebuildIndex,
+    /// Link the commands and pages tables.
+    LinkCommandPages,
     /// Run the sqlite shell on the weaver db
     Sqlite,
 }
@@ -95,6 +97,10 @@ pub fn parse() -> ConfigAndCommand {
                 .about("Rebuild the text search index from the files in the encrypted repo"),
         )
         .subcommand(
+            SubCommand::with_name("link-commands-pages")
+                .about("Link the commands page_id with the pages id, when matching"),
+        )
+        .subcommand(
             SubCommand::with_name("dump-url-policies").about("Show the current url policies"),
         )
         .get_matches();
@@ -132,6 +138,8 @@ pub fn parse() -> ConfigAndCommand {
         DataSubCommand::Decrypt(Collection(collection.into()), name.to_string())
     } else if matches.subcommand_matches("rebuild-index").is_some() {
         DataSubCommand::RebuildIndex
+    } else if matches.subcommand_matches("link-commands-pages").is_some() {
+        DataSubCommand::LinkCommandPages
     } else if matches.subcommand_matches("dump-url-policies").is_some() {
         DataSubCommand::DumpUrlPolicies
     } else {

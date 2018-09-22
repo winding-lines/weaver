@@ -19,7 +19,16 @@ pub fn fetch_id(connection: &Connection, kind: &str, command: &str) -> Result<Op
 /// Fetch or create an entry in the commands table matching the passed in name.
 pub fn fetch_or_create_id(connection: &Connection, kind: &str, command: &str) -> Result<i32> {
     match fetch_id(connection, kind, command)? {
-        Some(existing) => Ok(existing),
+        Some(existing) => {
+                let page_id = db::pages::fetch_id(connection, command)?;
+                let find_clause =
+                    commands::dsl::commands.filter(commands::dsl::id.eq(existing));
+                diesel::update(find_clause)
+                    .set(commands::dsl::page_id.eq(page_id))
+                    .execute(connection)
+                    .chain_err(|| "error updating page_id field")?;
+            Ok(existing)
+        },
         None => {
             let page_id = db::pages::fetch_id(connection, command)?;
             diesel::insert_into(commands::table)

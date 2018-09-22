@@ -1,3 +1,4 @@
+#![allow(proc_macro_derive_resolution_fallback)]
 use backends::schema::*;
 use db;
 use diesel;
@@ -8,7 +9,7 @@ use lib_goo::date;
 use lib_goo::entities::{ActionId, FormattedAction, NewAction, RecommendReason};
 use Connection;
 
-#[derive(Queryable)]
+#[derive(Queryable, Debug)]
 #[allow(dead_code)]
 struct Action2 {
     id: Option<i32>,
@@ -22,7 +23,7 @@ struct Action2 {
     status: Option<i32>,
 }
 
-#[derive(Queryable)]
+#[derive(Queryable, Debug)]
 #[allow(dead_code)]
 struct Location {
     id: Option<i32>,
@@ -30,21 +31,21 @@ struct Location {
 }
 
 #[allow(dead_code)]
-#[derive(Queryable)]
+#[derive(Queryable, Debug)]
 struct Epic {
     id: Option<i32>,
     name: String,
 }
 
 #[allow(dead_code)]
-#[derive(Queryable)]
+#[derive(Queryable,Debug)]
 struct Page {
     id: Option<i32>,
     normalized_url: String,
     title: Option<String>,
 }
 
-#[derive(Queryable)]
+#[derive(Queryable, Debug)]
 #[allow(dead_code)]
 struct Command {
     id: Option<i32>,
@@ -58,6 +59,9 @@ pub fn count(connection: &Connection) -> Result<usize> {
     let first: i64 = actions2::table.count().get_result(connection)?;
     Ok(first as usize)
 }
+
+#[allow(dead_code)]
+type Backend = diesel::sqlite::Sqlite;
 
 /// Fetch all actions as FormattedActions, use the pagination settings for the range. If present
 pub fn fetch(
@@ -75,9 +79,14 @@ pub fn fetch(
     if let Some(txt) = search {
         let like_clause = format!("%{}%", txt);
         info!("like clause '{}'", like_clause);
-        joined = joined.filter(commands::dsl::command.like(like_clause));
+        joined = joined.filter(
+            commands::dsl::command
+                .like(like_clause.clone())
+                .or(pages::dsl::title.like(like_clause))
+        );
     };
 
+    // info!("sql {:?}", diesel::debug_query::<Backend, _>(&joined));
     // Note: in sqlite3 you cannot pass offset without limit.
     let loaded = joined
         .limit(pagination.length.unwrap_or(-1))
