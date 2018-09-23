@@ -1,4 +1,4 @@
-image: 'rust:beta'
+image: 'rustdocker/rust:beta'
 
 stages:
   - test
