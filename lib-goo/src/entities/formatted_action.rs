@@ -1,6 +1,6 @@
 //! Representes a denormalized action which can be used in the UI.
 //!
-use date::Date;
+use crate::date::Date;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// Reasons why an action may be recommended.

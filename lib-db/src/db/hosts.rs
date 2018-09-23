@@ -1,8 +1,8 @@
-use backends::schema::hosts;
+use crate::backends::schema::hosts;
 use diesel;
 use diesel::prelude::*;
 use lib_error::*;
-use Connection;
+use crate::Connection;
 
 // Fetch the id for the given host, if present.
 pub fn fetch_id(connection: &Connection, host: &str) -> Result<Option<i32>> {

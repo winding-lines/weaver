@@ -1,6 +1,6 @@
 use super::output_selector;
 use super::{history_view, UserSelection};
-use api::{fetch_recommendations, Row};
+use crate::api::{fetch_recommendations, Row};
 use crossbeam_channel as channel;
 use cursive::views::EditView;
 use cursive::{CbFunc as CursiveCbFunc, Cursive};

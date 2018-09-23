@@ -1,5 +1,5 @@
 use super::shell_proxy;
-use cli;
+use crate::cli;
 use lib_error::*;
 use lib_goo::config::file_utils::{app_folder, read_content, write_content};
 use lib_goo::entities::flow::Flow;

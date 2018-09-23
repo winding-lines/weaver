@@ -1,8 +1,8 @@
-use backends::schema::locations;
+use crate::backends::schema::locations;
 use diesel;
 use diesel::prelude::*;
 use lib_error::*;
-use Connection;
+use crate::Connection;
 
 /// Fetch the id for the given location, if present.
 pub fn fetch_id(connection: &Connection, path: &str) -> Result<Option<i32>> {

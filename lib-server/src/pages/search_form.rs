@@ -5,7 +5,7 @@ use lib_goo::date;
 use lib_goo::entities::lda;
 use lib_index::Results;
 use std::collections::HashMap;
-use template_engine::build_context;
+use crate::template_engine::build_context;
 
 // One search entry as used by the template.
 #[derive(Serialize)]

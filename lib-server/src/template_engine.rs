@@ -1,5 +1,5 @@
 use actix_web::{error, Error};
-use analyses::*;
+use crate::analyses::*;
 use lib_error::{Result as Wesult};
 use lib_goo::config::file_utils;
 use std::sync::Mutex;

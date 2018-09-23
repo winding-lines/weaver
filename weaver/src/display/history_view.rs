@@ -1,5 +1,5 @@
 use super::processor::{Column, Msg};
-use api::Row;
+use crate::api::Row;
 use crossbeam_channel as channel;
 use cursive::align::HAlign;
 use cursive::theme::ColorStyle;

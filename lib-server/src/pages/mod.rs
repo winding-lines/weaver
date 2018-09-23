@@ -1,11 +1,11 @@
 //! Define the html pages used by the app and the related assets.
 //!
 use actix_web::App;
-use analyses::Analysis;
-use app_state::ApiState;
-use asset_map::AssetMap;
+use crate::analyses::Analysis;
+use crate::app_state::ApiState;
+use crate::asset_map::AssetMap;
 use std::sync::Arc;
-use template_engine::TemplateEngine;
+use crate::template_engine::TemplateEngine;
 
 mod canned;
 mod history;

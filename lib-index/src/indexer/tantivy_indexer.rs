@@ -1,6 +1,6 @@
 //! Provide an interface to the Tantivy index.
 //!
-use indexer::{Indexer, Results};
+use crate::indexer::{Indexer, Results};
 use lib_error::*;
 use lib_goo::config::file_utils::app_folder;
 use lib_goo::entities::PageContent;

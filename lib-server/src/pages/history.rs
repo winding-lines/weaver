@@ -5,7 +5,7 @@ use lib_db::actions2;
 use lib_goo::config::net::{PaginatedActions, Pagination};
 use lib_goo::entities::ActionId;
 use std::collections::HashMap;
-use template_engine::build_context;
+use crate::template_engine::build_context;
 
 /// Render the history page.
 fn handle(

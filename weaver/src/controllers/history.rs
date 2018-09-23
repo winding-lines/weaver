@@ -1,7 +1,7 @@
 use super::shell_proxy;
-use api::fetch_recommendations;
+use crate::api::fetch_recommendations;
 use clipboard::{ClipboardContext, ClipboardProvider};
-use display;
+use crate::display;
 use lib_error::*;
 use lib_goo::config::{Destination, Environment, OutputKind};
 use std::sync::Arc;

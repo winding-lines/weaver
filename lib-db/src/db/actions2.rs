@@ -1,13 +1,13 @@
 #![allow(proc_macro_derive_resolution_fallback)]
-use backends::schema::*;
-use db;
+use crate::backends::schema::*;
+use crate::db;
 use diesel;
 use diesel::prelude::*;
 use lib_error::*;
 use lib_goo::config::net::Pagination;
 use lib_goo::date;
 use lib_goo::entities::{ActionId, FormattedAction, NewAction, RecommendReason};
-use Connection;
+use crate::Connection;
 
 #[derive(Queryable, Debug)]
 #[allow(dead_code)]

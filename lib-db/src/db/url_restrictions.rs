@@ -1,5 +1,5 @@
 #![allow(proc_macro_derive_resolution_fallback)]
-use backends::schema::url_restrictions;
+use crate::backends::schema::url_restrictions;
 use diesel;
 use diesel::prelude::*;
 use lib_error::{Result as WResult};

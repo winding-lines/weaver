@@ -9,7 +9,7 @@ use keyring;
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use metrohash::MetroHash128;
-use repo::{Collection, Repo};
+use crate::repo::{Collection, Repo};
 use rpassword;
 use rust_sodium::crypto::{pwhash, secretbox};
 use std::fs::{create_dir, read, read_dir, remove_file, write, ReadDir};

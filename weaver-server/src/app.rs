@@ -1,8 +1,8 @@
 //! Main function of the weaver server.
 //!
 use chrono::prelude::*;
-use cli::ServerRun;
-use cli::{parse, CommandAndConfig, ServerSubCommand};
+use crate::cli::ServerRun;
+use crate::cli::{parse, CommandAndConfig, ServerSubCommand};
 use daemonize::{self, Daemonize};
 use lib_db::SqlStore;
 use lib_error::*;

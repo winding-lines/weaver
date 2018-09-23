@@ -1,5 +1,5 @@
 use lib_error::*;
-use {embedded_migrations, Connection, SqlProvider};
+use crate::{embedded_migrations, Connection, SqlProvider};
 
 // In memory Sqlite store used during testing. The database disappears when the
 // connection is closed so we pass in a function to initialize the

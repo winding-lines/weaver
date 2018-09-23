@@ -1,10 +1,10 @@
 //! Entity used when logging a new action. Could be collapsed with FormattedAction.
 
-use config::Environment;
+use crate::config::Environment;
 use lib_error::Result;
 use libc::getppid;
 use sys_info;
-use ::date::now;
+use crate::date::now;
 
 /// Data structure to create a new action.
 #[derive(Default, Deserialize, Serialize)]

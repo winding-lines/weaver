@@ -4,9 +4,8 @@
 // Crate Dependencies ---------------------------------------------------------
 extern crate cursive;
 extern crate regex;
-#[macro_use]
 extern crate log;
 
 mod action_list_view;
 
-pub use action_list_view::{ActionListPos, ActionListView, ActionListViewItem};
+pub use self::action_list_view::{ActionListPos, ActionListView, ActionListViewItem};

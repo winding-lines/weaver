@@ -1,6 +1,6 @@
 //! Url building constants and data structures used over the wire.
 //!
-use entities::{Cycle, FormattedAction};
+use crate::entities::{Cycle, FormattedAction};
 
 pub const API_BASE: &str = "/api";
 pub const ACTIONS2_BASE: &str = "/v2/actions";

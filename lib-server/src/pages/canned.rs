@@ -1,8 +1,8 @@
 /// Handle the pre-build analyses content.
 ///
 use actix_web::{error, App, Error, HttpRequest, HttpResponse, State};
-use analyses::get_analysis;
-use template_engine::build_context;
+use crate::analyses::get_analysis;
+use crate::template_engine::build_context;
 use super::PageState;
 
 fn handle((req, state): (HttpRequest<PageState>, State<PageState>)) -> Result<HttpResponse, Error> {

@@ -1,9 +1,9 @@
-use backends::schema::commands;
-use db;
+use crate::backends::schema::commands;
+use crate::db;
 use diesel;
 use diesel::prelude::*;
 use lib_error::*;
-use Connection;
+use crate::Connection;
 
 /// Fetch the id for the given epic, if present.
 pub fn fetch_id(connection: &Connection, kind: &str, command: &str) -> Result<Option<i32>> {

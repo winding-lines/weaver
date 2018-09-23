@@ -1,9 +1,9 @@
-use backends::schema::pages;
+use crate::backends::schema::pages;
 use diesel;
 use diesel::prelude::*;
 use lib_error::*;
 use lib_goo::normalize;
-use Connection;
+use crate::Connection;
 
 /// Fetch the id for the given page, if present.
 pub fn fetch_id(connection: &Connection, url: &str) -> Result<Option<i32>> {

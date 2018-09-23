@@ -1,7 +1,7 @@
 #![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 
 use actix_web::{http, App, HttpResponse, Json, Path, Query, State};
-use app_state::ApiState;
+use crate::app_state::ApiState;
 use bson::{self, Bson};
 use lib_ai::{compact, recommender};
 use lib_db::{actions2, Connection};

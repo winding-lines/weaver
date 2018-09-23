@@ -24,7 +24,7 @@ extern crate native_tls;
 #[cfg(feature = "rust-tls")]
 extern crate rustls;
 
-pub use server::Server;
+pub use crate::server::Server;
 
 mod analyses;
 mod asset_map;

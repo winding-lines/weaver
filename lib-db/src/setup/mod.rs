@@ -1,10 +1,10 @@
 //! Populate the database with initial data.
 
-use db::url_restrictions::{self, UrlRestriction};
+use crate::db::url_restrictions::{self, UrlRestriction};
 use lib_error::*;
 use lib_goo::config::file_utils;
 use serde_json as json;
-use Connection;
+use crate::Connection;
 
 // Populate the database with the URL that should not be logged
 fn do_not_log_urls(connection: &Connection) -> Result<()> {

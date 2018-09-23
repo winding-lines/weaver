@@ -1,10 +1,10 @@
 use super::{flows, history, shell_prompt};
-use cli::parse;
-use cli::Command::*;
-use cli::CommandAndConfig;
+use crate::cli::parse;
+use crate::cli::Command::*;
+use crate::cli::CommandAndConfig;
 use lib_error::*;
 use lib_goo::config::{file_utils, Destination, Environment};
-use local_store::epics;
+use crate::local_store::epics;
 use std::sync::Arc;
 
 /// Main dispatch function;

@@ -1,7 +1,7 @@
 /// Return summary information about the stores in text format. The intent is to plug this information
 /// directly in the UI.
 use actix_web::{http, App, State};
-use app_state::ApiState;
+use crate::app_state::ApiState;
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 fn summary(state: State<ApiState>) -> String {

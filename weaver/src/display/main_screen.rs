@@ -1,6 +1,6 @@
 use super::processor::{self, Msg};
 use super::{history_view, UserSelection};
-use api::Row;
+use crate::api::Row;
 use crossbeam_channel as channel;
 use cursive::event::{Event, Key};
 use cursive::theme::{Color, ColorStyle, BorderStyle, PaletteColor, Theme};

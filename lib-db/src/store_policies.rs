@@ -1,4 +1,4 @@
-use db::url_restrictions::{self, StorePolicy, UrlRestriction};
+use crate::db::url_restrictions::{self, StorePolicy, UrlRestriction};
 use lib_error::Result as WResult;
 use lib_goo::entities::PageContent;
 use regex::Regex;
