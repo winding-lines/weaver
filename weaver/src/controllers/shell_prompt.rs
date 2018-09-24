@@ -8,7 +8,7 @@ use std::io::{self, Write};
 
 /// Check to see if the environment is setup properly.
 pub fn check() -> Result<()> {
-    let ps1 = env::var("PS1").map_err(|_| "getting PS1")?;
+    let ps1 = env::var("PS1").context("getting PS1".into())?;
     if !ps1.contains("weaver") {
         println!("Your PS1 variable should contain an invocation to weaver, for example");
         // note: curlies are escaped by doubling them

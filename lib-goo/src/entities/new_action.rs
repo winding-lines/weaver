@@ -1,7 +1,7 @@
 //! Entity used when logging a new action. Could be collapsed with FormattedAction.
 
 use crate::config::Environment;
-use lib_error::Result;
+use lib_error::*;
 use libc::getppid;
 use sys_info;
 use crate::date::now;
@@ -53,7 +53,7 @@ impl NewAction {
     }
 
     pub fn build_from_url(url: &str, location: &str, epic: Option<&str>) -> Result<NewAction> {
-        let host = sys_info::hostname()?;
+        let host = sys_info::hostname().context("build url in new action".into())?;
         let executed = now();
         Ok(NewAction {
             executed,

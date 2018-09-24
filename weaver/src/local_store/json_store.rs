@@ -30,9 +30,9 @@ impl JsonStore {
         // Check the last modified time, exit if no changes.
         let file_modified = Some(
             path.metadata()
-                .map_err(|_| "metadata in fresh")?
+                .context("metadata in fresh".into())?
                 .modified()
-                .map_err(|_| "modified check in fresh")?,
+                .context("modified check in fresh".into())?,
         );
         if file_modified == self.modified {
             return Ok(());
@@ -57,7 +57,7 @@ impl JsonStore {
         self.modified = Some(
             path.metadata()?
                 .modified()
-                .map_err(|_| "reading metadata")?
+                .context("refresh date after save".into())?
         );
         Ok(())
     }

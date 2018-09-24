@@ -45,7 +45,7 @@ fn main() {
 
     // Run the main loop, be concise with error reporting since we may run in PS1.
     if let Err(ref e) = app::run() {
-        println!(" ERR `export WEAVER=error` for more");
+        println!(" ERR `export WEAVER=error` for more ");
         println!("error {}", e);
         error!("error {}", e);
 
@@ -53,5 +53,5 @@ fn main() {
 
         ::std::process::exit(1);
     }
-    info!("weaver exited normally");
+    info!("weaver-data exited normally");
 }

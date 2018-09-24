@@ -177,7 +177,7 @@ pub fn display(
     // Extract the desired output kind, needs to be done in the same thread.
     match user_selection {
         Some(us) => Ok(us),
-        None => Err("failed getting user selection".into())
+        None => Err(WeaverErrorKind::Generic("failed getting user selection").into())
     }
 }
 

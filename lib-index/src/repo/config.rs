@@ -25,7 +25,7 @@ impl Config {
 
         let config = bincode::deserialize::<Config>(&content[..])
             .map(Some)
-            .map_err(|_| "read repo config")?;
+            .context("read repo config".into())?;
         Ok(config)
     }
 
@@ -78,7 +78,7 @@ impl Config {
             }
         }
         let bin =
-            bincode::serialize(self).map_err(|_| "bincode serialization error for repo config")?;
+            bincode::serialize(self).context("bincode serialization error for repo config".into())?;
         write(&path, bin)?;
         Ok(())
     }

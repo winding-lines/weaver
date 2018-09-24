@@ -1,11 +1,11 @@
 #![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 
 use actix_web::{http, App, HttpResponse, Json, Path, Query, State};
-use crate::app_state::ApiState;
 use bson::{self, Bson};
+use crate::app_state::ApiState;
 use lib_ai::{compact, recommender};
 use lib_db::{actions2, Connection};
-use lib_error::Result as Wesult;
+use lib_error::{Result as Wesult, WeaverError};
 use lib_error::*;
 use lib_goo::config::net;
 use lib_goo::entities::NewAction;
@@ -16,13 +16,13 @@ use std::cmp;
 // Wrap into a bson envelope and save into the repo.
 fn save_to_repo(repo: &Repo, new_action: &NewAction) -> Result<String> {
     debug!("Saving to repo");
-    let data = bson::to_bson(new_action).map_err(|_| "create document for new_action")?;
+    let data = bson::to_bson(new_action).map_err(|e| WeaverError::from(format!("create document for new_action {}", e)))?;
     let mut document = bson::Document::new();
     document.insert("data", data);
     document.insert("type", Bson::String("NewAction".into()));
     document.insert("version", Bson::String(NewAction::version().into()));
     let mut out = Vec::<u8>::new();
-    bson::encode_document(&mut out, &document).map_err(|_| "encode new_action")?;
+    bson::encode_document(&mut out, &document).map_err(|e| WeaverError::from(format!("encode new_action {:?}", e)))?;
 
     repo.add(&Collection(NewAction::collection_name().into()), &out)
 }
@@ -45,15 +45,12 @@ fn build_recommendations(
     connection: &Connection,
     query: &net::RecommendationQuery,
 ) -> Result<net::PaginatedActions> {
-    let pagination =  net::Pagination {
+    let pagination = net::Pagination {
         length: query.length,
         start: query.start,
     };
-    let mut historical = actions2::fetch(
-        &connection,
-        query.term.as_ref().map(|a| &**a),
-        &pagination,
-    )?;
+    let mut historical =
+        actions2::fetch(&connection, query.term.as_ref().map(|a| &**a), &pagination)?;
     let cycles = compact::extract_cycles(&historical, 4);
     let mut recommended = recommender::recommend(&historical, &query.term);
     compact::decycle(&mut historical, &cycles);
@@ -161,7 +158,7 @@ mod tests {
     use super::*;
     use actix_web::test::TestServer;
     use actix_web::*;
-    use app_state::tests::StateWithActions;
+    use crate::app_state::tests::StateWithActions;
     use serde_json as json;
     use std::sync::Arc;
 

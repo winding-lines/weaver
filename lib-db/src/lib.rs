@@ -17,9 +17,9 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-pub use db::actions2;
-pub use db::pages;
-pub use db::url_restrictions;
+pub use crate::db::actions2;
+pub use crate::db::pages;
+pub use crate::db::url_restrictions;
 use diesel::sqlite::SqliteConnection;
 use lib_error::*;
 use lib_goo::config::file_utils;
@@ -84,9 +84,9 @@ impl SqlStore {
         if path_s.is_none() {
             return Err("bad path".into());
         }
-        let connection =
-            SqliteConnection::establish(path_s.unwrap())?;
-        embedded_migrations::run(&connection).map_err(|_| WeaverError::Generic("migration error".into()))?;
+        let connection = SqliteConnection::establish(path_s.unwrap())?;
+        embedded_migrations::run(&connection)
+            .context("migration error".into())?;
         Ok(())
     }
 
@@ -120,6 +120,6 @@ impl SqlProvider for SqlStore {
 }
 
 // Recreate various connections between tables.
-pub fn link_tables(connection: &Connection)  -> Result<()> {
+pub fn link_tables(connection: &Connection) -> Result<()> {
     db::commands::link_pages(connection)
 }

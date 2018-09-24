@@ -1,11 +1,11 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 use crate::backends::schema::url_restrictions;
+use crate::Connection;
 use diesel;
 use diesel::prelude::*;
-use lib_error::{Result as WResult};
+use lib_error::{Result as WResult, WeaverError};
 use std::str::FromStr;
 use std::string::ToString;
-use Connection;
 
 // Url (patterns) to not log, by default all urls are logged.
 pub const NO_LOG: &str = "!log";
@@ -27,7 +27,7 @@ pub enum StorePolicy {
 }
 
 impl FromStr for StorePolicy {
-    type Err = String;
+    type Err = WeaverError;
 
     fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
         match s {
@@ -35,7 +35,7 @@ impl FromStr for StorePolicy {
             DO_INDEX => Ok(StorePolicy::DoIndex),
             NO_INDEX => Ok(StorePolicy::NoIndex),
             HIDDEN => Ok(StorePolicy::Hidden),
-            _ => Err(format!("cannot parse url policy from {}", s)),
+            _ => Err(WeaverError::from(format!("cannot parse url policy from {}", s))),
         }
     }
 }
@@ -106,8 +106,8 @@ pub fn fetch_all(connection: &Connection) -> WResult<Vec<UrlRestriction>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test_helpers::SqlStoreInMemory;
-    use SqlProvider;
+    use crate::test_helpers::SqlStoreInMemory;
+    use crate::SqlProvider;
 
     #[test]
     fn test_only_url() {

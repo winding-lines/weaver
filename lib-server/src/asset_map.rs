@@ -22,11 +22,11 @@ impl AssetMap {
         let path = Path::new("lib-server/web/dist/css/weaver.css");
         File::open(&path)?
             .read_to_end(&mut css)
-            .map_err(|e| format!("cert open {:?}", e))?;
+            .context("css file open".into())?;
         let mut guard = self
             .0
             .write()
-            .map_err(|e| format!("lock asset hash map {:?}", e))?;
+            .map_err(|e| WeaverError::from(format!("lock asset hash map {:?}", e)))?;
         guard.insert("weaver.css".into(), css);
         Ok("weaver.css".into())
     }
@@ -35,7 +35,7 @@ impl AssetMap {
         let guard = self
             .0
             .read()
-            .map_err(|e| format!("lock asset hash map {:?}", e))?;
+            .map_err(|e| WeaverError::from(format!("lock asset hash map {:?}", e)))?;
         match guard.get(name) {
             Some(v) => Ok(v.clone()),
             None => Err("missing asset".into()),

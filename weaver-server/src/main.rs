@@ -59,7 +59,7 @@ fn main() {
 
     // Run the main loop, be concise with error reporting since we may run in PS1.
     if let Err(ref e) = app::run() {
-        print!(" ERR `export WEAVER=error` for more");
+        print!(" ERR `export WEAVER=error` for more ");
         error!("error {}", e);
 
         e.display();

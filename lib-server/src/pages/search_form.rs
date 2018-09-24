@@ -85,7 +85,7 @@ fn _handle(
             topics: Vec::new(),
         };
 
-        for mut result in &mut results.matches {
+        for result in &mut results.matches {
             let title = if !restrictions.should_display(result) {
                 &hidden_title
             } else {
@@ -149,11 +149,11 @@ mod tests {
     use super::*;
     use actix_web::test::TestServer;
     use actix_web::*;
-    use app_state::tests::default_test;
-    use asset_map::AssetMap;
+    use crate::app_state::tests::default_test;
+    use crate::asset_map::AssetMap;
     use lib_db::test_helpers::SqlStoreInMemory;
     use std::sync::Arc;
-    use template_engine::TemplateEngine;
+    use crate::template_engine::TemplateEngine;
 
     use lib_goo::entities::PageContent;
 

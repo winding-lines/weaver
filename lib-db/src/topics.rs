@@ -57,7 +57,7 @@ impl TopicStore {
         // load the json
         let contents = file_utils::read_content(&path)?;
         let doc_topics: DocTopics = json::from_str(&contents)
-            .map_err(|_| WeaverError::Generic("load doc-topics.json".into()))?;
+            .context("load doc-topics.json".into())?;
 
         // build the store
         Ok(Some(TopicStore::build(doc_topics)))

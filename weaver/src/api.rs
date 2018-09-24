@@ -64,8 +64,8 @@ pub fn fetch_recommendations(
         },
     )?;
     // rebase the command folders on the current work dir. This simplifies the UI interpretation.
-    for mut a in &mut actions {
-        if let Some(mut l) = a.location.as_mut() {
+    for a in &mut actions {
+        if let Some(l) = a.location.as_mut() {
             let rebased = env.rebase(Path::new(&l).into())?;
             *l = Environment::encode_path(&rebased);
         }

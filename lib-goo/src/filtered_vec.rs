@@ -14,7 +14,7 @@ struct Matcher(Regex);
 
 impl Matcher {
     pub fn build(s: &str) -> Result<Matcher> {
-        let r = Regex::new(s)?;
+        let r = Regex::new(s).context("filtered_vec".into())?;
         Ok(Matcher(r))
     }
 

@@ -3,6 +3,7 @@ name = "weaver-server"
 documentation = "Start and host the weaver server"
 version = "0.3.6"
 authors = ["Marius Seritan <git@winding-lines.com>"]
+edition = "2018"
 
 [[bin]]
 name = "weaver-server"

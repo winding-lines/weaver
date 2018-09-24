@@ -3,6 +3,7 @@ name = "lib-rpc"
 version = "0.1.0"
 description = "Implement rpc between weaver client and server"
 authors = ["Marius Seritan <git@winding-lines.com>"]
+edition = "2018"
 
 [dependencies]
 log = "*"

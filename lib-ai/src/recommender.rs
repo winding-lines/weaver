@@ -80,7 +80,7 @@ pub fn recommend(history: &[FormattedAction], term: &Option<String>) -> Vec<Form
     }
     if let Some(mf) = most_frequent {
         debug!("Adding more frequent {:?}", mf);
-        let mut freq = to_recommended_frequent(recent_1, mf.0, mf.1 as u32);
+        let freq = to_recommended_frequent(recent_1, mf.0, mf.1 as u32);
         out.push(freq);
     }
 

@@ -1,6 +1,6 @@
 use actix_web::{error, Error};
 use crate::analyses::*;
-use lib_error::{Result as Wesult};
+use lib_error::{Result as Wesult, WeaverError};
 use lib_goo::config::file_utils;
 use std::sync::Mutex;
 use tera;
@@ -35,7 +35,7 @@ impl TemplateEngine {
             ("history.html", include_str!("../templates/history.html")),
             // Display a brief list of all the actions.
             ("hud.html", include_str!("../templates/hud.html")),
-        ]).map_err(|_| "template error")?;
+        ]).map_err(|e| WeaverError::from(format!("template error {:?}", e)))?;
 
         Ok(TemplateEngine(Mutex::new(tera)))
     }

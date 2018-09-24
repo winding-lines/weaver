@@ -3,6 +3,7 @@ name = "weaver-project"
 version = "0.3.4"
 description = "Personal productivity tool allowing you to log and search through your command line and web history."
 authors = ["Marius Seritan <git@winding-lines.com>"]
+edition = "2018"
 
 [workspace]
 members = [

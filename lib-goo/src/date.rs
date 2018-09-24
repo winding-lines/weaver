@@ -6,7 +6,7 @@ pub struct Date(DateTime<FixedOffset>);
 
 impl Date {
     pub fn parse(rfc3339_date: &str) -> Result<Date> {
-        let inner = DateTime::parse_from_rfc3339(rfc3339_date).map_err(|_| "date parse error")?;
+        let inner = DateTime::parse_from_rfc3339(rfc3339_date).context("date parse error".into())?;
         Ok(Date(inner))
     }
 
@@ -23,7 +23,7 @@ impl Date {
 
 /// Age in seconds
 pub fn age(rfc3339_date: &str) -> Result<i64> {
-    let parsed = DateTime::parse_from_rfc3339(rfc3339_date).map_err(|_| "map parse error")?;
+    let parsed = DateTime::parse_from_rfc3339(rfc3339_date).context("date parse error in age".into())?;
     let utc: DateTime<Utc> = Utc::now();
     let duration = utc - parsed.with_timezone(&Utc);
     Ok(duration.num_seconds())

@@ -1,9 +1,9 @@
 use crate::db::url_restrictions::{self, StorePolicy, UrlRestriction};
-use lib_error::Result as WResult;
+use crate::Connection;
+use lib_error::{Result as WResult};
 use lib_goo::entities::PageContent;
 use regex::Regex;
 use std::convert::From;
-use Connection;
 
 // Describe a document matcher to identify documents that belong to a certain class.
 #[derive(Debug)]

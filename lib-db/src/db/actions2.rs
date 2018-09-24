@@ -174,7 +174,7 @@ pub fn insert(connection: &Connection, action: &NewAction) -> Result<u64> {
             .values(entry)
             .execute(connection)?;
         if count != 1 {
-            return Err(format!("bad insert count {} during migration", count).into());
+            return Err(WeaverError::from(format!("bad insert count {} during migration", count)));
         }
         Ok(1)
     })
@@ -193,8 +193,8 @@ mod tests {
     use lib_goo::config::net::*;
     use lib_goo::date::now;
     use lib_goo::entities::NewAction;
-    use test_helpers::SqlStoreInMemory;
-    use SqlProvider;
+    use crate::test_helpers::SqlStoreInMemory;
+    use crate::SqlProvider;
 
     #[test]
     fn test_insert_and_fetch() {

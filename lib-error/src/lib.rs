@@ -6,104 +6,146 @@ extern crate regex;
 extern crate reqwest;
 extern crate sys_info;
 extern crate tantivy;
+use std::fmt::{self, Display};
 use std::result;
 
 use std::convert::From;
 
-#[derive(Debug, Fail)]
-pub enum WeaverError {
-    #[fail(display = "weaver error {:?}", _0)]
-    Generic(String),
-    #[fail(display = "error {:?}", _0)]
-    Server(actix_web::Error),
-    #[fail(display = "error {:?}", _0)]
-    Tantivy(tantivy::TantivyError),
-    #[fail(display = "error {:?}", _0)]
-    Diesel(::diesel::result::Error),
-    #[fail(display = "error {:?}", _0)]
-    DieselConnection(::diesel::ConnectionError),
-    #[fail(display = "error {:?}", _0)]
-    SysInfo(::sys_info::Error),
-    #[fail(display = "error {:?}", _0)]
-    Io(#[cause] ::std::io::Error),
-    #[fail(display = "error {:?}", _0)]
-    Reqwest(::reqwest::Error),
-    #[fail(display = "error {:?}", _0)]
-    Regex(::regex::Error),
+#[derive(Debug)]
+pub struct WeaverError {
+    inner: failure::Context<WeaverErrorKind>,
+}
+
+#[derive(Clone, Debug, Fail)]
+pub enum WeaverErrorKind {
+    #[fail(display = "{}", _0)]
+    Generic(&'static str),
+    #[fail(display = "{}", _0)]
+    WithText(String),
+    #[fail(display = "sysinfo")]
+    SysInfo,
+    #[fail(display = "network")]
+    Network,
+    #[fail(display = "local")]
+    Local,
+    #[fail(display = "data")]
+    DataLayer, 
 }
 
 pub type Result<T> = result::Result<T, WeaverError>;
 
-impl<'a> From<&'a str> for WeaverError {
-    fn from(reason: &'a str) -> Self {
-        WeaverError::Generic(String::from(reason))
+pub use failure::ResultExt;
+
+impl failure::Fail for WeaverError {
+    fn cause(&self) -> Option<&failure::Fail> {
+        self.inner.cause()
+    }
+
+    fn backtrace(&self) -> Option<&failure::Backtrace> {
+        self.inner.backtrace()
+    }
+}
+
+impl Display for WeaverError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        Display::fmt(&self.inner, f)
+    }
+}
+
+impl WeaverError {
+    pub fn kind(&self) -> &WeaverErrorKind {
+        self.inner.get_context()
+    }
+
+    pub fn display(&self) {
+        use failure::Fail;
+
+        for e in Fail::iter_causes(self) {
+            eprintln!("caused by: {}", e);
+        }
+
+        if let Some(backtrace) = self.backtrace() {
+            eprintln!("backtrace: {:?}", backtrace);
+        }
+    }
+}
+
+impl From<WeaverErrorKind> for WeaverError {
+    fn from(kind: WeaverErrorKind) -> WeaverError {
+        WeaverError {
+            inner: failure::Context::new(kind),
+        }
+    }
+}
+
+impl From<failure::Context<WeaverErrorKind>> for WeaverError {
+    fn from(inner: failure::Context<WeaverErrorKind>) -> WeaverError {
+        WeaverError { inner: inner }
+    }
+}
+
+impl From<&'static str> for WeaverErrorKind {
+    fn from(reason: &'static str) -> Self {
+        WeaverErrorKind::Generic(reason)
+    }
+}
+
+impl From<&'static str> for WeaverError {
+    fn from(reason: &'static str) -> Self {
+        WeaverErrorKind::Generic(reason).into()
     }
 }
 
 impl From<String> for WeaverError {
     fn from(reason: String) -> Self {
-        WeaverError::Generic(reason)
-    }
-}
-
-impl From<tantivy::TantivyError> for WeaverError {
-    fn from(terror: tantivy::TantivyError) -> Self {
-        WeaverError::Tantivy(terror).into()
-    }
-}
-
-impl From<::diesel::result::Error> for WeaverError {
-    fn from(err: ::diesel::result::Error) -> Self {
-        WeaverError::Diesel(err).into()
-    }
-}
-
-impl From<::diesel::ConnectionError> for WeaverError {
-    fn from(err: ::diesel::ConnectionError) -> Self {
-        WeaverError::DieselConnection(err).into()
+        WeaverErrorKind::WithText(reason).into()
     }
 }
 
 impl From<::sys_info::Error> for WeaverError {
-    fn from(err: ::sys_info::Error) -> Self {
-        WeaverError::SysInfo(err).into()
-    }
-}
-
-impl From<::std::io::Error> for WeaverError {
-    fn from(err: ::std::io::Error) -> Self {
-        WeaverError::Io(err).into()
+    fn from(_err: ::sys_info::Error) -> Self {
+        WeaverErrorKind::SysInfo.into()
     }
 }
 
 impl From<::reqwest::Error> for WeaverError {
-    fn from(err: ::reqwest::Error) -> Self {
-        WeaverError::Reqwest(err).into()
+    fn from(_err: ::reqwest::Error) -> Self {
+        WeaverErrorKind::Network.into()
     }
 }
 
-impl From<::regex::Error> for WeaverError {
-    fn from(err: ::regex::Error) -> Self {
-        WeaverError::Regex(err).into()
-    }
-}
-
-impl WeaverError {
-    pub fn display(&self) {
-        use failure::Fail;
-
-        for e in Fail::iter_causes(self) {
-            println!("caused by: {}", e);
-        }
-
-        if let Some(backtrace) = self.backtrace() {
-            println!("backtrace: {:?}", backtrace);
-        }
+impl From<::std::io::Error> for WeaverError {
+    fn from(_err: ::std::io::Error) -> Self {
+        WeaverErrorKind::Local.into()
     }
 }
 
 impl actix_web::ResponseError for WeaverError {
     fn error_response(&self) -> actix_web::HttpResponse {
         actix_web::HttpResponse::InternalServerError().into()
+    }
+}
+
+impl From<tantivy::TantivyError> for WeaverError {
+    fn from(_err: tantivy::TantivyError) -> Self {
+        WeaverErrorKind::DataLayer.into()
+    }
+}
+
+impl From<::diesel::result::Error> for WeaverError {
+    fn from(_err: ::diesel::result::Error) -> Self {
+        WeaverErrorKind::DataLayer.into()
+    }
+}
+
+impl From<::diesel::ConnectionError> for WeaverError {
+    fn from(_err: ::diesel::ConnectionError) -> Self {
+        WeaverErrorKind::DataLayer.into()
+    }
+}
+
+impl From<::regex::Error> for WeaverError {
+    fn from(_err: ::regex::Error) -> Self {
+        WeaverErrorKind::DataLayer.into()
     }
 }

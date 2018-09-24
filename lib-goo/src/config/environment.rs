@@ -24,9 +24,9 @@ impl Environment {
     pub fn build(epic: Option<String>) -> Result<Environment> {
         let home_dir = match dirs::home_dir() {
             Some(d) => d,
-            None => return Err("cannot get home directory location".into()),
+            None => return Err(WeaverError::from("cannot get home directory location"))),
         };
-        let cwd = env::current_dir()?;
+        let cwd = env::current_dir().context("environment".into())?;
         let cwd_rebased = Self::normalize_base_dir(cwd.clone(), &home_dir, "~")?;
         Ok(Environment {
             cwd,
@@ -47,7 +47,7 @@ impl Environment {
         replacement: &str,
     ) -> Result<PathBuf> {
         if path.starts_with(base) {
-            let relative = path.strip_prefix(base).map_err(|_| "strip prefix")?;
+            let relative = path.strip_prefix(base).context("env normalize".into())?;
             let mut out = PathBuf::new();
             out.push(replacement);
             if relative.components().next().is_some() {

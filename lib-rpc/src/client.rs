@@ -22,17 +22,16 @@ pub fn recommendations(
         net::API_BASE,
         net::ACTIONS2_BASE,
         net::RECOMMENDATIONS,
-        serde_urlencoded::to_string(params).map_err(|_| "encoding url params")?
+        serde_urlencoded::to_string(params).context("encoding url params".into())?
     );
     debug!("Downloading recommendations from {}", url);
     let client = reqwest::Client::new();
     let mut response = client
         .get(&url)
         .send()
-        .map_err(|e| format!("error in getting recommendations {:?}", e))?;
+        .context("error in getting recommendations".into())?;
     response
-        .json::<net::PaginatedActions>()
-        .map_err(|e| e.into())
+        .json::<net::PaginatedActions>().map_err(|a| a.into())
 }
 
 pub fn add(destination: &Destination, req: &NewAction) -> Result<u64> {
@@ -65,5 +64,5 @@ pub fn set_annotation(destination: &Destination, id: &ActionId, content: &str) -
         )).json(&data)
         .send()
         .map(|_| 0)
-        .map_err(|e| e.into())
+        .map_err(|a| a.into())
 }

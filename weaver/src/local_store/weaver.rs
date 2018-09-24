@@ -27,11 +27,12 @@ impl Default for Weaver {
 
 impl Weaver {
     pub fn load_from_string(contents: &str) -> Result<Weaver> {
-        let weaver: Weaver = json::from_str(&contents).map_err(|_| "parsing main weaver state")?;
+        let weaver: Weaver = json::from_str(&contents).context("parsing main weaver state".into())?;
         Ok(weaver)
     }
 
     pub fn to_str(&self) -> Result<String> {
-        json::to_string_pretty(self).map_err(|_| "encoding weaver in json".into())
+        let pretty = json::to_string_pretty(self).context("encoding weaver in json".into())?;
+        Ok(pretty)
     }
 }

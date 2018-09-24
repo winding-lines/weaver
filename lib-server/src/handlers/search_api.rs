@@ -92,7 +92,7 @@ mod tests {
     use super::*;
     use actix_web::test::TestServer;
     use actix_web::*;
-    use app_state::tests::default_test;
+    use crate::app_state::tests::default_test;
 
     fn state() -> ApiState {
         let s = default_test();

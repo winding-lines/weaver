@@ -128,7 +128,7 @@ impl Indexer for TantivyIndexer {
         // A ticket has been opened regarding this problem.
         let query = match query_parser.parse_query(what) {
             Ok(q) => q,
-            Err(e) => return Err(format!("error parsing query {:?}", e).into()),
+            Err(e) => return Err(WeaverError::from(format!("error parsing query {:?}", e))),
         };
 
         // A query defines a set of documents, as

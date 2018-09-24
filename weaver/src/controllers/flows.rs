@@ -16,7 +16,7 @@ fn flows_folder(global: bool) -> Result<PathBuf> {
     };
     path.push("flows");
     if !path.exists() {
-        fs::create_dir(&path)?;
+        fs::create_dir(&path).context("create flows folder".into())?;
     }
     Ok(path)
 }
@@ -24,7 +24,7 @@ fn flows_folder(global: bool) -> Result<PathBuf> {
 /// Load the flows in the given folder.
 pub fn load_folder(path: &Path, out: &mut Vec<Flow>) -> Result<()> {
     for entry in WalkDir::new(path) {
-        let entry = entry.map_err(|_| "listing flows")?;
+        let entry = entry.context("listing flows".into())?;
         let path = entry.path();
         if let Some(os_name) = path.file_name() {
             if let Some(name) = os_name.to_str() {
@@ -63,11 +63,11 @@ pub fn active() -> Result<Vec<String>> {
 fn run_flow(flow: &Flow) -> Result<()> {
     for action in &flow.actions {
         println!("  {}", action);
-        let exit_code = shell_proxy::run(action).map_err(|_| "running flow action")?;
+        let exit_code = shell_proxy::run(action).context("running flow action".into())?;
         if exit_code != 0 {
             let msg = format!(" '{}' failed: {}", action, exit_code);
             println!("{}", msg);
-            return Err(msg.into());
+            return Err(WeaverErrorKind::Generic("flow failed").into());
         }
     }
     Ok(())
@@ -83,7 +83,7 @@ where
             return run_flow(flow);
         }
     }
-    Err("flow not found".into())
+    Err(WeaverErrorKind::Generic("flow not found").into())
 }
 
 /// Create a flow with the given name, in the global location or not,

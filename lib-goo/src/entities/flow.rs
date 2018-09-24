@@ -53,12 +53,13 @@ pub struct Flow {
 
 impl Flow {
     pub fn load_from_string(contents: &str) -> Result<Flow> {
-        let script: Flow = json::from_str(&contents).map_err(|_| "parsing flow")?;
+        let script: Flow = json::from_str(&contents).context("parsing flow".into())?;
         Ok(script)
     }
 
     pub fn to_str(&self) -> Result<String> {
-        json::to_string_pretty(self).map_err(|_| "encoding script in json".into())
+        let pretty = json::to_string_pretty(self).context("encoding script in json".into())?;
+        Ok(pretty)
     }
 
     /// Check if the preconditions of the Flow match.

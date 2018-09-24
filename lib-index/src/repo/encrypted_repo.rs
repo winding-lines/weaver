@@ -5,11 +5,11 @@
 
 use super::config::Config;
 use bincode::{deserialize, serialize};
+use crate::repo::{Collection, Repo};
 use keyring;
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use metrohash::MetroHash128;
-use crate::repo::{Collection, Repo};
 use rpassword;
 use rust_sodium::crypto::{pwhash, secretbox};
 use std::fs::{create_dir, read, read_dir, remove_file, write, ReadDir};
@@ -78,11 +78,11 @@ impl EncryptedRepo {
                 let ring = keyring::Keyring::new("weaver", "weaver-user");
                 match ring.get_password() {
                     Err(e) => {
-                        let msg = format!(
+                        error!(
                             "please run `weaver-data create` in order to setup the repo\n{}",
                             e
                         );
-                        Err(msg.into())
+                        Err("please run `weaver-data create` in order to setup the repo".into())
                     }
                     Ok(pwd) => {
                         if pwd.is_empty() {
@@ -111,7 +111,7 @@ impl EncryptedRepo {
             let new_pwd =
                 rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
             ring.set_password(&new_pwd)
-                .map_err(|_| "save password in keyring")?;
+                .context("save password in keyring".into())?;
             println!("Password saved in the keyring.");
         }
         Ok(())
@@ -155,8 +155,7 @@ impl EncryptedRepo {
         let disk = read(path)?;
 
         // Deserialize
-        let entry = deserialize::<DiskEntry>(&disk)
-            .map_err(|_| format!("deserialize disk entry {:?}", path))?;
+        let entry = deserialize::<DiskEntry>(&disk).context("deserialize encrypted file".into())?;
 
         // Build crypto entities and decrypt.
         let nonce = match secretbox::Nonce::from_slice(&entry.nonce[..]) {

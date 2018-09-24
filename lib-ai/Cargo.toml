@@ -2,6 +2,7 @@
 name = "lib-ai"
 version = "0.1.0"
 authors = ["Marius Seritan <git@winding-lines.com>"]
+edition = "2018"
 
 
 [dependencies]

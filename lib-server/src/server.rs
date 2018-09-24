@@ -26,8 +26,8 @@ fn config_tls() -> Result<server::NativeTlsAcceptor> {
     File::open(&cert_path)?
         .read_to_end(&mut identity)
         .map_err(|e| format!("cert open {:?}", e))?;
-    let identity = Identity::from_pkcs12(&identity, "1234").map_err(|e| format!("ssl {:?}", e))?;
-    let acceptor = TlsAcceptor::new(identity).map_err(|e| format!("acceptor {:?}", e))?;
+    let identity = Identity::from_pkcs12(&identity, "1234").context("ssl".into())?;
+    let acceptor = TlsAcceptor::new(identity).context("acceptor")?;
 
     Ok(server::NativeTlsAcceptor::new(acceptor))
 }
@@ -49,10 +49,10 @@ fn config_tls() -> Result<server::RustlsAcceptor> {
         let mut cert = vec![];
         File::open(&cert_path)?
             .read_to_end(&mut cert)
-            .map_err(|e| format!("cert open {:?}", e))?;
+            .context("cert open".into())?;
         cert_path.pop();
         let mut buf_cert = BufReader::new(&cert[..]);
-        certs(&mut buf_cert).map_err(|e| format!("cert decode {:?}", e))?
+        certs(&mut buf_cert).map_err(|e| WeaverError::from(format!("cert decode {:?}", e)))?
     };
 
     let mut keys = {
@@ -60,9 +60,9 @@ fn config_tls() -> Result<server::RustlsAcceptor> {
         let mut key = vec![];
         File::open(&cert_path)?
             .read_to_end(&mut key)
-            .map_err(|e| format!("key open {:?}", e))?;
+            .context("key open".into())?;
         let mut buf_key = BufReader::new(&key[..]);
-        pkcs8_private_keys(&mut buf_key).map_err(|e| format!("key decode {:?}", e))?
+        pkcs8_private_keys(&mut buf_key).map_err(|e| WeaverError::from(format!("key decode {:?}", e)))?
     };
 
     if keys.is_empty() {

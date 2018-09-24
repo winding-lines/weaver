@@ -111,7 +111,7 @@ pub(crate) fn config(app: App<PageState>) -> App<PageState> {
 mod tests {
     use super::*;
     use lib_goo::entities::FormattedAction;
-    use template_engine::TemplateEngine;
+    use crate::template_engine::TemplateEngine;
     use tera;
 
     #[test]

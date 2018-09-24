@@ -22,7 +22,7 @@ pub(crate) mod tests {
     use lib_db::actions2;
     use lib_db::test_helpers::SqlStoreInMemory;
     use lib_db::{Connection, SqlProvider};
-    use lib_error::Result as WResult;
+    use lib_error::{Result as WResult, ResultExt};
     use lib_goo::entities::{NewAction, PageContent};
     use lib_index::repo::Collection;
     use lib_index::repo::Repo;

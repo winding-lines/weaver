@@ -12,14 +12,15 @@ pub fn read_content(path: &Path) -> Result<String> {
         .and_then(|mut file| {
             let mut contents = String::new();
             file.read_to_string(&mut contents).map(|_| contents)
-        })?;
+        }).context("read file contents".into())?;
     Ok(content)
 }
 
 /// Write the content to the given file.
 pub fn write_content<T: AsRef<str>>(path: &Path, content: T) -> Result<()> {
     File::create(path)
-        .and_then(|mut f| f.write_all(content.as_ref().as_bytes()))?;
+        .and_then(|mut f| f.write_all(content.as_ref().as_bytes()))
+        .context("write contents to file".into())?;
     Ok(())
 }
 
@@ -55,11 +56,11 @@ pub fn app_folder() -> Result<PathBuf> {
         path.push(home);
         path.push(app_location());
         if !path.exists() {
-            fs::create_dir(&path)?;
+            fs::create_dir(&path).context("create app folder".into())?;
         }
         Ok(path)
     } else {
-        Err("cannot get home folder".into())
+        Err(WeaverErrorKind::Generic("cannot get home folder").into())
     }
 }
 
@@ -68,7 +69,7 @@ pub fn backup_for_file(filename: &str) -> Result<PathBuf> {
     let mut out = app_folder()?;
     out.push("backup");
     if !out.exists() {
-        fs::create_dir(&out)?;
+        fs::create_dir(&out).context("backup folder".into())?;
     }
     let now: DateTime<Local> = Local::now();
     let timestamp = format!(
@@ -79,7 +80,7 @@ pub fn backup_for_file(filename: &str) -> Result<PathBuf> {
     );
     out.push(timestamp);
     if !out.exists() {
-        fs::create_dir(&out)?;
+        fs::create_dir(&out).context("timed folder".into())?;
     }
     let out_name = format!(
         "{hour:02}-{min:02}-{sec:02}-{name}",
@@ -99,12 +100,12 @@ pub fn default_database() -> Result<PathBuf> {
         path.push(home);
         path.push(app_location());
         if !path.exists() {
-            fs::create_dir(&path)?;
+            fs::create_dir(&path).context("database".into())?;
         }
         path.push(DEFAULT_DB_NAME);
         Ok(path)
     } else {
-        Err("cannot get home folder".into())
+        Err(WeaverErrorKind::Generic("cannot get home folder").into())
     }
 }
 
