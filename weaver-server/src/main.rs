@@ -52,6 +52,8 @@ fn main() {
         builder.parse(&env::var("WEAVER").unwrap());
     } else {
         builder.filter_module("actix_web", log::LevelFilter::Info);
+        builder.filter_module("lib_db", log::LevelFilter::Info);
+        builder.filter_module("lib_server", log::LevelFilter::Info);
         builder.filter_module("tantivy", log::LevelFilter::Info);
         builder.filter_level(log::LevelFilter::Error);
     }

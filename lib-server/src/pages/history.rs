@@ -6,6 +6,7 @@ use lib_goo::config::net::{PaginatedActions, Pagination};
 use lib_goo::entities::ActionId;
 use std::collections::HashMap;
 use crate::template_engine::build_context;
+use std::time::Instant;
 
 /// Render the history page.
 fn handle(
@@ -50,7 +51,8 @@ struct HudQuery {
 fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpResponse, Error> {
     let connection = state.api.sql.connection()?;
     let count = actions2::count(&connection)? as i64;
-    let pagination = if query.term.is_some() {
+    let term = query.term.as_ref().and_then(|a| if a.is_empty() {None} else {Some(&**a)} );
+    let pagination = if term.is_some() {
         Pagination {
             start: None,
             length: None,
@@ -61,17 +63,25 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
             length: Some(200),
         }
     };
-    let mut fetched = actions2::fetch(&connection, query.term.as_ref().map(|a| &**a), &pagination)?;
+    let fetch_start = Instant::now();
+    let mut fetched = actions2::fetch(&connection, term, &pagination)?;
+    let duration = fetch_start.elapsed();
     info!(
-        "fetched {} actions for term {:?}",
+        "fetched {} actions for term {:?} in {}.{}",
         fetched.len(),
-        query.term
+        query.term,
+        duration.as_secs(),
+        duration.subsec_millis(),
     );
+    let compact_start = Instant::now();
     let cycles = compact::extract_cycles(&fetched, 4);
     compact::decycle(&mut fetched, &cycles);
-    info!("after compacting got {} actions", fetched.len());
+    let duration = compact_start.elapsed();
+    info!("after compacting got {} actions in {}.{}", 
+        fetched.len(), duration.as_secs(), duration.subsec_millis());
 
     // Put in the shape expected by the template.
+    let serialization_start = Instant::now();
     let since_id = query.since_id.map(|s| ActionId::new(s));
     let mut results: Vec<HudEntry> = Vec::new();
     for action in fetched.into_iter().rev() {
@@ -92,13 +102,21 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
             results.push(entry);
         }
     }
+    let duration = serialization_start.elapsed();
+    info!("serialization {}.{}", 
+        duration.as_secs(), duration.subsec_millis());
 
     // Render the output.
+    let template_start = Instant::now();
     let template = &state.template;
     let mut ctx = build_context(&None);
     ctx.insert("results", &results);
     ctx.insert("term", &query.term);
     let rendered = template.render("hud.html", &ctx)?;
+    let duration = template_start.elapsed();
+    info!("template render {}.{}", 
+        duration.as_secs(), duration.subsec_millis());
+
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 

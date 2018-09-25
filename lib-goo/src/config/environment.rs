@@ -24,7 +24,7 @@ impl Environment {
     pub fn build(epic: Option<String>) -> Result<Environment> {
         let home_dir = match dirs::home_dir() {
             Some(d) => d,
-            None => return Err(WeaverError::from("cannot get home directory location"))),
+            None => return Err(WeaverError::from("cannot get home directory location")),
         };
         let cwd = env::current_dir().context("environment".into())?;
         let cwd_rebased = Self::normalize_base_dir(cwd.clone(), &home_dir, "~")?;
