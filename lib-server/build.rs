@@ -3,9 +3,12 @@ use std::env;
 
 fn main() {
     let shell = env::var("SHELL").unwrap_or(String::from("/bin/sh"));
-    Command::new(shell)
+    let status = Command::new(shell)
         .current_dir("web")
         .arg("./build.sh")
-        .spawn()
+        .status()
         .expect("build failed");
+    if !status.success() {
+         ::std::process::exit(1);
+    }
 }
