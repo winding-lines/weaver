@@ -111,7 +111,7 @@ impl EncryptedRepo {
             let new_pwd =
                 rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
             ring.set_password(&new_pwd)
-                .context("save password in keyring".into())?;
+                .map_err(|_| WeaverError::from("save password in keyring"))?;
             println!("Password saved in the keyring.");
         }
         Ok(())
