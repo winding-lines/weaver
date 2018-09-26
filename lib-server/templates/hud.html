@@ -61,8 +61,14 @@
     // started with the default browser.
     function clickBody(event) {
       let href = event.target && event.target.dataset.href;
-      if (href && window.external && window.external.invoke) {
-        window.external.invoke(JSON.stringify({ fn: 'click', href: href }));
+      if (!href) {
+        return;
+      }
+      let web_view_connector = window.external && window.external.invoke;
+      let tether_connector = window.tether;
+      let connector = web_view_connector || tether_connector;
+      if (connector) {
+        connector(JSON.stringify({ fn: 'click', href: href }));
       }
     }
 
