@@ -32,6 +32,14 @@
     th {
       text-align: left;
     }
+
+    .search-block {
+      display: flex;
+    }
+
+    #reset-url {
+      padding-left: 20px;
+    }
   </style>
 </head>
 
@@ -40,21 +48,24 @@
     <form>
       <input id="search-term" type="text" name="term" value="{{term}}" placeholder="Enter search term..." />
     </form>
-    <div class="results">
-      <table id="actions">
-        {% for i in results %}
-        <tr class="action" id={{i.id}}>
-          <td class="time" data-when={{i.when}}></td>
-          <td class="name">{% if i.kind == 'url' %}<a data-href="{{ i.location }}">{% endif %}
-              {{i.name}}
-              {% if i.kind == 'url' %} </a> {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
+    <div id="reset-url">
+      <a>reset</a>
     </div>
-
   </div>
+  <div class="results">
+    <table id="actions">
+      {% for i in results %}
+      <tr class="action" id={{i.id}}>
+        <td class="time" data-when={{i.when}}></td>
+        <td class="name">{% if i.kind == 'url' %}<a data-href="{{ i.location }}">{% endif %}
+            {{i.name}}
+            {% if i.kind == 'url' %} </a> {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
   <script>
 
     // Transmit url clicks to the weaver-hud container so that they can be
@@ -85,13 +96,17 @@
           return;
         }
         search = newSearch;
-        if(debounceId) {
+        if (debounceId) {
           clearInterval(debounceId);
-          debounceId=null;
+          debounceId = null;
         }
-        debounceId = setTimeout(function() {
+        debounceId = setTimeout(function () {
           window.location.search = newSearch;
         }, 100);
+      });
+
+      document.getElementById("reset-url").addEventListener("click", function () {
+        window.location.search = "";
       });
 
     })();
