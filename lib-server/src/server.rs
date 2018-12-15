@@ -1,16 +1,16 @@
-use actix_web::middleware::Logger;
-use actix_web::{server, App};
 use crate::analyses::load_analyses;
 use crate::app_state::ApiState;
 use crate::asset_map::AssetMap;
 use crate::handlers;
+use crate::pages;
+use crate::template_engine::TemplateEngine;
+use actix_web::middleware::Logger;
+use actix_web::{server, App};
 use lib_db::{topics, SqlStore};
 use lib_error::*;
 use lib_index::repo::EncryptedRepo;
 use lib_index::TantivyIndexer;
-use crate::pages;
 use std::sync::Arc;
-use crate::template_engine::TemplateEngine;
 
 #[cfg(feature = "tls")]
 fn config_tls() -> Result<server::NativeTlsAcceptor> {
@@ -33,7 +33,7 @@ fn config_tls() -> Result<server::NativeTlsAcceptor> {
 }
 
 #[cfg(feature = "rust-tls")]
-fn config_tls() -> Result<server::RustlsAcceptor> {
+fn config_tls() -> Result<rustls::ServerConfig> {
     use lib_goo::config::file_utils;
     use rustls::internal::pemfile::{certs, pkcs8_private_keys};
     use rustls::{NoClientAuth, ServerConfig};
@@ -62,7 +62,8 @@ fn config_tls() -> Result<server::RustlsAcceptor> {
             .read_to_end(&mut key)
             .context("key open".into())?;
         let mut buf_key = BufReader::new(&key[..]);
-        pkcs8_private_keys(&mut buf_key).map_err(|e| WeaverError::from(format!("key decode {:?}", e)))?
+        pkcs8_private_keys(&mut buf_key)
+            .map_err(|e| WeaverError::from(format!("key decode {:?}", e)))?
     };
 
     if keys.is_empty() {
@@ -73,9 +74,8 @@ fn config_tls() -> Result<server::RustlsAcceptor> {
         .set_single_cert(cert_chain, keys.remove(0))
         .map_err(|e| format!("set_single_cert {:?}", e))?;
 
-    let acceptor = server::RustlsAcceptor::new(config);
 
-    Ok(acceptor)
+    Ok(config)
 }
 
 /// Placeholder struct for further expansion.
@@ -94,7 +94,8 @@ impl Server {
         let asset_map = Arc::new(AssetMap::build());
         let apps_factory = move || {
             vec![
-                App::with_state(asset_map.clone()).prefix("/assets/")
+                App::with_state(asset_map.clone())
+                    .prefix("/assets/")
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     .configure(pages::static_assets::config)
                     .boxed(),
@@ -103,10 +104,11 @@ impl Server {
                     indexer: indexer.clone(),
                     repo: repo.clone(),
                     topic_store: topic_store.clone(),
-                }).prefix("/api/")
-                    .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
-                    .configure(handlers::config)
-                    .boxed(),
+                })
+                .prefix("/api/")
+                .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
+                .configure(handlers::config)
+                .boxed(),
                 App::with_state(pages::PageState {
                     template: template.clone(),
                     assets: asset_map.clone(),
@@ -118,10 +120,10 @@ impl Server {
                         topic_store: topic_store.clone(),
                     },
                 })
-                    .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
-                    // Add the html pages
-                    .configure(pages::config)
-                    .boxed(),
+                .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
+                // Add the html pages
+                .configure(pages::config)
+                .boxed(),
             ]
         };
 
@@ -130,9 +132,12 @@ impl Server {
         #[cfg(any(feature = "tls", feature = "rust-tls"))]
         {
             match config_tls() {
-                Ok(acceptor) => {
+                Ok(config) => {
                     info!("Initializing TLS on port {}", https_port);
-                    s = s.bind_with(format!("0.0.0.0:{}", https_port), acceptor)?;
+                    let acceptor =
+                        server::RustlsAcceptor::with_flags(config,
+                                                           server::ServerFlags::HTTP1 | server::ServerFlags::HTTP2);
+                    s = s.bind_with(format!("0.0.0.0:{}", https_port), move || acceptor.clone())?;
                 }
                 Err(e) => error!("Cannot start TLS {:?}", e),
             }

@@ -107,4 +107,10 @@ pub(crate) mod tests {
             s
         }
     }
+
+    impl Clone for StateWithActions {
+        fn clone(&self) -> StateWithActions {
+            StateWithActions(self.0.clone())
+        }
+    }
 }
