@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 serde = "1.0"
 bincode = "1.0"
-rust_sodium = "0.10.1"
+rust_sodium = {git = "https://github.com/winding-lines/rust_sodium.git" }
 keyring = "0.6.0"
 metrohash = "1.0"
 rpassword = "2.0"
@@ -19,6 +19,7 @@ lib-goo = {path="../lib-goo"}
 
 
 [dependencies.tantivy]
-git = "https://github.com/tantivy-search/tantivy"
-rev = "279a9eb5e3ba2b18d8f3ab3a40caef9701f87927"
+# git = "https://github.com/tantivy-search/tantivy"
+# rev = "279a9eb5e3ba2b18d8f3ab3a40caef9701f87927"
+version = "0.8"
 features = ["mmap"]

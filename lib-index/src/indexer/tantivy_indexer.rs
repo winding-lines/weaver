@@ -6,7 +6,7 @@ use lib_goo::config::file_utils::app_folder;
 use lib_goo::entities::PageContent;
 use std::fs;
 use std::path::PathBuf;
-use tantivy::collector::TopCollector;
+use tantivy::collector::TopDocs;
 use tantivy::query::QueryParser;
 use tantivy::schema::*;
 use tantivy::Index;
@@ -143,14 +143,10 @@ impl Indexer for TantivyIndexer {
         // We are not interested in all of the documents but
         // only in the top N. Keeping track of our top best documents
         // is the role of the TopCollector.
-        let mut top_collector = TopCollector::with_limit(40);
+        let top_docs = TopDocs::with_limit(40);
 
         // We can now perform our query.
-        searcher.search(&*query, &mut top_collector)?;
-
-        // Our top collector now contains the 10
-        // most relevant doc ids...
-        let doc_addresses = top_collector.docs();
+        let doc_addresses = searcher.search(&*query, &top_docs)?;
 
         // The actual documents still need to be
         // retrieved from Tantivy's store.
@@ -160,7 +156,7 @@ impl Indexer for TantivyIndexer {
         // a title.
 
         let mut out = Vec::new();
-        for doc_address in doc_addresses {
+        for (_score, doc_address) in doc_addresses {
             let retrieved_doc = searcher.doc(doc_address)?;
             let found_id = retrieved_doc
                 .get_first(f_id)

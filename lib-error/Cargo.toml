@@ -7,15 +7,16 @@ edition = "2018"
 [dependencies]
 diesel = "*"
 sys-info = "*"
-actix-web = "0.7"
-reqwest = "0.8"
-regex = "1.0"
+actix-web = "*"
+reqwest = "*"
+regex = "*"
 
 [dependencies.failure]
 version = "0.1"
 features = ["backtrace"]
 
 [dependencies.tantivy]
-git = "https://github.com/tantivy-search/tantivy"
-rev = "279a9eb5e3ba2b18d8f3ab3a40caef9701f87927"
+# git = "https://github.com/tantivy-search/tantivy"
+# rev = "279a9eb5e3ba2b18d8f3ab3a40caef9701f87927"
+version = "0.8"
 features = ["mmap"]

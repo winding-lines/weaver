@@ -7,7 +7,7 @@ edition = "2018"
 
 [dependencies]
 log = "*"
-reqwest = "0.8"
+reqwest = "0.9"
 serde = {version = "*", features=["derive"]}
 serde_json = "*"
 serde_urlencoded = "0.5.1"

@@ -1,11 +1,5 @@
-extern crate actix_web;
-extern crate diesel;
 #[macro_use]
 extern crate failure;
-extern crate regex;
-extern crate reqwest;
-extern crate sys_info;
-extern crate tantivy;
 use std::fmt::{self, Display};
 use std::result;
 
