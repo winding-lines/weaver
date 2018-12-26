@@ -4,7 +4,7 @@ use lib_goo::config::file_utils;
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, ::serde::Serialize, ::serde::Deserialize)]
 pub struct Analysis {
     pub name: String,
     pub file: String,

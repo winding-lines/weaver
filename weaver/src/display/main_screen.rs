@@ -88,7 +88,7 @@ pub fn display(
     env: Arc<Environment>,
     destination: &Destination,
 ) -> Result<UserSelection> {
-    debug!(
+    ::log::debug!(
         "Entering main screen with {} actions, first one {:?}",
         rows.len(),
         rows.first()

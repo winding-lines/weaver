@@ -1,3 +1,5 @@
+use ::serde::{Deserialize, Serialize};
+
 /// Track the execution of a given Flow.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct FlowState {

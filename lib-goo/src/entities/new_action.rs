@@ -7,7 +7,7 @@ use sys_info;
 use crate::date::now;
 
 /// Data structure to create a new action.
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, ::serde::Deserialize, ::serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewAction {
     /// Time when the command was executed.

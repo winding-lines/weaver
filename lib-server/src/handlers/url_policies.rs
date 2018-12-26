@@ -5,7 +5,7 @@ use lib_db::store_policies;
 use lib_db::url_restrictions;
 use lib_error::*;
 
-#[derive(Default, Serialize, Debug)]
+#[derive(Default, ::serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Restrictions {
     pub do_not_log: Vec<String>,
@@ -34,19 +34,19 @@ fn fetch(state: State<ApiState>) -> HttpResponse {
                 do_not_log: build_urls(&all.do_not_log),
                 do_index: build_urls(&all.do_index),
             };
-            debug!("store_policies {:?}", all);
+            ::log::debug!("store_policies {:?}", all);
             all.do_not_index.clear();
             HttpResponse::Ok().json(out)
         }
         Err(e) => {
-            error!("store_policies error {:?}", e);
+            ::log::error!("store_policies error {:?}", e);
             HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).finish()
         }
     }
 }
 
 /// Data shape when requesting to add a new URL Policy.
-#[derive(Serialize, Deserialize, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct UrlRestriction {
     pub url: String,
@@ -59,7 +59,7 @@ pub struct UrlRestriction {
 fn create((state, input): (State<ApiState>, Json<UrlRestriction>)) -> Result<String> {
     let connection = state.sql.connection()?;
     let policy = input.kind.parse::<url_restrictions::StorePolicy>()?;
-    debug!("marked private {}", input.url);
+    ::log::debug!("marked private {}", input.url);
     url_restrictions::insert(
         &connection,
         url_restrictions::UrlRestriction::with_url(&policy, &input.url),

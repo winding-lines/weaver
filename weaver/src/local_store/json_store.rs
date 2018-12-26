@@ -38,7 +38,7 @@ impl JsonStore {
             return Ok(());
         }
 
-        debug!("loading config {:?}", &path);
+        ::log::debug!("loading config {:?}", &path);
 
         let content = file_utils::read_content(&path)?;
         let content = Weaver::load_from_string(&content)?;

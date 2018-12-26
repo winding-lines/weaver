@@ -1,5 +1,5 @@
 use bincode;
-use cli::{parse, ConfigAndCommand, DataSubCommand};
+use crate::cli::{parse, ConfigAndCommand, DataSubCommand};
 use lib_db::{self, pages, setup, topics, SqlProvider, SqlStore};
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
@@ -19,7 +19,7 @@ pub fn run() -> Result<()> {
         password_source,
         command,
     } = parse();
-    debug!("Executing cli command {:?}", command);
+    ::log::debug!("Executing cli command {:?}", command);
     let password_source = password_source.unwrap_or(PasswordSource::Keyring);
 
     // Initialize the crypto environment.

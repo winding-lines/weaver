@@ -5,7 +5,7 @@ use lib_db::actions2;
 use lib_error::*;
 use lib_goo::entities::NewAction;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct BrowserAction {
     pub url: String,

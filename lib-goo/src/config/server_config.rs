@@ -51,7 +51,7 @@ fn is_listening(http_addr: &str) -> bool {
             false
         }
         Err(_) => {
-            debug!(
+            ::log::debug!(
                 "Error binding to {}, assume the server is running.",
                 http_addr
             );

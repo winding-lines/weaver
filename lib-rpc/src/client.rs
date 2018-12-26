@@ -24,7 +24,7 @@ pub fn recommendations(
         net::RECOMMENDATIONS,
         serde_urlencoded::to_string(params).context("encoding url params".into())?
     );
-    debug!("Downloading recommendations from {}", url);
+    ::log::debug!("Downloading recommendations from {}", url);
     let client = reqwest::Client::new();
     let mut response = client
         .get(&url)

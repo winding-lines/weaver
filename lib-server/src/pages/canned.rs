@@ -24,7 +24,7 @@ pub(crate) fn config(app: App<PageState>, should_log: bool) -> App<PageState> {
 
     let url = "/analyses/{name}";
     if should_log {
-        debug!("registering {}", url);
+        ::log::debug!("registering {}", url);
     }
     app.resource(url, |r| r.with(handle))
 }

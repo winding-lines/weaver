@@ -15,22 +15,6 @@
 //!
 //! The [weaver-data](../weaver_fata/index.html) needs to be setup accordingly.
 //!
-extern crate chrono;
-extern crate clap;
-extern crate daemonize;
-extern crate env_logger;
-extern crate futures;
-extern crate hyper;
-#[macro_use]
-extern crate log;
-extern crate lib_db;
-extern crate lib_error;
-extern crate lib_goo;
-extern crate lib_index;
-extern crate lib_server;
-extern crate mime;
-extern crate serde;
-extern crate serde_json;
 use std::io::{self, Write};
 
 mod app;
@@ -62,12 +46,12 @@ fn main() {
     // Run the main loop, be concise with error reporting since we may run in PS1.
     if let Err(ref e) = app::run() {
         print!(" ERR `export WEAVER=error` for more ");
-        error!("error {}", e);
+        ::log::error!("error {}", e);
 
         e.display();
 
         ::std::process::exit(1);
     }
     let _ = io::stdout().flush();
-    info!("weaver-server exited normally");
+    ::log::info!("weaver-server exited normally");
 }

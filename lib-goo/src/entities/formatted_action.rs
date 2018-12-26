@@ -4,7 +4,7 @@ use crate::date::Date;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// Reasons why an action may be recommended.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub enum RecommendReason {
     /// This command occured in the history of commands in the order in which it is returned.
     Historical,
@@ -23,7 +23,7 @@ impl Default for RecommendReason {
 
 // Create a new type for the Action ID field, there are a lot of functions
 // handling both IDs and raw indices in arrays.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Eq, Hash)]
+#[derive(Clone, Debug, Default, ::serde::Deserialize, PartialEq, ::serde::Serialize, Eq, Hash)]
 pub struct ActionId(usize);
 
 impl ActionId {
@@ -57,7 +57,7 @@ impl Display for ActionId {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, ::serde::Deserialize, ::serde::Serialize)]
 pub struct FormattedAction {
     pub annotation: Option<String>,
     pub id: ActionId,
@@ -77,7 +77,7 @@ impl FormattedAction {
 }
 
 // Structure to represent repeats in the list of actions.
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Default, PartialEq, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Cycle {
     // Synthetic ID for this cyle, not persistent.
     pub id: usize,

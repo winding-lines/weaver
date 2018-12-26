@@ -23,7 +23,7 @@ pub fn run() -> Result<()> {
         server_config,
         password_source,
     } = parse();
-    debug!("Executing cli command {:?}", command);
+    ::log::debug!("Executing cli command {:?}", command);
     match command {
         Noop => Ok(()),
         ServerSubCommand::Start(ref mode) => {

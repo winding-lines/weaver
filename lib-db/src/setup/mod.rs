@@ -81,7 +81,7 @@ fn do_index(connection: &Connection) -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, ::serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserContent {
     restrictions: Vec<url_restrictions::UrlRestriction>,
@@ -108,4 +108,21 @@ pub fn populate_data(connection: &Connection) -> Result<()> {
     do_index(connection)?;
     user_defined(connection)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parse() {
+        
+        let uc = json::from_str::<UserContent>(r#"{
+        "restrictions" : [
+
+        ]
+        }"#);
+        assert_eq!(uc.unwrap().restrictions.len(), 0);
+    }
+
 }

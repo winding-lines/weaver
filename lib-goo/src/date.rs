@@ -1,7 +1,7 @@
 use chrono::{DateTime, FixedOffset, SecondsFormat, Utc};
 use lib_error::*;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Date(DateTime<FixedOffset>);
 
 impl Date {

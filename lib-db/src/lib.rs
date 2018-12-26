@@ -2,20 +2,10 @@
 //!
 //!
 
-extern crate chrono;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
-extern crate lib_error;
-extern crate lib_goo;
-#[macro_use]
-extern crate log;
-extern crate regex;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
 
 pub use crate::db::actions2;
 pub use crate::db::pages;
@@ -113,7 +103,7 @@ impl SqlProvider for SqlStore {
         } else {
             return Err("no database url".into());
         };
-        debug!("opening database {} ", &db_url);
+        ::log::debug!("opening database {} ", &db_url);
         let connection = SqliteConnection::establish(&db_url)?;
         Ok(connection)
     }

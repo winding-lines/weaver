@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use crate::template_engine::build_context;
 
 // One search entry as used by the template.
-#[derive(Serialize)]
+#[derive(::serde::Serialize)]
 struct Data<'a> {
     title: &'a str,
     url: &'a str,
@@ -17,7 +17,7 @@ struct Data<'a> {
 }
 
 // One topic entry as used by the template.
-#[derive(Serialize)]
+#[derive(::serde::Serialize)]
 struct TopicInfo {
     id: usize,
     count: usize,
@@ -25,7 +25,7 @@ struct TopicInfo {
 }
 
 // All the data used in the template
-#[derive(Serialize)]
+#[derive(::serde::Serialize)]
 struct Datum<'a> {
     total: u64,
     matches: Vec<Data<'a>>,

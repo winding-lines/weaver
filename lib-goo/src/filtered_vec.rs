@@ -37,7 +37,7 @@ impl<T: FilteredItem + Clone + Default> FilteredVec<T> {
         let matcher = match Matcher::build(search) {
             Ok(r) => r,
             Err(e) => {
-                error!("bad matcher: {:?}", e);
+                ::log::error!("bad matcher: {:?}", e);
                 return None;
             }
         };
@@ -64,7 +64,7 @@ impl<T: FilteredItem + Clone + Default> FilteredVec<T> {
         let matcher = match Matcher::build(search) {
             Ok(r) => r,
             Err(e) => {
-                error!("bad matcher: {:?}", e);
+                ::log::error!("bad matcher: {:?}", e);
                 return None;
             }
         };

@@ -78,7 +78,7 @@ pub fn insert(connection: &Connection, ur: UrlRestriction) -> WResult<()> {
     Ok(())
 }
 
-#[derive(Debug, Deserialize, Serialize, Queryable, Default)]
+#[derive(Debug,::serde::Serialize, ::serde::Deserialize, Queryable, Default)]
 #[allow(dead_code)]
 pub struct UrlRestriction {
     pub id: Option<i32>,

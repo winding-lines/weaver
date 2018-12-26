@@ -8,13 +8,13 @@ pub const ANNOTATIONS: &str = "/annotations";
 pub const RECOMMENDATIONS: &str = "/recommendations";
 
 /// A request to change the annotation for a given entry.
-#[derive(Serialize, Deserialize)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
 pub struct Annotation {
     pub annotation: String,
 }
 
 /// A request for paginated data.
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Pagination {
     /// Offset
     pub start: Option<i64>,
@@ -23,7 +23,7 @@ pub struct Pagination {
 }
 
 /// A paginated response.
-#[derive(Deserialize, Serialize)]
+#[derive(::serde::Deserialize, ::serde::Serialize)]
 pub struct PaginatedActions {
     pub entries: Vec<FormattedAction>,
     pub total: usize,
@@ -31,7 +31,7 @@ pub struct PaginatedActions {
 }
 
 /// Request parameters to fetch recommendations.
-#[derive(Deserialize, Serialize)]
+#[derive(::serde::Deserialize, ::serde::Serialize)]
 pub struct RecommendationQuery {
     pub term: Option<String>,
     pub start: Option<i64>,

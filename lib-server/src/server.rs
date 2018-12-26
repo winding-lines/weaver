@@ -133,13 +133,13 @@ impl Server {
         {
             match config_tls() {
                 Ok(config) => {
-                    info!("Initializing TLS on port {}", https_port);
+                    ::log::info!("Initializing TLS on port {}", https_port);
                     let acceptor =
                         server::RustlsAcceptor::with_flags(config,
                                                            server::ServerFlags::HTTP1 | server::ServerFlags::HTTP2);
                     s = s.bind_with(format!("0.0.0.0:{}", https_port), move || acceptor.clone())?;
                 }
-                Err(e) => error!("Cannot start TLS {:?}", e),
+                Err(e) => ::log::error!("Cannot start TLS {:?}", e),
             }
         }
         s.run();

@@ -34,7 +34,7 @@ fn handle(
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
 
-#[derive(Serialize)]
+#[derive(::serde::Serialize)]
 struct HudEntry {
     id: ActionId,
     when: String,
@@ -42,7 +42,7 @@ struct HudEntry {
     location: String,
     name: String,
 }
-#[derive(Deserialize)]
+#[derive(::serde::Deserialize)]
 struct HudQuery {
     term: Option<String>,
     since_id: Option<usize>,
@@ -66,7 +66,7 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
     let fetch_start = Instant::now();
     let mut fetched = actions2::fetch(&connection, term, &pagination)?;
     let duration = fetch_start.elapsed();
-    info!(
+    ::log::info!(
         "fetched {} actions for term {:?} in {}.{}",
         fetched.len(),
         query.term,
@@ -77,7 +77,7 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
     let cycles = compact::extract_cycles(&fetched, 4);
     compact::decycle(&mut fetched, &cycles);
     let duration = compact_start.elapsed();
-    info!("after compacting got {} actions in {}.{}", 
+    ::log::info!("after compacting got {} actions in {}.{}", 
         fetched.len(), duration.as_secs(), duration.subsec_millis());
 
     // Put in the shape expected by the template.
@@ -103,7 +103,7 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
         }
     }
     let duration = serialization_start.elapsed();
-    info!("serialization {}.{}", 
+    ::log::info!("serialization {}.{}", 
         duration.as_secs(), duration.subsec_millis());
 
     // Render the output.
@@ -114,7 +114,7 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
     ctx.insert("term", &query.term);
     let rendered = template.render("hud.html", &ctx)?;
     let duration = template_start.elapsed();
-    info!("template render {}.{}", 
+    ::log::info!("template render {}.{}", 
         duration.as_secs(), duration.subsec_millis());
 
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))

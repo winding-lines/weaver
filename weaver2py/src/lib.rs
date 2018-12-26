@@ -14,13 +14,6 @@
 
 #![allow(dead_code)]
 
-extern crate bincode;
-#[macro_use]
-extern crate cpython;
-extern crate lib_error;
-extern crate lib_goo;
-extern crate lib_index;
-
 mod repo;
 mod error;
 

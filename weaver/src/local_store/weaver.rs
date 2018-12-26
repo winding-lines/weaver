@@ -3,7 +3,7 @@ use lib_error::*;
 use serde_json as json;
 
 /// All the Milestones that Weaver knows about.
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(::serde::Deserialize, ::serde::Serialize, Debug)]
 pub(crate) struct Weaver {
     pub active_epic: Option<String>,
     // Name of the active milestone.

@@ -15,26 +15,6 @@
 //! The shell process manages the current epic in a local json store and reads the rest
 //! of the information from the [weaver-server](../../weaver_server/index.html).
 //!
-extern crate chrono;
-extern crate clap;
-extern crate clipboard;
-extern crate crossbeam_channel;
-extern crate cursive;
-extern crate env_logger;
-#[macro_use]
-extern crate log;
-extern crate regex;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
-extern crate termion;
-extern crate walkdir;
-// Workspace crates
-extern crate lib_error;
-extern crate lib_goo;
-extern crate lib_rpc;
-extern crate lib_tui;
 
 mod api;
 mod cli;
@@ -63,11 +43,11 @@ fn main() {
         if !has_weaver_env {
             print!(" ERR `export WEAVER=error` for more ");
         };
-        error!("error {}", e);
+        ::log::error!("error {}", e);
 
         e.display();
 
         ::std::process::exit(1);
     }
-    info!("weaver exited normally");
+    ::log::info!("weaver exited normally");
 }

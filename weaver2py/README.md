@@ -11,5 +11,5 @@ In order to compile and install this extension:
 2. Install dependencies: `pip install setuptools_rust`
 3. Run `python setup.py install` in this folder.
 
-Note: setuo.py needs to pass in special 
+Note: setup.py needs to pass in special 
 [linker options](https://github.com/dgrunwald/rust-cpython/issues/87)

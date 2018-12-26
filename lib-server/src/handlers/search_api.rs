@@ -9,7 +9,7 @@ use lib_error::{Result as Wesult};
 use lib_goo::entities::PageContent;
 use lib_index::repo::Collection;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, ::serde::Serialize, ::serde::Deserialize)]
 struct PageStatus {
     is_indexed: bool,
     summary: Option<String>,
@@ -50,14 +50,14 @@ fn create(data: (State<ApiState>, Json<PageContent>)) -> HttpResponse {
     match _create(data) {
         Ok(ps) => HttpResponse::Ok().json(ps),
         Err(e) => {
-            error!("search_api error {:?}", e);
+            ::log::error!("search_api error {:?}", e);
             HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).finish()
         }
     }
 }
 
 // Query parameters coming from the client
-#[derive(Deserialize)]
+#[derive(::serde::Deserialize)]
 struct SearchQuery {
     term: String,
 }

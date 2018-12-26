@@ -94,7 +94,7 @@ pub fn create_view(initial: Vec<Row>, processor_tx: &channel::Sender<Msg>) -> TV
                     view_tx.send(Msg::Selection(value));
                 } else {
                     // Errors are harder to display in Cursive mode, also need to redirect stderr to file.
-                    error!("cannot find table");
+                    ::log::error!("cannot find table");
                 }
             },
         );

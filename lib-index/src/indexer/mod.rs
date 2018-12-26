@@ -5,7 +5,7 @@ mod tantivy_indexer;
 
 pub use self::tantivy_indexer::TantivyIndexer;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize, Default)]
 pub struct Results {
     pub total: u64,
     pub matches: Vec<PageContent>,

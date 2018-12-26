@@ -15,7 +15,7 @@ use std::cmp;
 
 // Wrap into a bson envelope and save into the repo.
 fn save_to_repo(repo: &Repo, new_action: &NewAction) -> Result<String> {
-    debug!("Saving to repo");
+    ::log::debug!("Saving to repo");
     let data = bson::to_bson(new_action).map_err(|e| WeaverError::from(format!("create document for new_action {}", e)))?;
     let mut document = bson::Document::new();
     document.insert("data", data);
@@ -29,12 +29,12 @@ fn save_to_repo(repo: &Repo, new_action: &NewAction) -> Result<String> {
 
 /// Create a new action.
 fn create((state, new_action): (State<ApiState>, Json<NewAction>)) -> Wesult<String> {
-    debug!("Entering create in action_api");
+    ::log::debug!("Entering create in action_api");
     let repo = &*state.repo;
     let new_action = &*new_action;
     save_to_repo(repo, new_action)?;
 
-    debug!("Saving to db");
+    ::log::debug!("Saving to db");
     actions2::insert(&state.sql.connection()?, new_action).map(|d| format!("{}", d))
 }
 
@@ -84,7 +84,7 @@ fn recommendations(
         Ok(paginated) => HttpResponse::Ok().json(paginated),
         Err(e) => {
             let msg = format!("recommendations_api error {:?}", e);
-            error!("{}", msg);
+            ::log::error!("{}", msg);
             HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).body(msg)
         }
     }
@@ -94,7 +94,7 @@ fn recommendations(
 /// Returns actions together with pagination meta data.
 fn paginated_fetch((state, input): (State<ApiState>, Query<net::Pagination>)) -> HttpResponse {
     let pagination = &*input;
-    debug!("Entering paginated_fetch {:?}", pagination);
+    ::log::debug!("Entering paginated_fetch {:?}", pagination);
     match state
         .sql
         .connection()
@@ -111,7 +111,7 @@ fn paginated_fetch((state, input): (State<ApiState>, Query<net::Pagination>)) ->
         }
         Err(e) => {
             let msg = format!("actions_api error {:?}", e);
-            error!("{}", msg);
+            ::log::error!("{}", msg);
             HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR).body(msg)
         }
     }
@@ -129,7 +129,7 @@ fn set_annotation(
 pub(crate) fn config(app: App<ApiState>, should_log: bool) -> App<ApiState> {
     // v2 actions
     if should_log {
-        debug!("registering {}", net::ACTIONS2_BASE);
+        ::log::debug!("registering {}", net::ACTIONS2_BASE);
     }
     let app = app.resource(net::ACTIONS2_BASE, |r| {
         r.method(http::Method::GET).with(paginated_fetch);
@@ -139,14 +139,14 @@ pub(crate) fn config(app: App<ApiState>, should_log: bool) -> App<ApiState> {
     // recommendations
     let recs = format!("{}{}", net::ACTIONS2_BASE, net::RECOMMENDATIONS);
     if should_log {
-        debug!("registering {}", recs);
+        ::log::debug!("registering {}", recs);
     }
     let app = app.resource(&recs, |r| r.method(http::Method::GET).with(recommendations));
 
     // annotation setter
     let ann = format!("{}/{{id}}{}", net::ACTIONS2_BASE, net::ANNOTATIONS);
     if should_log {
-        debug!("registering {}", ann);
+        ::log::debug!("registering {}", ann);
     }
     app.resource(&ann, |r| {
         r.method(http::Method::POST).with(set_annotation);

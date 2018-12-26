@@ -156,7 +156,7 @@ impl Processor {
     // Filter the displayed commands to match the given string,
     // optionally selects the given row.
     fn filter(&mut self, f: Option<&str>, selected_row: Option<usize>) {
-        debug!("Received filter message {:?}", f);
+        ::log::debug!("Received filter message {:?}", f);
         let tx = self.self_tx.clone();
         let fresh = match fetch_recommendations(f.map(String::from), &self.destination, &self.env) {
             Ok(fresh) => fresh,
@@ -207,7 +207,7 @@ impl Processor {
     }
 
     fn jump_to_next(&mut self) {
-        debug!(
+        ::log::debug!(
             "jumpToNext, search {:?} current {:?} ",
             self.search_string, self.formatted_action
         );
@@ -221,7 +221,7 @@ impl Processor {
     }
 
     fn jump_to_prev(&mut self) {
-        debug!(
+        ::log::debug!(
             "jumpToPrev, search {:?} current {:?} ",
             self.search_string, self.formatted_action
         );
@@ -296,16 +296,16 @@ impl ProcessorThread {
             loop {
                 match self.rx.recv() {
                     Some(Msg::Selection(selection)) => {
-                        debug!("Received selection message {:?}", selection);
+                        ::log::debug!("Received selection message {:?}", selection);
                         processor.select_row_and_col(selection);
                     }
 
                     Some(Msg::TableSubmit) => {
-                        debug!("Exiting in TableSubmit");
+                        ::log::debug!("Exiting in TableSubmit");
                     }
 
                     Some(Msg::FilterSubmit) => {
-                        debug!(
+                        ::log::debug!(
                             "Exiting in FilterSubmit, selection {:?}",
                             processor.formatted_action
                         );
@@ -321,7 +321,7 @@ impl ProcessorThread {
                     Some(Msg::CommandSubmit(f)) => {
                         // Handle a string submitted from the command box.
                         processor.submit_command(f);
-                        debug!(
+                        ::log::debug!(
                             "Exiting in EditSubmit, selection {:?}",
                             processor.formatted_action
                         );
@@ -333,7 +333,7 @@ impl ProcessorThread {
                         processor.search_string = Some(f);
                     }
                     Some(Msg::JumpToSelection) => {
-                        debug!("Received JumpToSelection");
+                        ::log::debug!("Received JumpToSelection");
                         let current_id = processor.formatted_action.as_ref().map(|a| a.id.prev());
                         processor.filter(None, current_id);
                     }
@@ -350,7 +350,7 @@ impl ProcessorThread {
                         processor.select_kind(k);
                     }
                     Some(Msg::ExtractState) => {
-                        debug!("Received end msg");
+                        ::log::debug!("Received end msg");
                         let mine = processor.output_kind.lock().unwrap();
                         self.tx.send(UserSelection {
                             action: processor.formatted_action,
@@ -358,7 +358,7 @@ impl ProcessorThread {
                         });
                         return;
                     }
-                    None => debug!("received None message"),
+                    None => ::log::debug!("received None message"),
                 }
             }
         })

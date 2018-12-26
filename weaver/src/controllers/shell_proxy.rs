@@ -10,7 +10,7 @@ where
 {
     let shell = env::var("SHELL").context("missing shell".into())?;
 
-    debug!("using shell {} to run {:?}", shell, command.as_ref());
+    ::log::debug!("using shell {} to run {:?}", shell, command.as_ref());
     let mut cmd = Command::new(shell);
     cmd.arg("-c");
     cmd.arg(command.as_ref());

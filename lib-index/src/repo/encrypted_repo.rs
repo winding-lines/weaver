@@ -25,7 +25,7 @@ pub struct EncryptedRepo {
 }
 
 /// An encrypted file saved to disk.
-#[derive(Serialize, Deserialize)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
 struct DiskEntry {
     /// We generate a nonce for each file and save it with the encrypted file.
     nonce: Vec<u8>,
@@ -78,7 +78,7 @@ impl EncryptedRepo {
                 let ring = keyring::Keyring::new("weaver", "weaver-user");
                 match ring.get_password() {
                     Err(e) => {
-                        error!(
+                        ::log::error!(
                             "please run `weaver-data create` in order to setup the repo\n{}",
                             e
                         );
@@ -192,12 +192,12 @@ impl Repo for EncryptedRepo {
     /// Add the file to the repository, encrypt it.
     /// Return the handler under which it was saved.
     fn add(&self, collection: &Collection, content: &[u8]) -> Result<String> {
-        debug!("Adding content to collection \"{}\"", collection.0);
+        ::log::debug!("Adding content to collection \"{}\"", collection.0);
         // Generate nonce and encrypt
         let nonce = secretbox::gen_nonce();
         let ciphertext = secretbox::seal(content, &nonce, &self.key);
 
-        debug!("Build output path from hashname");
+        ::log::debug!("Build output path from hashname");
         let mut hasher = MetroHash128::default();
         hasher.write(&ciphertext);
         let hash = format!("{}", hasher.finish());
@@ -207,7 +207,7 @@ impl Repo for EncryptedRepo {
         };
         out.push(hash.clone());
 
-        debug!("Build the disk struct");
+        ::log::debug!("Build the disk struct");
         let mut nonce_vec = Vec::new();
         nonce_vec.extend_from_slice(&nonce.0);
         let disk_entry = DiskEntry {
@@ -216,7 +216,7 @@ impl Repo for EncryptedRepo {
         };
         let serialized = serialize(&disk_entry).map_err(|_| "serialize to bincode")?;
 
-        debug!("writing to disk");
+        ::log::debug!("writing to disk");
         write(&out, &serialized)?;
         Ok(hash)
     }

@@ -11,7 +11,7 @@ trait Matcher {
 }
 
 /// Precondition that matches if a certain file contains a string.
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(::serde::Deserialize, ::serde::Serialize, Debug, PartialEq)]
 pub struct FileContent {
     path: String,
     contains: String,
@@ -29,7 +29,7 @@ impl Matcher for FileContent {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(::serde::Deserialize, ::serde::Serialize, Debug, PartialEq)]
 pub enum Precondition {
     #[serde(rename = "file_content")]
     FileContent(FileContent),
@@ -44,7 +44,7 @@ impl Matcher for Precondition {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(::serde::Deserialize, ::serde::Serialize, Debug)]
 pub struct Flow {
     pub name: String,
     pub preconditions: Vec<Precondition>,

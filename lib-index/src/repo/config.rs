@@ -7,7 +7,7 @@ use rust_sodium::crypto::pwhash::{gen_salt, Salt};
 use std::fs::{create_dir, read, write};
 use std::path::{Path, PathBuf};
 
-#[derive(Serialize, Deserialize)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
 pub(crate) struct Config {
     salt_raw: Vec<u8>,
 }

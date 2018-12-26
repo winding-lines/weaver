@@ -78,7 +78,7 @@ pub fn fetch(
     // Apply an optional filter
     if let Some(txt) = search {
         let like_clause = format!("%{}%", txt);
-        info!("like clause '{}'", like_clause);
+        ::log::info!("like clause '{}'", like_clause);
         joined = joined.filter(
             commands::dsl::command
                 .like(like_clause.clone())

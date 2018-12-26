@@ -14,18 +14,6 @@
 //!
 //! The [weaver-server](../weaver_server/index.html) needs to be setup accordingly.
 //!
-extern crate bincode;
-extern crate chrono;
-extern crate clap;
-extern crate env_logger;
-extern crate lib_db;
-extern crate lib_error;
-extern crate lib_goo;
-extern crate lib_index;
-#[macro_use]
-extern crate log;
-extern crate serde;
-extern crate serde_json;
 
 mod app;
 mod cli;
@@ -47,11 +35,11 @@ fn main() {
     if let Err(ref e) = app::run() {
         println!(" ERR `export WEAVER=error` for more ");
         println!("error {}", e);
-        error!("error {}", e);
+        ::log::error!("error {}", e);
 
         e.display();
 
         ::std::process::exit(1);
     }
-    info!("weaver-data exited normally");
+    ::log::info!("weaver-data exited normally");
 }
