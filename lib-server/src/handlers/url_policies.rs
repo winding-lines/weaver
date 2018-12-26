@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
+#![allow(clippy::needless_pass_by_value)]
 use actix_web::{http, App, HttpResponse, Json, State};
 use crate::app_state::ApiState;
 use lib_db::store_policies;

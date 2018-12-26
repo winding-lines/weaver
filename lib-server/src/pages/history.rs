@@ -1,11 +1,11 @@
 use super::PageState;
+use crate::template_engine::build_context;
 use actix_web::{App, Error, HttpResponse, Query, State};
 use lib_ai::compact;
 use lib_db::actions2;
 use lib_goo::config::net::{PaginatedActions, Pagination};
 use lib_goo::entities::ActionId;
 use std::collections::HashMap;
-use crate::template_engine::build_context;
 use std::time::Instant;
 
 /// Render the history page.
@@ -51,7 +51,10 @@ struct HudQuery {
 fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpResponse, Error> {
     let connection = state.api.sql.connection()?;
     let count = actions2::count(&connection)? as i64;
-    let term = query.term.as_ref().and_then(|a| if a.is_empty() {None} else {Some(&**a)} );
+    let term = query
+        .term
+        .as_ref()
+        .and_then(|a| if a.is_empty() { None } else { Some(&**a) });
     let pagination = if term.is_some() {
         Pagination {
             start: None,
@@ -77,12 +80,16 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
     let cycles = compact::extract_cycles(&fetched, 4);
     compact::decycle(&mut fetched, &cycles);
     let duration = compact_start.elapsed();
-    ::log::info!("after compacting got {} actions in {}.{}", 
-        fetched.len(), duration.as_secs(), duration.subsec_millis());
+    ::log::info!(
+        "after compacting got {} actions in {}.{}",
+        fetched.len(),
+        duration.as_secs(),
+        duration.subsec_millis()
+    );
 
     // Put in the shape expected by the template.
     let serialization_start = Instant::now();
-    let since_id = query.since_id.map(|s| ActionId::new(s));
+    let since_id = query.since_id.map(ActionId::new);
     let mut results: Vec<HudEntry> = Vec::new();
     for action in fetched.into_iter().rev() {
         let keep = match since_id {
@@ -91,7 +98,11 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
         };
         if keep {
             let when = action.when.as_ref().map(|a| a.to_js()).unwrap_or_default();
-            let location = action.location.unwrap_or(action.name.clone());
+            let location = if action.location.is_some() {
+                action.location.unwrap()
+            } else {
+                action.name.clone()
+            };
             let entry = HudEntry {
                 id: action.id,
                 when,
@@ -103,8 +114,11 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
         }
     }
     let duration = serialization_start.elapsed();
-    ::log::info!("serialization {}.{}", 
-        duration.as_secs(), duration.subsec_millis());
+    ::log::info!(
+        "serialization {}.{}",
+        duration.as_secs(),
+        duration.subsec_millis()
+    );
 
     // Render the output.
     let template_start = Instant::now();
@@ -114,8 +128,11 @@ fn hud((state, query): (State<PageState>, Query<HudQuery>)) -> Result<HttpRespon
     ctx.insert("term", &query.term);
     let rendered = template.render("hud.html", &ctx)?;
     let duration = template_start.elapsed();
-    ::log::info!("template render {}.{}", 
-        duration.as_secs(), duration.subsec_millis());
+    ::log::info!(
+        "template render {}.{}",
+        duration.as_secs(),
+        duration.subsec_millis()
+    );
 
     Ok(HttpResponse::Ok().content_type("text/html").body(rendered))
 }
@@ -128,8 +145,8 @@ pub(crate) fn config(app: App<PageState>) -> App<PageState> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lib_goo::entities::FormattedAction;
     use crate::template_engine::TemplateEngine;
+    use lib_goo::entities::FormattedAction;
     use tera;
 
     #[test]
