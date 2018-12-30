@@ -1,0 +1,28 @@
+# Local build artifacts
+target
+.cargo
+
+# Data folder
+data
+
+# IDE files
+.vscode
+.idea
+*.iml
+
+# Git files
+.git
+.gitignore
+
+# Documentation
+*.md
+
+# python extension folder
+weaver2py
+
+# web server js files
+lib-server/web/node_modules
+lib-server/web/dist
+
+# OS X
+.DS_Store

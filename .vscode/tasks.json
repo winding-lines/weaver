@@ -128,6 +128,26 @@
         },
         {
             "type": "shell",
+            "label": "cargo test-export",
+            "command": "./my-cargo.sh",
+            "args": [
+                "test",
+                "-p",
+                "lib-export",
+                "--",
+                "--nocapture"
+            ],
+            "options": {
+                "env": {
+                    "WEAVER": "debug"
+                }
+            },
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
+            "type": "shell",
             "label": "cargo test-lib-db",
             "command": "./my-cargo.sh",
             "args": [
