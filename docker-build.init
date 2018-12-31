@@ -1,0 +1,20 @@
+# cloud-init file for multipass
+#
+# Use with:
+#
+#  multipass launch -n docker-build -m 8G -d 50G -c 4 --cloud-init docker-build.init
+#  multipass mount -u $UID:1000  $PWD docker-build:/home/multipass/weaver
+#  multipass exec docker-build "sudo shutdown -r now"
+#  multipass start docker-build
+#  multipass exec docker-build "cd weaver&& sudo docker build -t windinglines19/weaver:20181231 ."
+#
+
+package_update: true
+package_upgrade: true
+
+runcmd:
+ - sudo snap install docker
+ - sudo apt install gcc pkg-config libssl-dev
+ - mkdir weaver
+
+
