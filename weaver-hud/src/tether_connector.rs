@@ -1,3 +1,4 @@
+#[cfg(target_os = "macos")]
 #[cfg(feature="use-tether")]
 pub fn start() {
     let config = crate::util::parse();

@@ -11,7 +11,6 @@ path = "src/main.rs"
 
 [features]
 default = ["use-tether"]
-use-web-view = ["web-view"]
 use-tether = ["tether"]
 
 [dependencies]
@@ -29,5 +28,4 @@ lib-goo = {path = "../lib-goo"}
 lib-rpc = {path = "../lib-rpc"}
 
 [target.'cfg(target_os="macos")'.dependencies]
-web-view = { version = "0.2", optional = true }
 tether = { git = "https://github.com/winding-lines/tether.git", rev = "bba5015d2fc5512bdfbe9a35b394de6a7d369f34", optional = true }
