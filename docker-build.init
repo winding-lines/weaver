@@ -14,7 +14,7 @@ package_upgrade: true
 
 runcmd:
  - sudo snap install docker
- - sudo apt install gcc pkg-config libssl-dev
+ - sudo apt install gcc pkg-config libssl-dev ncurses-dev libsqlite3-dev
  - mkdir weaver
 
 

@@ -14,17 +14,10 @@ RUN /bin/sh build.sh
 # We need to use the Rust build image, because
 # we need the Rust compiler and Cargo tooling
 FROM rust:1.31 as build
+RUN apt-get update && apt-get install -y libdbus-1-dev libgmp-dev
 
 #########
 
-# Using bundled SQLite, no need to install it
-# RUN apt-get update && apt-get install -y\
-#    sqlite3\
-#    --no-install-recommends\
-# && rm -rf /var/lib/apt/lists/*
-
-# Creates a dummy project used to grab dependencies
-RUN USER=root cargo new --bin app
 WORKDIR /app
 
 # Copies the complete project
