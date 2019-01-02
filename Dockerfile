@@ -52,5 +52,5 @@ EXPOSE 3012
 # and the binary from the "build" stage to the current stage
 COPY --from=build app/target/release/weaver-server .
 
-# Configures the startup!
-CMD ./weaver-server start --fg
+# Configures the startup
+CMD ./weaver-server --location /data start --fg --port 8080 

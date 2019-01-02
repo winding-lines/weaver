@@ -1,0 +1,61 @@
+---
+apiVersion: "apps/v1beta1"
+kind: StatefulSet
+metadata:
+  name: weaver
+  labels:
+    app: weaver
+spec:
+  serviceName: weaver
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weaver
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: weaver
+    spec:
+      serviceAccountName: weaver
+      securityContext:
+        fsGroup: 34
+        runAsUser: 34
+      containers:
+      - image: windinglines19/weaver:20190101_2
+        imagePullPolicy: IfNotPresent
+        name: weaver
+        envFrom:
+        - configMapRef:
+            name: weaver
+        env:
+        - name: STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: weaver-data
+              key: storePassword
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /data
+          name: data
+        resources:
+          limits:
+            cpu: 300m
+            memory: 1Gi
+          requests:
+            cpu: 50m
+            memory: 256Mi
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+        - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: "15Gi"
+      storageClassName: default

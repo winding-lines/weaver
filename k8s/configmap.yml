@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weaver
+  labels:
+    app: weaver
+data: 
+  DATA_FOLDER: '/data'
+  DOMAIN: 'https://ingress.westus.cloudapp.azure.com'

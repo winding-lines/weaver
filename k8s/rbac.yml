@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: weaver
+  labels:
+    app: weaver
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: weaver
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    resourceNames:
+      - "weaver"
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    resourceNames:
+      - "weaver-tls"
+    verbs:
+      - get
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: weaver
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: weaver
+subjects:
+- kind: ServiceAccount
+  name: weaver
