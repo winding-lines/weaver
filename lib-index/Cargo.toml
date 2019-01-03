@@ -10,7 +10,7 @@ bincode = "1.0"
 rust_sodium = {git = "https://github.com/winding-lines/rust_sodium.git" }
 keyring = "0.6.0"
 metrohash = "1.0"
-rpassword = "2.0"
+rpassword = "2.1"
 log = "0.4"
 
 lib-db = {path="../lib-db"}

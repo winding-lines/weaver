@@ -40,6 +40,7 @@ FROM debian:stretch-slim
 RUN apt-get update && apt-get install -y\
     openssl\
     ca-certificates\
+    libdbus-1-dev libgmp-dev libsqlite3-dev\
     --no-install-recommends\
  && rm -rf /var/lib/apt/lists/*
 
@@ -51,6 +52,7 @@ EXPOSE 3012
 # Copies the files from the context (env file and web-vault)
 # and the binary from the "build" stage to the current stage
 COPY --from=build app/target/release/weaver-server .
+COPY --from=build app/target/release/weaver-data .
 
 # Configures the startup
 CMD ./weaver-server --location /data start --fg --port 8080 
