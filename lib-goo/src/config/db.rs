@@ -7,4 +7,6 @@ pub enum PasswordSource {
     Keyring,
     /// Pass in
     PassIn(String),
+    /// Read from WEAVER_PASSWORD
+    Environment
 }

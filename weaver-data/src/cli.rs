@@ -57,6 +57,8 @@ pub fn parse() -> ConfigAndCommand {
         .arg(
             Arg::with_name("password")
                 .short("P")
+                .takes_value(true)
+                .possible_values(&["prompt", "keyring", "environment"])
                 .long("password")
                 .help("Prompt for password - instead of the default of taking from keyring"),
         )
@@ -115,8 +117,13 @@ pub fn parse() -> ConfigAndCommand {
             command: DataSubCommand::Noop,
         };
     }
-    let password_source = if matches.is_present("password") {
-        db::PasswordSource::Prompt
+    let password_source = if let Some(source) = matches.value_of("password") {
+        match source {
+            "prompt" => db::PasswordSource::Prompt,
+            "keyring" => db::PasswordSource::Keyring,
+            "environment" => db::PasswordSource::Environment,
+            _ => db::PasswordSource::Keyring,
+        }
     } else {
         db::PasswordSource::Keyring
     };

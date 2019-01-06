@@ -99,6 +99,7 @@ impl EncryptedRepo {
                 Ok(new_pwd)
             }
             PasswordSource::PassIn(value) => Ok(value.clone()),
+            PasswordSource::Environment => std::env::var("WEAVER_PASSWORD").map_err(|_| WeaverError::from("no password in the environment"))
         }
     }
 
