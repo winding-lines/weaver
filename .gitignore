@@ -8,3 +8,4 @@ Cargo.lock
 .idea/
 .env
 *iml
+.gitsecret/keys/random_seed
