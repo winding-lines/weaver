@@ -1,20 +1,19 @@
-image: 'docker:stable'
+image: 'docker:latest'
 
 stages:
   - build
 
 variables:
-  # When using dind, it's wise to use the overlayfs driver for
-  # improved performance.
   DOCKER_DRIVER: overlay2
 
- services:
-   - docker:dind
-
+services:
+  - docker:dind 
+   
 before_script:
   - docker info
 
-build:
+
+release:
   stage: build
   script:
     - docker build -t weaver .
