@@ -10,16 +10,20 @@ bincode = "1.0"
 rust_sodium = {git = "https://github.com/winding-lines/rust_sodium.git" }
 keyring = "0.6.0"
 metrohash = "1.0"
-rpassword = "2.1"
 log = "0.4"
 
 lib-db = {path="../lib-db"}
 lib-error = {path="../lib-error"}
 lib-goo = {path="../lib-goo"}
 
-
 [dependencies.tantivy]
 # git = "https://github.com/tantivy-search/tantivy"
 # rev = "279a9eb5e3ba2b18d8f3ab3a40caef9701f87927"
 version = "0.8"
 features = ["mmap"]
+
+
+[target.'cfg(target_os="macos")'.dependencies]
+rpassword = {version = "2.1"}
+
+

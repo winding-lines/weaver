@@ -13,6 +13,7 @@ data
 # Git files
 .git
 .gitignore
+.gitsecret
 
 # Documentation
 *.md

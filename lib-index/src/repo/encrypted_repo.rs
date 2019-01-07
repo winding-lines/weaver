@@ -4,13 +4,12 @@
 //! to add some structure to them.
 
 use super::config::Config;
-use bincode::{deserialize, serialize};
 use crate::repo::{Collection, Repo};
+use bincode::{deserialize, serialize};
 use keyring;
 use lib_error::*;
 use lib_goo::config::db::PasswordSource;
 use metrohash::MetroHash128;
-use rpassword;
 use rust_sodium::crypto::{pwhash, secretbox};
 use std::fs::{create_dir, read, read_dir, remove_file, write, ReadDir};
 use std::hash::Hasher;
@@ -42,6 +41,20 @@ pub struct RepoDir<'a> {
 /// The entry returned by the RepoDir iterator.
 pub struct RepoEntry(Vec<u8>);
 
+#[cfg(target_os = "macos")]
+fn prompt_for_password() -> Result<String> {
+    let new_pwd =
+        rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
+    Ok(new_pwd)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn prompt_for_password() -> Result<String> {
+    Err(WeaverError::from(
+        "prompting for the password not supported",
+    ))
+}
+
 impl EncryptedRepo {
     // Build the repo with information from its config and the keyring
     pub fn build(password_source: &PasswordSource) -> Result<EncryptedRepo> {
@@ -59,7 +72,8 @@ impl EncryptedRepo {
                 &salt,
                 pwhash::OPSLIMIT_INTERACTIVE,
                 pwhash::MEMLIMIT_INTERACTIVE,
-            ).unwrap();
+            )
+            .unwrap();
         };
         Ok(Self { key, base_folder })
     }
@@ -93,15 +107,13 @@ impl EncryptedRepo {
                     }
                 }
             }
-            PasswordSource::Prompt => {
-                let new_pwd =
-                    rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
-                Ok(new_pwd)
-            }
+            PasswordSource::Prompt => prompt_for_password(),
             PasswordSource::PassIn(value) => Ok(value.clone()),
-            PasswordSource::Environment => std::env::var("WEAVER_PASSWORD").map_err(|_| WeaverError::from("no password in the environment"))
+            PasswordSource::Environment => std::env::var("WEAVER_PASSWORD")
+                .map_err(|_| WeaverError::from("no password in the environment")),
         }
     }
+
 
     pub fn setup_if_needed(source: &PasswordSource) -> Result<()> {
         if Self::get_password(source).is_ok() {
@@ -109,8 +121,7 @@ impl EncryptedRepo {
         }
         if source == &PasswordSource::Keyring {
             let ring = keyring::Keyring::new("weaver", "weaver-user");
-            let new_pwd =
-                rpassword::prompt_password_stdout("Enter a password for the document repo: ")?;
+            let new_pwd = prompt_for_password()?;
             ring.set_password(&new_pwd)
                 .map_err(|_| WeaverError::from("save password in keyring"))?;
             println!("Password saved in the keyring.");
