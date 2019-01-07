@@ -23,7 +23,7 @@ spec:
         fsGroup: 34
         runAsUser: 34
       containers:
-      - image: windinglines19/weaver:20190105_1
+      - image: windinglines19/weaver:20190106_1
         imagePullPolicy: IfNotPresent
         name: weaver
         envFrom:
