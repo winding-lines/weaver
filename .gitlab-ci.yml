@@ -1,8 +1,6 @@
 image: 'rust:latest'
 
 stages:
-  - test
-  - doc
   - build
 
 variables:
@@ -11,44 +9,13 @@ variables:
   RUST_SODIUM_USE_PKG_CONFIG: "true"
 
 before_script:
-  - apt-get update -yq
-  - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y sqlite3 libsqlite3-dev libncurses5-dev libncursesw5-dev libsodium-dev libgtk-3-dev 
+  - docker info
 
-test:
-  stage: test
-  script:
-    - rustc --version
-    - cargo --version
-    - cargo test --all --verbose
-
-pages:
-  stage: doc
-  script:
-    - cargo doc --all --no-deps
-    - mv target/doc public
-    - echo '<meta http-equiv="refresh" content="0; url='weaver'">' > public/index.html
-  artifacts:
-    paths:
-      - public
-  only:
-    - master
 
 release:
   stage: build
   script:
-    - cargo build --all --release
-    - mkdir release
-    - mv target/release/weaver release
-    - mv target/release/weaver-data release
-    - mv target/release/weaver-server release
-  artifacts:
-    paths:
-      - release
+    - docker build -t weaver .
   only:
     - master
 
-cache:
-  paths:
-    - apt/
-    - cargo/
-    - target/
