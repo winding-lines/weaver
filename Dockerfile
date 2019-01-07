@@ -54,4 +54,4 @@ COPY --from=build app/target/release/weaver-server .
 COPY --from=build app/target/release/weaver-data .
 
 # Configures the startup
-CMD /weaver-data --password environment --location /data create && /weaver-server --location /data start --fg --port 8080
+CMD /weaver-data --password environment --location /data setup && /weaver-server --location /data start --fg --port 8080
