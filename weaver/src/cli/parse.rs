@@ -93,6 +93,7 @@ pub fn parse() -> CommandAndConfig {
         Some(port) => ServerConfig {
             http_port: port,
             https_port: port + 1,
+            address: String::from("127.0.0.1")
         },
         None => ServerConfig::current(),
     };
