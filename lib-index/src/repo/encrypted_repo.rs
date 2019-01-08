@@ -85,7 +85,7 @@ impl EncryptedRepo {
         out
     }
 
-    /// Read the password from the keyring.
+    /// Read the password from the required source.
     fn get_password(source: &PasswordSource) -> Result<String> {
         match source {
             PasswordSource::Keyring => {

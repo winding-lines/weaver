@@ -52,6 +52,8 @@ pub fn parse() -> CommandAndConfig {
         .arg(
             Arg::with_name("password")
                 .short("P")
+                .takes_value(true)
+                .possible_values(&["prompt", "keyring", "environment"])
                 .long("password")
                 .help("Prompt for password - instead of the default of taking from keyring"),
         )
@@ -88,12 +90,17 @@ pub fn parse() -> CommandAndConfig {
     let server_config = match matches.value_of("port").and_then(|p| p.parse::<u16>().ok()) {
         Some(port) => ServerConfig {
             http_port: port,
-            https_port: port+1,
+            https_port: port + 1,
         },
         None => ServerConfig::current(),
     };
-    let password_source = if matches.is_present("password") {
-        db::PasswordSource::Prompt
+    let password_source = if let Some(source) = matches.value_of("password") {
+        match source {
+            "prompt" => db::PasswordSource::Prompt,
+            "keyring" => db::PasswordSource::Keyring,
+            "environment" => db::PasswordSource::Environment,
+            _ => db::PasswordSource::Keyring,
+        }
     } else {
         db::PasswordSource::Keyring
     };
@@ -124,5 +131,5 @@ fn parse_command(matches: &ArgMatches) -> ServerSubCommand {
         };
         return ServerSubCommand::Start(server_run);
     }
-    unreachable!()
+    return ServerSubCommand::Check;
 }
