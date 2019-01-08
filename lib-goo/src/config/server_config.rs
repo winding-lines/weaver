@@ -8,6 +8,7 @@ pub const HTTPS_PORT: u16 = 8467;
 pub struct ServerConfig {
     pub http_port: u16,
     pub https_port: u16,
+    pub address: String,
 }
 
 impl Default for ServerConfig {
@@ -15,6 +16,7 @@ impl Default for ServerConfig {
         ServerConfig {
             http_port: HTTP_PORT,
             https_port: HTTPS_PORT,
+            address: String::from("127.0.0.1"),
         }
     }
 }

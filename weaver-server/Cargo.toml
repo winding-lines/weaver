@@ -9,6 +9,9 @@ edition = "2018"
 name = "weaver-server"
 path = "src/main.rs"
 
+[features]
+default = []
+rust-tls = ["lib-server/rust-tls"]
 
 [dependencies]
 chrono = "0.4"

@@ -85,6 +85,7 @@ impl Server {
     pub fn start(
         http_port: u16,
         https_port: u16,
+        address: &str,
         store: Arc<SqlStore>,
         repo: Arc<EncryptedRepo>,
     ) -> Result<Server> {
@@ -128,7 +129,7 @@ impl Server {
         };
 
         let mut s = server::new(apps_factory);
-        s = s.bind(format!("127.0.0.1:{}", http_port))?;
+        s = s.bind(format!("{}:{}", address, http_port))?;
         #[cfg(any(feature = "tls", feature = "rust-tls"))]
         {
             match config_tls() {

@@ -6,7 +6,7 @@ edition = "2018"
 build = "build.rs"
 
 [features]
-default = ["rust-tls"]
+default = []
 rust-tls = ["rustls", "actix-web/rust-tls"]
 
 [dependencies]
