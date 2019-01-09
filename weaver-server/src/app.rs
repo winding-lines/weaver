@@ -114,7 +114,7 @@ fn start(
             println!("Started in daemon mode");
         }
     }
-    let _actix = lib_server::Server::start(config.http_port, config.https_port, &config.address, store, repo)?;
+    let _actix = lib_server::Server::start(config.http_port, config.https_port, &config.address, config.base_url.clone(), store, repo)?;
 
     Ok(Server)
 }

@@ -74,6 +74,14 @@ pub fn parse() -> CommandAndConfig {
                 .value_name("ADDRESS")
                 .help("Select an address for the server to run on"),
         )
+        .arg(
+            Arg::with_name("base-url")
+                .long("base-url")
+                .global(true)
+                .takes_value(true)
+                .value_name("BASE_URL")
+                .help("Select base_url to host the URLs under"),
+        )
         .subcommand(SubCommand::with_name("check").about("Check to see that the server exists"))
         .subcommand(
             SubCommand::with_name("start")
@@ -95,12 +103,14 @@ pub fn parse() -> CommandAndConfig {
         .get_matches();
 
     let address = matches.value_of("address").unwrap_or("127.0.0.1");
+    let base_url = matches.value_of("base-url").unwrap_or("/");
     // Check if port is present and is in int format.
     let server_config = match matches.value_of("port").and_then(|p| p.parse::<u16>().ok()) {
         Some(port) => ServerConfig {
             http_port: port,
             https_port: port + 1,
             address: String::from(address),
+            base_url: String::from(base_url),
         },
         None => ServerConfig::current(),
     };

@@ -74,7 +74,6 @@ fn config_tls() -> Result<rustls::ServerConfig> {
         .set_single_cert(cert_chain, keys.remove(0))
         .map_err(|e| format!("set_single_cert {:?}", e))?;
 
-
     Ok(config)
 }
 
@@ -86,6 +85,7 @@ impl Server {
         http_port: u16,
         https_port: u16,
         address: &str,
+        base_url: String,
         store: Arc<SqlStore>,
         repo: Arc<EncryptedRepo>,
     ) -> Result<Server> {
@@ -94,9 +94,10 @@ impl Server {
         let topic_store = Arc::new(topics::TopicStore::load()?);
         let asset_map = Arc::new(AssetMap::build());
         let apps_factory = move || {
+            let assets_url = format!("{}/assets", base_url);
             vec![
                 App::with_state(asset_map.clone())
-                    .prefix("/assets/")
+                    .prefix(assets_url)
                     .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                     .configure(pages::static_assets::config)
                     .boxed(),
@@ -106,7 +107,7 @@ impl Server {
                     repo: repo.clone(),
                     topic_store: topic_store.clone(),
                 })
-                .prefix("/api/")
+                .prefix(format!("{}/api", base_url))
                 .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                 .configure(handlers::config)
                 .boxed(),
@@ -121,6 +122,7 @@ impl Server {
                         topic_store: topic_store.clone(),
                     },
                 })
+                .prefix(base_url.clone())
                 .middleware(Logger::new("%t %P \"%r\" %s %b %T"))
                 // Add the html pages
                 .configure(pages::config)
@@ -135,9 +137,10 @@ impl Server {
             match config_tls() {
                 Ok(config) => {
                     ::log::info!("Initializing TLS on port {}", https_port);
-                    let acceptor =
-                        server::RustlsAcceptor::with_flags(config,
-                                                           server::ServerFlags::HTTP1 | server::ServerFlags::HTTP2);
+                    let acceptor = server::RustlsAcceptor::with_flags(
+                        config,
+                        server::ServerFlags::HTTP1 | server::ServerFlags::HTTP2,
+                    );
                     s = s.bind_with(format!("0.0.0.0:{}", https_port), move || acceptor.clone())?;
                 }
                 Err(e) => ::log::error!("Cannot start TLS {:?}", e),
